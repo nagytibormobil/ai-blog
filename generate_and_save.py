@@ -23,7 +23,7 @@ def load_model(model_name="gpt2"):
     model.eval()
     return tokenizer, model, device
 
-def generate_text(tokenizer, model, device, prompt, max_new_tokens=150, temperature=0.8, top_p=0.92):
+def generate_text(tokenizer, model, device, prompt, max_new_tokens=300, temperature=0.8, top_p=0.92):
     inputs = tokenizer(prompt, return_tensors="pt")
     inputs = {k: v.to(device) for k, v in inputs.items()}
     with torch.no_grad():
@@ -59,43 +59,44 @@ def save_html(outdir, title, body):
     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
     fn = f"{ts}-{safe_filename(title)[:100]}.html"
     path = os.path.join(outdir, fn)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(f"""<!DOCTYPE html>
+    html = f"""<!DOCTYPE html>
 <html lang="hu">
 <head>
-  <meta charset="UTF-8">
-  <title>{title}</title>
+    <meta charset="UTF-8">
+    <title>{title}</title>
 </head>
 <body>
-  <h1>{title}</h1>
-  <p>{body}</p>
-
-  <hr>
-  <h2>💰 Ajánlott lehetőségek</h2>
-  <ul>
-    <li><a href="https://icmarkets.com/?camp=3992" target="_blank">🌍 ICMarkets - kereskedj profi szinten</a></li>
-    <li><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">🏦 Dukascopy - nyiss számlát promóciós kóddal: E12831</a></li>
-    <li><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank">📱 Honeygain - keress passzív jövedelmet az internet megosztásával</a></li>
-  </ul>
+    <h1>{title}</h1>
+    <p>{body.replace("\n", "<br>")}</p>
+    <hr>
+    <h2>💰 Ajánlott lehetőségek</h2>
+    <ul>
+      <li><a href="https://icmarkets.com/?camp=3992" target="_blank">🌍 ICMarkets - kereskedj profi szinten</a></li>
+      <li><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">🏦 Dukascopy - nyiss számlát promóciós kóddal: E12831</a></li>
+      <li><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank">📱 Honeygain - keress passzív jövedelmet az internet megosztásával</a></li>
+    </ul>
 </body>
-</html>""")
+</html>"""
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(html)
     return path
 
 def main():
-    parser = argparse.ArgumentParser(description="AI poszt generáló (HTML verzió).")
+    parser = argparse.ArgumentParser(description="AI poszt generáló (HTML).")
     parser.add_argument("--model", type=str, default="gpt2")
     parser.add_argument("--num_posts", type=int, default=1)
-    parser.add_argument("--outdir", type=str, default=OUTDIR_DEFAULT)
+    parser.add_argument("--prompt", type=str, default="")
     args = parser.parse_args()
 
-    ensure_dir(args.outdir)
+    ensure_dir(OUTDIR_DEFAULT)
     tokenizer, model, device = load_model(args.model)
 
-    prompt = "Írj egy rövid blogposztot a mesterséges intelligenciáról."
+    prompt = args.prompt if args.prompt else "Írj egy rövid blogposztot a mesterséges intelligencia jövőjéről."
     for i in range(args.num_posts):
+        print(f"\nGenerálás {i+1}/{args.num_posts} — prompt: {prompt[:60]}...")
         body = generate_text(tokenizer, model, device, prompt)
         title = make_title(body)
-        path = save_html(args.outdir, title, body)
+        path = save_html(OUTDIR_DEFAULT, title, body)
         print("Létrehozva:", path)
 
 if __name__ == "__main__":
