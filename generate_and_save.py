@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # generate_and_save.py
+
 import os
 import argparse
 from datetime import datetime
@@ -46,11 +47,7 @@ def generate_text(tokenizer, model, device, prompt, max_new_tokens=150, temperat
 
 def make_title(text, fallback="AI poszt"):
     lines = [l.strip() for l in text.splitlines() if l.strip()]
-    if lines:
-        title = lines[0][:80]
-    else:
-        title = fallback
-    return title
+    return lines[0][:80] if lines else fallback
 
 def safe_filename(s):
     keep = "-_.() abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -60,29 +57,25 @@ def save_markdown(outdir, title, body):
     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
     fn = f"{ts}-{safe_filename(title)[:100]}.md"
     path = os.path.join(outdir, fn)
-
-    affiliate_block = """
----
-
-💸 **Támogasd a blogot az ajánlott partnereken keresztül**
-
-- 📈 [ICMarkets](https://icmarkets.com/?camp=3992)  
-- 🏦 [Dukascopy](https://www.dukascopy.com/api/es/12831/type-S/target-id-149) (Promóciós kód: E12831)  
-- 🐝 [Honeygain – passzív jövedelem internetmegosztással](https://r.honeygain.me/NAGYT86DD6)  
-"""
-
     with open(path, "w", encoding="utf-8") as f:
-        f.write(f"# {title}\n\n{body}\n\n{affiliate_block}")
-    return path, fn, title
+        f.write(f"# {title}\n\n{body}\n")
+    return path
 
-def update_index(outdir, index_file):
-    files = sorted(os.listdir(outdir), reverse=True)
+def load_prompts_from_file(path):
+    if not os.path.exists(path):
+        return []
+    with open(path, "r", encoding="utf-8") as f:
+        return [l.strip() for l in f.readlines() if l.strip()]
+
+def update_index():
+    posts = sorted(os.listdir(OUTDIR_DEFAULT), reverse=True)
     links = []
-    for fn in files:
-        if fn.endswith(".md"):
-            title = fn.split("-", 1)[-1].rsplit(".", 1)[0].replace("_", " ")
-            links.append(f'- <a href="{outdir}/{fn}">{title}</a>')
-    html_content = f"""<!DOCTYPE html>
+    for post in posts:
+        if post.endswith(".md"):
+            title = post.split("-", 1)[-1].replace("_", " ")[:80]
+            links.append(f'<li><a href="{OUTDIR_DEFAULT}/{post}">{title}</a></li>')
+
+    html = f"""<!DOCTYPE html>
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
@@ -91,31 +84,34 @@ def update_index(outdir, index_file):
 <body>
     <h1>Üdv a blogomon 👋</h1>
     <p>Ez egy AI által generált blog.</p>
+
     <h2>Legújabb posztok</h2>
     <ul>
-        {' '.join(f'<li>{l}</li>' for l in links)}
+        {' '.join(links)}
+    </ul>
+
+    <hr>
+    <h2>💰 Ajánlott lehetőségek</h2>
+    <ul>
+        <li><a href="https://icmarkets.com/?camp=3992" target="_blank">🌍 ICMarkets - kereskedj profi szinten</a></li>
+        <li><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">🏦 Dukascopy - nyiss számlát promóciós kóddal: E12831</a></li>
+        <li><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank">📱 Honeygain - keress passzív jövedelmet az internet megosztásával</a></li>
     </ul>
 </body>
-</html>"""
-    with open(index_file, "w", encoding="utf-8") as f:
-        f.write(html_content)
-    print("Index frissítve:", index_file)
-
-def load_prompts_from_file(path):
-    if not os.path.exists(path):
-        return []
-    with open(path, "r", encoding="utf-8") as f:
-        lines = [l.strip() for l in f.readlines() if l.strip()]
-    return lines
+</html>
+"""
+    with open(INDEX_FILE, "w", encoding="utf-8") as f:
+        f.write(html)
+    print("✅ index.html frissítve")
 
 def main():
     parser = argparse.ArgumentParser(description="Egyszerű AI poszt generáló (GPT-2).")
-    parser.add_argument("--model", type=str, default="gpt2", help="Hugging Face modell neve (alap: gpt2)")
-    parser.add_argument("--num_posts", type=int, default=3, help="Hány posztot generáljon")
-    parser.add_argument("--prompt", type=str, default="", help="Ha megadsz egy promptot, azt használja")
-    parser.add_argument("--prompt_file", type=str, default="", help="Promptok fájl (egy sor = egy prompt)")
-    parser.add_argument("--outdir", type=str, default=OUTDIR_DEFAULT, help="Kimeneti mappa")
-    parser.add_argument("--max_new_tokens", type=int, default=160, help="Maximálisan generált token (szöveg hossza)")
+    parser.add_argument("--model", type=str, default="gpt2")
+    parser.add_argument("--num_posts", type=int, default=1)
+    parser.add_argument("--prompt", type=str, default="")
+    parser.add_argument("--prompt_file", type=str, default="")
+    parser.add_argument("--outdir", type=str, default=OUTDIR_DEFAULT)
+    parser.add_argument("--max_new_tokens", type=int, default=160)
     parser.add_argument("--temperature", type=float, default=0.8)
     parser.add_argument("--top_p", type=float, default=0.92)
     args = parser.parse_args()
@@ -130,12 +126,11 @@ def main():
         prompts.insert(0, args.prompt)
     if not prompts:
         prompts = [
-            "Írj egy hasznos, könnyen olvasható blogposztot a következő témában: házi praktikák a mindennapi életben.",
-            "Írj egy rövid, SEO-barát cikket arról, hogyan válassz futócipőt kezdőknek.",
-            "Írj egy 6-8 mondatos Facebook-posztot, ami promózza egy kisvállalkozás kézműves termékeit."
+            "Írj egy hasznos blogposztot a mindennapi élethez.",
+            "Írj egy rövid, SEO-barát cikket a futásról.",
+            "Írj egy Facebook-posztot kézműves termékekről."
         ]
 
-    created = []
     for i in range(args.num_posts):
         prompt = prompts[i % len(prompts)]
         print(f"\nGenerálás {i+1}/{args.num_posts} — prompt: {prompt[:60]}...")
@@ -144,15 +139,11 @@ def main():
                              temperature=args.temperature,
                              top_p=args.top_p)
         title = make_title(body)
-        path, fn, title = save_markdown(args.outdir, title, body)
-        created.append(path)
+        path = save_markdown(args.outdir, title, body)
         print("Létrehozva:", path)
 
-    update_index(args.outdir, INDEX_FILE)
-
-    print("\nKész. Összes létrehozott fájl:")
-    for p in created:
-        print(" -", p)
+    # Frissítsük az index.html-t
+    update_index()
 
 if __name__ == "__main__":
     main()
