@@ -4,6 +4,7 @@
 import os
 import argparse
 from datetime import datetime
+import subprocess
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -104,6 +105,16 @@ def update_index():
         f.write(html)
     print("✅ index.html frissítve")
 
+def git_commit_and_push():
+    try:
+        subprocess.run(["git", "add", "."], check=True)
+        msg = f"Automatikus frissítés {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        subprocess.run(["git", "commit", "-m", msg], check=True)
+        subprocess.run(["git", "push"], check=True)
+        print("✅ Változtatások feltöltve GitHubra")
+    except subprocess.CalledProcessError:
+        print("⚠️ Git hiba történt (lehet, hogy nincs változás a commit-hoz).")
+
 def main():
     parser = argparse.ArgumentParser(description="Egyszerű AI poszt generáló (GPT-2).")
     parser.add_argument("--model", type=str, default="gpt2")
@@ -142,8 +153,8 @@ def main():
         path = save_markdown(args.outdir, title, body)
         print("Létrehozva:", path)
 
-    # Frissítsük az index.html-t
     update_index()
+    git_commit_and_push()
 
 if __name__ == "__main__":
     main()
