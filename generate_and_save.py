@@ -7,6 +7,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 OUTDIR_DEFAULT = "generated_posts"
+INDEX_FILE = "index.html"
 
 def ensure_dir(path):
     os.makedirs(path, exist_ok=True)
@@ -14,11 +15,9 @@ def ensure_dir(path):
 def load_model(model_name="gpt2"):
     print("Modell és tokenizer betöltése:", model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    # ha nincs pad token, használjuk az eos-t
     if tokenizer.pad_token is None:
         tokenizer.add_special_tokens({'pad_token': tokenizer.eos_token})
     model = AutoModelForCausalLM.from_pretrained(model_name)
-    # ha hozzáadtunk token-t, méreteket frissítjük
     model.resize_token_embeddings(len(tokenizer))
     device = torch.device("cpu")
     model.to(device)
@@ -28,36 +27,19 @@ def load_model(model_name="gpt2"):
 def generate_text(tokenizer, model, device, prompt, max_new_tokens=150, temperature=0.8, top_p=0.92):
     inputs = tokenizer(prompt, return_tensors="pt")
     inputs = {k: v.to(device) for k, v in inputs.items()}
-    try:
-        with torch.no_grad():
-            out = model.generate(
-                **inputs,
-                do_sample=True,
-                max_new_tokens=max_new_tokens,
-                temperature=temperature,
-                top_p=top_p,
-                pad_token_id=tokenizer.pad_token_id,
-                eos_token_id=tokenizer.eos_token_id,
-                repetition_penalty=1.1,
-                num_return_sequences=1
-            )
-    except TypeError:
-        # régebbi transformers esetén fallback max_length-re
-        max_length = inputs["input_ids"].shape[1] + max_new_tokens
-        with torch.no_grad():
-            out = model.generate(
-                **inputs,
-                do_sample=True,
-                max_length=max_length,
-                temperature=temperature,
-                top_p=top_p,
-                pad_token_id=tokenizer.pad_token_id,
-                eos_token_id=tokenizer.eos_token_id,
-                repetition_penalty=1.1,
-                num_return_sequences=1
-            )
+    with torch.no_grad():
+        out = model.generate(
+            **inputs,
+            do_sample=True,
+            max_new_tokens=max_new_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            pad_token_id=tokenizer.pad_token_id,
+            eos_token_id=tokenizer.eos_token_id,
+            repetition_penalty=1.1,
+            num_return_sequences=1
+        )
     text = tokenizer.decode(out[0], skip_special_tokens=True)
-    # eltávolítjuk a prompt ismétlődő részét, ha benne marad
     if text.startswith(prompt):
         text = text[len(prompt):].strip()
     return text.strip()
@@ -78,9 +60,46 @@ def save_markdown(outdir, title, body):
     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
     fn = f"{ts}-{safe_filename(title)[:100]}.md"
     path = os.path.join(outdir, fn)
+
+    affiliate_block = """
+---
+
+💸 **Támogasd a blogot az ajánlott partnereken keresztül**
+
+- 📈 [ICMarkets](https://icmarkets.com/?camp=3992)  
+- 🏦 [Dukascopy](https://www.dukascopy.com/api/es/12831/type-S/target-id-149) (Promóciós kód: E12831)  
+- 🐝 [Honeygain – passzív jövedelem internetmegosztással](https://r.honeygain.me/NAGYT86DD6)  
+"""
+
     with open(path, "w", encoding="utf-8") as f:
-        f.write(f"# {title}\n\n{body}\n")
-    return path
+        f.write(f"# {title}\n\n{body}\n\n{affiliate_block}")
+    return path, fn, title
+
+def update_index(outdir, index_file):
+    files = sorted(os.listdir(outdir), reverse=True)
+    links = []
+    for fn in files:
+        if fn.endswith(".md"):
+            title = fn.split("-", 1)[-1].rsplit(".", 1)[0].replace("_", " ")
+            links.append(f'- <a href="{outdir}/{fn}">{title}</a>')
+    html_content = f"""<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Blog</title>
+</head>
+<body>
+    <h1>Üdv a blogomon 👋</h1>
+    <p>Ez egy AI által generált blog.</p>
+    <h2>Legújabb posztok</h2>
+    <ul>
+        {' '.join(f'<li>{l}</li>' for l in links)}
+    </ul>
+</body>
+</html>"""
+    with open(index_file, "w", encoding="utf-8") as f:
+        f.write(html_content)
+    print("Index frissítve:", index_file)
 
 def load_prompts_from_file(path):
     if not os.path.exists(path):
@@ -110,22 +129,26 @@ def main():
     if args.prompt:
         prompts.insert(0, args.prompt)
     if not prompts:
-        # alapértelmezett prompt
         prompts = [
-            "Írj egy hasznos, könnyen olvasható blogposztot a következő témában: házi praktikák a mindennapi életben. Kezdd egy figyelemfelkeltő bevezetéssel és adj 5 gyakorlati tippet.",
-            "Írj egy rövid, SEO-barát cikket arról, hogyan válassz futócipőt kezdőknek. Tartsd egyszerűen és gyakorlati tanácsokat adj.",
-            "Írj egy 6-8 mondatos Facebook-posztot, ami promózza egy kisvállalkozás kézműves termékeit, hangsúlyozva az egyedi jelleget."
+            "Írj egy hasznos, könnyen olvasható blogposztot a következő témában: házi praktikák a mindennapi életben.",
+            "Írj egy rövid, SEO-barát cikket arról, hogyan válassz futócipőt kezdőknek.",
+            "Írj egy 6-8 mondatos Facebook-posztot, ami promózza egy kisvállalkozás kézműves termékeit."
         ]
 
     created = []
     for i in range(args.num_posts):
         prompt = prompts[i % len(prompts)]
         print(f"\nGenerálás {i+1}/{args.num_posts} — prompt: {prompt[:60]}...")
-        body = generate_text(tokenizer, model, device, prompt, max_new_tokens=args.max_new_tokens, temperature=args.temperature, top_p=args.top_p)
+        body = generate_text(tokenizer, model, device, prompt,
+                             max_new_tokens=args.max_new_tokens,
+                             temperature=args.temperature,
+                             top_p=args.top_p)
         title = make_title(body)
-        path = save_markdown(args.outdir, title, body)
+        path, fn, title = save_markdown(args.outdir, title, body)
         created.append(path)
         print("Létrehozva:", path)
+
+    update_index(args.outdir, INDEX_FILE)
 
     print("\nKész. Összes létrehozott fájl:")
     for p in created:
