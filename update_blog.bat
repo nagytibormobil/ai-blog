@@ -1,12 +1,15 @@
 @echo off
 cd /d C:\ai_blog
 
-:: Generál 5 új HTML posztot
-py generate_and_save.py --num_posts 5
+:: Aktiváljuk a virtuális környezetet
+call ai-env\Scripts\activate.bat
 
-:: Frissít GitHubra
+:: Generáljunk 5 új SEO-barát HTML posztot képekkel és releváns YouTube videókkal
+python generate_and_save.py --num_posts 5
+
+:: Frissítjük és feltöltjük GitHubra
 git add .
-git commit -m "Automatikus frissítés új HTML posztokkal"
+git commit -m "Automatikus frissítés - új SEO-barát posztok"
 git push
 
 echo.
