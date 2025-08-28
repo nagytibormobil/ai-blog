@@ -108,7 +108,8 @@ def generate_post(game):
     cheats = random.sample(CHEATS_EXAMPLES, k=2)
 
     # Cover kép – repo assets mappából
-    cover = f"https://placehold.co/800x450?text={game['name'].replace(' ','+')}"
+    cover = f"./assets/images/{game['name'].lower().replace(' ','-')}.jpg"
+
 
 
     description = f"""
