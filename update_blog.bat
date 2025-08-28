@@ -2,7 +2,7 @@
 cd /d C:\ai_blog
 
 :: Generál 5 új HTML posztot
-py generate_and_save.py --num_posts 5
+py generate_and_save.py --num_posts 25
 
 :: Frissít GitHubra
 git add .
