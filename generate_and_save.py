@@ -6,79 +6,35 @@ import json
 from pathlib import Path
 from bs4 import BeautifulSoup
 
-# ==============
+# ==========================
 # SETTINGS
-# ==============
+# ==========================
 OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
 
 # Sample game pool
 GAMES = [
-    {
-        "name": "Elden Ring",
-        "platforms": ["PC", "PS", "Xbox"],
-        "year": 2022,
-        "publisher": "FromSoftware",
-        "version": "1.09",
-        "youtube": "https://www.youtube.com/embed/9iUuT2y7gC8"
-    },
-    {
-        "name": "GTA V",
-        "platforms": ["PC", "PS", "Xbox"],
-        "year": 2013,
-        "publisher": "Rockstar Games",
-        "version": "Latest",
-        "youtube": "https://www.youtube.com/embed/QkkoHAzjnUs"
-    },
-    {
-        "name": "The Witcher 3 Wild Hunt",
-        "platforms": ["PC", "PS", "Xbox", "Switch"],
-        "year": 2015,
-        "publisher": "CD Projekt Red",
-        "version": "Next-Gen",
-        "youtube": "https://www.youtube.com/embed/c0i88t0Kacs"
-    },
-    {
-        "name": "Minecraft",
-        "platforms": ["PC", "Mobile", "Xbox", "PS"],
-        "year": 2011,
-        "publisher": "Mojang",
-        "version": "1.20",
-        "youtube": "https://www.youtube.com/embed/aqz-KE-bpKQ"
-    },
-    {
-        "name": "Fortnite",
-        "platforms": ["PC", "PS", "Xbox", "Mobile"],
-        "year": 2017,
-        "publisher": "Epic Games",
-        "version": "Chapter 4",
-        "youtube": "https://www.youtube.com/embed/2gUtfBmw86Y"
-    },
-    {
-        "name": "Call of Duty Modern Warfare II",
-        "platforms": ["PC", "PS", "Xbox"],
-        "year": 2022,
-        "publisher": "Activision",
-        "version": "1.0",
-        "youtube": "https://www.youtube.com/embed/OeVapCrI1pY"
-    },
-    {
-        "name": "League of Legends",
-        "platforms": ["PC"],
-        "year": 2009,
-        "publisher": "Riot Games",
-        "version": "13.8",
-        "youtube": "https://www.youtube.com/embed/UZi6wZy3cpc"
-    },
-    {
-        "name": "FIFA 23",
-        "platforms": ["PC", "PS", "Xbox"],
-        "year": 2022,
-        "publisher": "EA Sports",
-        "version": "Final",
-        "youtube": "https://www.youtube.com/embed/o3V-GvvzjE4"
-    },
+    {"name": "Elden Ring", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "FromSoftware", "version": "1.09"},
+    {"name": "GTA V", "platforms": ["PC", "PS", "Xbox"], "year": 2013, "publisher": "Rockstar Games", "version": "Latest"},
+    {"name": "The Witcher 3 Wild Hunt", "platforms": ["PC", "PS", "Xbox", "Switch"], "year": 2015, "publisher": "CD Projekt Red", "version": "Next-Gen"},
+    {"name": "Minecraft", "platforms": ["PC", "Mobile", "Xbox", "PS"], "year": 2011, "publisher": "Mojang", "version": "1.20"},
+    {"name": "Fortnite", "platforms": ["PC", "PS", "Xbox", "Mobile"], "year": 2017, "publisher": "Epic Games", "version": "Chapter 4"},
+    {"name": "Call of Duty Modern Warfare II", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "Activision", "version": "1.0"},
+    {"name": "League of Legends", "platforms": ["PC"], "year": 2009, "publisher": "Riot Games", "version": "13.8"},
+    {"name": "FIFA 23", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "EA Sports", "version": "Final"},
 ]
+
+# YouTube videók játék szerint
+YOUTUBE_VIDEOS = {
+    "Elden Ring": "https://www.youtube.com/embed/9iUuT2y7gC8",
+    "GTA V": "https://www.youtube.com/embed/QkkoHAzjnUs",
+    "The Witcher 3 Wild Hunt": "https://www.youtube.com/embed/c0i88t0Kacs",
+    "Minecraft": "https://www.youtube.com/embed/aqz-KE-bpKQ",
+    "Fortnite": "https://www.youtube.com/embed/2gUtfBmw86Y",
+    "Call of Duty Modern Warfare II": "https://www.youtube.com/embed/oP3B4bNGe2c",
+    "League of Legends": "https://www.youtube.com/embed/UZi6wZy3cpc",
+    "FIFA 23": "https://www.youtube.com/embed/4sW0d9R9P6c",
+}
 
 CHEATS_EXAMPLES = [
     "God Mode: IDDQD",
@@ -88,15 +44,21 @@ CHEATS_EXAMPLES = [
     "No Clip Mode: NOCLIP"
 ]
 
-# ==============
+# ==========================
 # HELPERS
-# ==============
+# ==========================
 def slugify(name, extra="cheats-tips"):
+    """SEO-barát URL név generálása"""
     return name.lower().replace(" ", "-").replace(":", "").replace("_", "-") + f"-{extra}.html"
 
-# ==============
+def get_cover_image(game_name):
+    """Placeholder kép generálása, ha nincs valódi kép"""
+    safe_name = game_name.replace(" ", "+")
+    return f"https://placehold.co/800x450?text={safe_name}"
+
+# ==========================
 # GENERATE POST
-# ==============
+# ==========================
 def generate_post(game):
     now = datetime.datetime.now()
     filename = slugify(game["name"])
@@ -105,12 +67,11 @@ def generate_post(game):
     title = f"{game['name']} Cheats & Tips"
     rating = round(random.uniform(2.5, 5.0), 1)
 
+    # YouTube videó csak ha van releváns
+    youtube = YOUTUBE_VIDEOS.get(game["name"], None)
+
     cheats = random.sample(CHEATS_EXAMPLES, k=2)
-
-    # Cover kép – repo assets mappából
-    cover = f"./assets/images/{game['name'].lower().replace(' ','-')}.jpg"
-
-
+    cover = get_cover_image(game["name"])
 
     description = f"""
     <p><strong>{game['name']}</strong> is one of the most exciting games released in {game['year']}. 
@@ -126,7 +87,6 @@ def generate_post(game):
     you’ll be able to uncover even more details that make this title worth playing again and again.</p>
     """
 
-    # HTML összeállítása
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -137,7 +97,7 @@ def generate_post(game):
 </head>
 <body style="font-family:Arial, sans-serif; max-width:800px; margin:0 auto; line-height:1.6; padding:20px;">
   <h1>{game['name']} Cheats & Tips</h1>
-  <img src="{cover}" alt="{game['name']}" style="width:100%; border-radius:8px;" />
+  <img src="{cover}" alt="{game['name']} gameplay and tips" style="width:100%; border-radius:8px;" />
 
   <h2>About the Game</h2>
   <ul>
@@ -145,19 +105,18 @@ def generate_post(game):
     <li><strong>Publisher:</strong> {game['publisher']}</li>
     <li><strong>Version:</strong> {game['version']}</li>
     <li><strong>Platforms:</strong> {', '.join(game['platforms'])}</li>
-    <li><strong>Offline:</strong> {random.choice(["Yes","No"])}</li>
-    <li><strong>Multiplayer:</strong> {random.choice(["Yes","No"])}</li>
+    <li><strong>Offline:</strong> {random.choice(['Yes','No'])}</li>
+    <li><strong>Multiplayer:</strong> {random.choice(['Yes','No'])}</li>
   </ul>
 
   <h2>Full Review</h2>
   {description}
 """
 
-    # YouTube blokk csak ha van link
-    if game.get("youtube"):
+    if youtube:
         html += f"""
   <h2>Gameplay Video</h2>
-  <iframe width="100%" height="400" src="{game['youtube']}" frameborder="0" allowfullscreen></iframe>
+  <iframe width="100%" height="400" src="{youtube}" frameborder="0" allowfullscreen></iframe>
 """
 
     html += f"""
@@ -168,6 +127,17 @@ def generate_post(game):
 
   <h2>AI Rating</h2>
   <p>⭐ {rating}/5</p>
+
+  <h2>User Comments</h2>
+  <p><em>Leave your thoughts below. Max 10 comments/day. All comments are moderated.</em></p>
+  <textarea style="width:100%;height:100px;"></textarea>
+  <br><button>Submit</button>
+
+  <hr>
+  <h2>Sponsored</h2>
+  <p><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank" style="font-size:18px;">📱 Earn real money while you play – Honeygain</a></p>
+  <p><a href="https://icmarkets.com/?camp=3992" target="_blank">🌍 ICMarkets – trade like a pro</a></p>
+  <p><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">🏦 Dukascopy – promo code: E12831</a></p>
 
   <hr>
   <footer style="font-size:12px; color:#666;">
@@ -193,9 +163,9 @@ def generate_post(game):
         "comments": 0
     }
 
-# ==============
+# ==========================
 # UPDATE INDEX
-# ==============
+# ==========================
 def update_index(posts):
     with open(INDEX_FILE, "r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, "html.parser")
@@ -203,7 +173,6 @@ def update_index(posts):
     scripts = soup.find_all("script")
     for s in scripts:
         if "AUTO-GENERATED POSTS START" in s.text:
-            before = s.text.split("POSTS =")[0]
             after = s.text.split("// <<< AUTO-GENERATED POSTS END >>>")[1]
             new_json = json.dumps(posts, indent=2)
             s.string = f"    // <<< AUTO-GENERATED POSTS START >>>\n    const POSTS = {new_json};\n    // <<< AUTO-GENERATED POSTS END >>>{after}"
@@ -212,25 +181,9 @@ def update_index(posts):
     with open(INDEX_FILE, "w", encoding="utf-8") as f:
         f.write(str(soup))
 
-# ==============
+# ==========================
 # MAIN
-# ==============
+# ==========================
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num_posts", type=int, default=5)
-    args = parser.parse_args()
-
-    Path(OUTPUT_DIR).mkdir(exist_ok=True)
-
-    posts = []
-    for i in range(args.num_posts):
-        game = random.choice(GAMES)
-        post = generate_post(game)
-        posts.append(post)
-        print(f"Generated: {post['title']} → {post['url']}")
-
-    update_index(posts)
-    print("index.html updated.")
-
-if __name__ == "__main__":
-    main()
+    parser.add_argument("--num_posts",
