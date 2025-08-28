@@ -132,17 +132,100 @@
 <p class="tiny">© <span id="year"></span> AI Gaming Blog</p>
 </section>
 </main>
-<script>    // <<< AUTO-GENERATED POSTS START >>>
-    const POSTS = [
+<script>const POSTS = [
+  {
+    "title": "Elden Ring",
+    "url": "generated_posts/elden-ring-cheats-tips.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 3.6,
+    "cover": "https://placehold.co/800x450?text=Elden+Ring",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Call of Duty Modern Warfare II",
+    "url": "generated_posts/call-of-duty-modern-warfare-ii-cheats-tips.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 2.9,
+    "cover": "https://placehold.co/800x450?text=Call+of+Duty+Modern+Warfare+II",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Fortnite",
+    "url": "generated_posts/fortnite-cheats-tips.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox",
+      "Mobile"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.8,
+    "cover": "https://placehold.co/800x450?text=Fortnite",
+    "views": 0,
+    "comments": 0
+  },
   {
     "title": "League of Legends",
     "url": "generated_posts/league-of-legends-cheats-tips.html",
     "platform": [
       "PC"
     ],
-    "date": "2025-08-28",
-    "rating": 4.7,
+    "date": "2025-08-29",
+    "rating": 3.2,
     "cover": "https://placehold.co/800x450?text=League+of+Legends",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "GTA V",
+    "url": "generated_posts/gta-v-cheats-tips.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.6,
+    "cover": "https://placehold.co/800x450?text=GTA+V",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "League of Legends",
+    "url": "generated_posts/league-of-legends-cheats-tips.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.9,
+    "cover": "https://placehold.co/800x450?text=League+of+Legends",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Fortnite",
+    "url": "generated_posts/fortnite-cheats-tips.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox",
+      "Mobile"
+    ],
+    "date": "2025-08-29",
+    "rating": 3.0,
+    "cover": "https://placehold.co/800x450?text=Fortnite",
     "views": 0,
     "comments": 0
   },
@@ -155,61 +238,41 @@
       "Xbox",
       "Switch"
     ],
-    "date": "2025-08-28",
-    "rating": 2.8,
+    "date": "2025-08-29",
+    "rating": 4.6,
     "cover": "https://placehold.co/800x450?text=The+Witcher+3+Wild+Hunt",
     "views": 0,
     "comments": 0
   },
   {
-    "title": "FIFA 23",
-    "url": "generated_posts/fifa-23-cheats-tips.html",
+    "title": "Minecraft",
+    "url": "generated_posts/minecraft-cheats-tips.html",
+    "platform": [
+      "PC",
+      "Mobile",
+      "Xbox",
+      "PS"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.3,
+    "cover": "https://placehold.co/800x450?text=Minecraft",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Call of Duty Modern Warfare II",
+    "url": "generated_posts/call-of-duty-modern-warfare-ii-cheats-tips.html",
     "platform": [
       "PC",
       "PS",
       "Xbox"
     ],
-    "date": "2025-08-28",
-    "rating": 2.8,
-    "cover": "https://placehold.co/800x450?text=FIFA+23",
+    "date": "2025-08-29",
+    "rating": 4.2,
+    "cover": "https://placehold.co/800x450?text=Call+of+Duty+Modern+Warfare+II",
     "views": 0,
     "comments": 0
   }
-];
-    // <<< AUTO-GENERATED POSTS END >>>
-
-    function byDateDesc(a,b){ return new Date(b.date)-new Date(a.date); }
-    function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
-    function starHTML(r){ const full=Math.floor(r); const half=(r-full)>=0.5?1:0; const empty=5-full-half; return "⭐".repeat(full)+(half?"½":"")+"☆".repeat(empty);}
-    function card(p){
-      const img = p.cover||`https://placehold.co/800x450?text=${p.title.replace(' ','+')}`;
-      const platforms = (p.platform||[]).join(" • ");
-      return `<article class="card">
-        <a class="thumb" href="${p.url}"><img src="${img}" alt="${p.title} gameplay and tips" loading="lazy"></a>
-        <div class="content">
-          <h3 class="title"><a href="${p.url}">${p.title}</a></h3>
-          <div class="meta">
-            <span class="badge">${platforms||"Game"}</span>
-            <span class="muted">${new Date(p.date).toLocaleDateString()}</span>
-            <span class="stars" title="${p.rating}/5">${starHTML(clamp(p.rating||0,0,5))}</span>
-          </div>
-        </div>
-      </article>`;
-    }
-
-    const latest = [...POSTS].sort(byDateDesc).slice(0, 9);
-    document.getElementById('latestGrid').innerHTML = latest.map(card).join("");
-    const popular = [...POSTS].sort((a,b)=> (b.views+(b.comments*3))-(a.views+(a.comments*3))).slice(0,3);
-    document.getElementById('popularGrid').innerHTML = popular.map(card).join("");
-    function pick3(arr){ const used=new Set(); const out=[]; while(out.length<3 && used.size<arr.length){ const i=Math.floor(Math.random()*arr.length); if(!used.has(i)){ used.add(i); out.push(arr[i]); } } return out; }
-    document.getElementById('exploreGrid').innerHTML = pick3(POSTS).map(card).join("");
-
-    const pick = document.getElementById('pick');
-    [...POSTS].sort((a,b)=>a.title.localeCompare(b.title)).forEach(p=>{ const o=document.createElement('option'); o.value=p.url; o.textContent=p.title; pick.appendChild(o); });
-    document.getElementById('go').onclick=()=>{ const u=pick.value; if(u) location.href=u; }
-    document.getElementById('find').onclick=()=>{ const q=document.getElementById('q').value.trim().toLowerCase(); if(!q) return; const hit=POSTS.find(p=>p.title.toLowerCase().includes(q)); if(hit) location.href=hit.url; else alert("No match."); }
-
-    document.getElementById('year').textContent=new Date().getFullYear();
-</script>
+];</script>
 </body>
 </html>
