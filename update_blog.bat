@@ -13,4 +13,3 @@ echo.
 echo ===============================
 echo ✅ Blog frissítve és feltöltve!
 echo ===============================
-pause
