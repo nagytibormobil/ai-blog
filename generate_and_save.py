@@ -6,35 +6,29 @@ import json
 from pathlib import Path
 from bs4 import BeautifulSoup
 
-# ====================
+# ==============
 # SETTINGS
-# ====================
+# ==============
 OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
 
-# Sample game pool
+# Sample game pool (népszerűbb címekből válogatva)
 GAMES = [
     {"name": "Elden Ring", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "FromSoftware", "version": "1.09"},
     {"name": "GTA V", "platforms": ["PC", "PS", "Xbox"], "year": 2013, "publisher": "Rockstar Games", "version": "Latest"},
-    {"name": "The Witcher 3 Wild Hunt", "platforms": ["PC", "PS", "Xbox", "Switch"], "year": 2015, "publisher": "CD Projekt Red", "version": "Next-Gen"},
+    {"name": "The Witcher 3: Wild Hunt", "platforms": ["PC", "PS", "Xbox", "Switch"], "year": 2015, "publisher": "CD Projekt Red", "version": "Next-Gen"},
     {"name": "Minecraft", "platforms": ["PC", "Mobile", "Xbox", "PS"], "year": 2011, "publisher": "Mojang", "version": "1.20"},
     {"name": "Fortnite", "platforms": ["PC", "PS", "Xbox", "Mobile"], "year": 2017, "publisher": "Epic Games", "version": "Chapter 4"},
-    {"name": "Call of Duty Modern Warfare II", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "Activision", "version": "1.0"},
+    {"name": "Call of Duty: Modern Warfare II", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "Activision", "version": "1.0"},
     {"name": "League of Legends", "platforms": ["PC"], "year": 2009, "publisher": "Riot Games", "version": "13.8"},
     {"name": "FIFA 23", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "EA Sports", "version": "Final"},
 ]
 
-# YouTube linkek játékhoz
-YOUTUBE_LINKS = {
-    "Elden Ring": "https://www.youtube.com/embed/9iUuT2y7gC8",
-    "GTA V": "https://www.youtube.com/embed/3fumBcKC6RE",
-    "The Witcher 3 Wild Hunt": "https://www.youtube.com/embed/5eH3pl6vU3M",
-    "Minecraft": "https://www.youtube.com/embed/aqz-KE-bpKQ",
-    "Fortnite": "https://www.youtube.com/embed/7nD3XP5JQ8M",
-    "Call of Duty Modern Warfare II": "https://www.youtube.com/embed/UZi6wZy3cpc",
-    "League of Legends": "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    "FIFA 23": "https://www.youtube.com/embed/2g811Eo7K8U",
-}
+YOUTUBE_EXAMPLES = [
+    "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    "https://www.youtube.com/embed/9bZkp7q19f0",
+    "https://www.youtube.com/embed/3fumBcKC6RE"
+]
 
 CHEATS_EXAMPLES = [
     "God Mode: IDDQD",
@@ -44,28 +38,19 @@ CHEATS_EXAMPLES = [
     "No Clip Mode: NOCLIP"
 ]
 
-# ====================
-# HELPERS
-# ====================
-def slugify(name):
-    return name.lower().replace(" ", "-").replace(":", "").replace("_", "-") + "-cheats-tips.html"
-
-def placeholder_image(game_name):
-    return f"https://placehold.co/800x450?text={game_name.replace(' ','+')}"
-
-# ====================
+# ==============
 # GENERATE POST
-# ====================
+# ==============
 def generate_post(game):
     now = datetime.datetime.now()
-    filename = slugify(game["name"])
+    timestamp = now.strftime("%Y%m%d-%H%M%S")
+    filename = f"{timestamp}-{game['name'].replace(' ', '_')}.html"
     filepath = os.path.join(OUTPUT_DIR, filename)
 
-    title = f"{game['name']} Cheats & Tips"
+    title = f"{game['name']} Review & Guide"
     rating = round(random.uniform(2.5, 5.0), 1)
-    youtube = YOUTUBE_LINKS.get(game["name"], None)
+    youtube = random.choice(YOUTUBE_EXAMPLES)
     cheats = random.sample(CHEATS_EXAMPLES, k=2)
-    cover = placeholder_image(game["name"])
 
     description = f"""
     <p><strong>{game['name']}</strong> is one of the most exciting games released in {game['year']}. 
@@ -81,7 +66,6 @@ def generate_post(game):
     you’ll be able to uncover even more details that make this title worth playing again and again.</p>
     """
 
-    # HTML összeállítása
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -91,8 +75,8 @@ def generate_post(game):
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
 <body style="font-family:Arial, sans-serif; max-width:800px; margin:0 auto; line-height:1.6; padding:20px;">
-  <h1>{title}</h1>
-  <img src="{cover}" alt="{game['name']} gameplay and tips" style="width:100%; border-radius:8px;" />
+  <h1>{game['name']}</h1>
+  <img src="https://placehold.co/800x450?text={game['name'].replace(' ','+')}" alt="{game['name']}" style="width:100%; border-radius:8px;" />
 
   <h2>About the Game</h2>
   <ul>
@@ -100,21 +84,16 @@ def generate_post(game):
     <li><strong>Publisher:</strong> {game['publisher']}</li>
     <li><strong>Version:</strong> {game['version']}</li>
     <li><strong>Platforms:</strong> {', '.join(game['platforms'])}</li>
-    <li><strong>Offline:</strong> {random.choice(['Yes','No'])}</li>
-    <li><strong>Multiplayer:</strong> {random.choice(['Yes','No'])}</li>
+    <li><strong>Offline:</strong> {random.choice(["Yes","No"])}</li>
+    <li><strong>Multiplayer:</strong> {random.choice(["Yes","No"])}</li>
   </ul>
 
   <h2>Full Review</h2>
   {description}
-"""
 
-    if youtube:
-        html += f"""
   <h2>Gameplay Video</h2>
   <iframe width="100%" height="400" src="{youtube}" frameborder="0" allowfullscreen></iframe>
-"""
 
-    html += f"""
   <h2>Cheats & Tips</h2>
   <ul>
     {''.join(f"<li>{c}</li>" for c in cheats)}
@@ -143,7 +122,6 @@ def generate_post(game):
 </body>
 </html>
 """
-
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(html)
 
@@ -153,60 +131,35 @@ def generate_post(game):
         "platform": game["platforms"],
         "date": now.strftime("%Y-%m-%d"),
         "rating": rating,
-        "cover": cover,
+        "cover": f"https://placehold.co/800x450?text={game['name'].replace(' ','+')}",
         "views": 0,
         "comments": 0
     }
 
-# ====================
+# ==============
 # UPDATE INDEX
-# ====================
-def update_index(new_posts):
-    # Ha nincs index.html, hozzuk létre egy üres POSTS tömbbel
-    if not os.path.exists(INDEX_FILE):
-        with open(INDEX_FILE, "w", encoding="utf-8") as f:
-            f.write("""<!DOCTYPE html><html><head><meta charset="UTF-8"><title>AI Gaming Blog</title></head><body><script>const POSTS=[];</script></body></html>""")
-
+# ==============
+def update_index(posts):
     with open(INDEX_FILE, "r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, "html.parser")
 
+    # Find JS POSTS array
     scripts = soup.find_all("script")
-    posts_script = None
     for s in scripts:
-        if "const POSTS" in s.text:
-            posts_script = s
+        if "AUTO-GENERATED POSTS START" in s.text:
+            # replace JSON array
+            before = s.text.split("POSTS =")[0]
+            after = s.text.split("// <<< AUTO-GENERATED POSTS END >>>")[1]
+            new_json = json.dumps(posts, indent=2)
+            s.string = f"    // <<< AUTO-GENERATED POSTS START >>>\n    const POSTS = {new_json};\n    // <<< AUTO-GENERATED POSTS END >>>{after}"
             break
-
-    # Olvassuk be a meglévő posztokat
-    existing_posts = []
-    if posts_script:
-        text = posts_script.string
-        start = text.find("[")
-        end = text.rfind("]")+1
-        if start != -1 and end != -1:
-            try:
-                existing_posts = json.loads(text[start:end])
-            except:
-                existing_posts = []
-
-    # Új posztokat hozzáadjuk
-    combined_posts = new_posts + existing_posts  # legújabb elöl
-
-    new_json = json.dumps(combined_posts, indent=2)
-    script_content = f"const POSTS = {new_json};"
-    if posts_script:
-        posts_script.string.replace_with(script_content)
-    else:
-        new_tag = soup.new_tag("script")
-        new_tag.string = script_content
-        soup.body.append(new_tag)
 
     with open(INDEX_FILE, "w", encoding="utf-8") as f:
         f.write(str(soup))
 
-# ====================
+# ==============
 # MAIN
-# ====================
+# ==============
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_posts", type=int, default=5)
@@ -215,7 +168,7 @@ def main():
     Path(OUTPUT_DIR).mkdir(exist_ok=True)
 
     posts = []
-    for _ in range(args.num_posts):
+    for i in range(args.num_posts):
         game = random.choice(GAMES)
         post = generate_post(game)
         posts.append(post)
