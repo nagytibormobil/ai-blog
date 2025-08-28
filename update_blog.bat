@@ -1,18 +1,23 @@
 @echo off
+REM ==========================================
+REM AI Gaming Blog – Automatikus frissítés
+REM ==========================================
+
 cd /d C:\ai_blog
 
-:: Aktiváljuk a virtuális környezetet
+REM Aktiváljuk a Python virtuális környezetet
 call ai-env\Scripts\activate.bat
 
-:: Generáljunk 5 új SEO-barát HTML posztot képekkel és releváns YouTube videókkal
-python generate_and_save.py --num_posts 5
+REM Generáljunk 3 új HTML posztot
+python generate_and_save.py --num_posts 3
 
-:: Frissítjük és feltöltjük GitHubra
+REM Git commit & push automatikusan
 git add .
-git commit -m "Automatikus frissítés - új SEO-barát posztok"
+git commit -m "Automatikus frissítés új HTML posztokkal"
 git push
 
 echo.
 echo ===============================
 echo ✅ Blog frissítve és feltöltve!
 echo ===============================
+pause

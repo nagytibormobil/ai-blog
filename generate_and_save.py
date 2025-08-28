@@ -6,9 +6,9 @@ import json
 from pathlib import Path
 from bs4 import BeautifulSoup
 
-# ==========================
+# ==============
 # SETTINGS
-# ==========================
+# ==============
 OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
 
@@ -24,17 +24,11 @@ GAMES = [
     {"name": "FIFA 23", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "EA Sports", "version": "Final"},
 ]
 
-# YouTube videók játék szerint
-YOUTUBE_VIDEOS = {
-    "Elden Ring": "https://www.youtube.com/embed/9iUuT2y7gC8",
-    "GTA V": "https://www.youtube.com/embed/QkkoHAzjnUs",
-    "The Witcher 3 Wild Hunt": "https://www.youtube.com/embed/c0i88t0Kacs",
-    "Minecraft": "https://www.youtube.com/embed/aqz-KE-bpKQ",
-    "Fortnite": "https://www.youtube.com/embed/2gUtfBmw86Y",
-    "Call of Duty Modern Warfare II": "https://www.youtube.com/embed/oP3B4bNGe2c",
-    "League of Legends": "https://www.youtube.com/embed/UZi6wZy3cpc",
-    "FIFA 23": "https://www.youtube.com/embed/4sW0d9R9P6c",
-}
+YOUTUBE_EXAMPLES = [
+    "https://www.youtube.com/embed/UZi6wZy3cpc",  # League gameplay
+    "https://www.youtube.com/embed/aqz-KE-bpKQ",  # Minecraft gameplay
+    "https://www.youtube.com/embed/9iUuT2y7gC8",  # Elden Ring gameplay
+]
 
 CHEATS_EXAMPLES = [
     "God Mode: IDDQD",
@@ -44,21 +38,15 @@ CHEATS_EXAMPLES = [
     "No Clip Mode: NOCLIP"
 ]
 
-# ==========================
+# ==============
 # HELPERS
-# ==========================
+# ==============
 def slugify(name, extra="cheats-tips"):
-    """SEO-barát URL név generálása"""
     return name.lower().replace(" ", "-").replace(":", "").replace("_", "-") + f"-{extra}.html"
 
-def get_cover_image(game_name):
-    """Placeholder kép generálása, ha nincs valódi kép"""
-    safe_name = game_name.replace(" ", "+")
-    return f"https://placehold.co/800x450?text={safe_name}"
-
-# ==========================
+# ==============
 # GENERATE POST
-# ==========================
+# ==============
 def generate_post(game):
     now = datetime.datetime.now()
     filename = slugify(game["name"])
@@ -67,11 +55,12 @@ def generate_post(game):
     title = f"{game['name']} Cheats & Tips"
     rating = round(random.uniform(2.5, 5.0), 1)
 
-    # YouTube videó csak ha van releváns
-    youtube = YOUTUBE_VIDEOS.get(game["name"], None)
-
+    # YouTube – csak ha van találat
+    youtube = random.choice(YOUTUBE_EXAMPLES) if random.random() < 0.5 else None
     cheats = random.sample(CHEATS_EXAMPLES, k=2)
-    cover = get_cover_image(game["name"])
+
+    # Placeholder cover kép
+    cover = f"https://placehold.co/800x450?text={game['name'].replace(' ','+')}"
 
     description = f"""
     <p><strong>{game['name']}</strong> is one of the most exciting games released in {game['year']}. 
@@ -105,8 +94,8 @@ def generate_post(game):
     <li><strong>Publisher:</strong> {game['publisher']}</li>
     <li><strong>Version:</strong> {game['version']}</li>
     <li><strong>Platforms:</strong> {', '.join(game['platforms'])}</li>
-    <li><strong>Offline:</strong> {random.choice(['Yes','No'])}</li>
-    <li><strong>Multiplayer:</strong> {random.choice(['Yes','No'])}</li>
+    <li><strong>Offline:</strong> {random.choice(["Yes","No"])}</li>
+    <li><strong>Multiplayer:</strong> {random.choice(["Yes","No"])}</li>
   </ul>
 
   <h2>Full Review</h2>
@@ -149,6 +138,7 @@ def generate_post(game):
 </html>
 """
 
+    Path(OUTPUT_DIR).mkdir(exist_ok=True)
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(html)
 
@@ -163,27 +153,56 @@ def generate_post(game):
         "comments": 0
     }
 
-# ==========================
+# ==============
 # UPDATE INDEX
-# ==========================
-def update_index(posts):
-    with open(INDEX_FILE, "r", encoding="utf-8") as f:
-        soup = BeautifulSoup(f, "html.parser")
+# ==============
+def update_index(new_posts):
+    # Olvassuk be a régi posztokat
+    try:
+        with open(INDEX_FILE, "r", encoding="utf-8") as f:
+            soup = BeautifulSoup(f, "html.parser")
+        scripts = soup.find_all("script")
+        for s in scripts:
+            if "AUTO-GENERATED POSTS START" in s.text:
+                old_posts_json = s.text.split("POSTS =")[1].split("// <<< AUTO-GENERATED POSTS END >>>")[0].strip()
+                old_posts = json.loads(old_posts_json)
+                break
+        else:
+            old_posts = []
+    except:
+        old_posts = []
 
-    scripts = soup.find_all("script")
+    # Összefűzzük az új és a régi posztokat
+    all_posts = new_posts + old_posts
+
+    # Frissítés az index.html-ben
     for s in scripts:
         if "AUTO-GENERATED POSTS START" in s.text:
             after = s.text.split("// <<< AUTO-GENERATED POSTS END >>>")[1]
-            new_json = json.dumps(posts, indent=2)
+            new_json = json.dumps(all_posts, indent=2)
             s.string = f"    // <<< AUTO-GENERATED POSTS START >>>\n    const POSTS = {new_json};\n    // <<< AUTO-GENERATED POSTS END >>>{after}"
             break
 
     with open(INDEX_FILE, "w", encoding="utf-8") as f:
         f.write(str(soup))
 
-# ==========================
+# ==============
 # MAIN
-# ==========================
+# ==============
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num_posts",
+    parser.add_argument("--num_posts", type=int, default=3)
+    args = parser.parse_args()
+
+    posts = []
+    for _ in range(args.num_posts):
+        game = random.choice(GAMES)
+        post = generate_post(game)
+        posts.append(post)
+        print(f"Generated: {post['title']} → {post['url']}")
+
+    update_index(posts)
+    print("index.html updated.")
+
+if __name__ == "__main__":
+    main()
