@@ -1,15 +1,16 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>AI Gaming Blog – Reviews, Guides, Cheats, and Tips</title>
-<meta name="description" content="Daily AI-generated gaming reviews, walkthroughs, graphics impressions, cheats, and tips for PC, PlayStation, Xbox, and mobile games."/>
-<meta property="og:title" content="AI Gaming Blog"/>
-<meta property="og:description" content="Reviews, cheats & tips. Fresh posts daily. PC, PlayStation, Xbox & Mobile games."/>
-<meta property="og:type" content="website"/>
-<meta property="og:url" content="https://nagytibormobil.github.io/ai-blog/"/>
-<meta name="robots" content="index,follow"/>
+<meta content="Daily AI-generated gaming reviews, walkthroughs, graphics impressions, cheats, and tips for PC, PlayStation, Xbox, and mobile games." name="description"/>
+<meta content="AI Gaming Blog" property="og:title"/>
+<meta content="Reviews, cheats &amp; tips. Fresh posts daily. PC, PlayStation, Xbox &amp; Mobile games." property="og:description"/>
+<meta content="website" property="og:type"/>
+<meta content="https://nagytibormobil.github.io/ai-blog/" property="og:url"/>
+<meta content="index,follow" name="robots"/>
 <style>
 :root{
   --bg:#0b0f14; --panel:#121821; --muted:#9fb0c3; --text:#eaf1f8; --accent:#5cc8ff; --warn:#ffd166;
@@ -56,7 +57,7 @@ button{cursor:pointer}
 <body>
 <header class="hero">
 <div class="wrap">
-<h1>AI Gaming Blog – Daily Reviews, Guides & Cheats 🎮</h1>
+<h1>AI Gaming Blog – Daily Reviews, Guides &amp; Cheats 🎮</h1>
 <p>Fresh, AI-generated posts about PC, PlayStation, Xbox, and Mobile games. No fluff – just gameplay insights, graphics opinions, walkthroughs, and cheat tips.</p>
 <nav class="top">
 <a class="btn" href="#latest">Latest Posts</a>
@@ -88,7 +89,7 @@ button{cursor:pointer}
 <section class="section" id="popular">
 <h2>Top 3 Popular</h2>
 <div class="grid" id="popularGrid"></div>
-<p class="tiny muted">Based on views & comments. Updated automatically.</p>
+<p class="tiny muted">Based on views &amp; comments. Updated automatically.</p>
 </section>
 <section class="section" id="explore">
 <h2>More to Explore</h2>
@@ -112,10 +113,93 @@ button{cursor:pointer}
 </div>
 <p class="tiny">© <span id="year"></span> AI Gaming Blog</p>
 </section>
-
-<script>
-    // <<< AUTO-GENERATED POSTS START >>>
-    const POSTS = []; // generate_and_save.py fogja frissíteni
+<script>    // <<< AUTO-GENERATED POSTS START >>>
+    const POSTS = [
+  {
+    "title": "The Witcher 3: Wild Hunt",
+    "url": "generated_posts/20250829-121533-The_Witcher_3:_Wild_Hunt.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox",
+      "Switch"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.6,
+    "cover": "Picture/The_Witcher_3:_Wild_Hunt.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Fortnite",
+    "url": "generated_posts/20250829-121538-Fortnite.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox",
+      "Mobile"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.2,
+    "cover": "Picture/Fortnite.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Elden Ring",
+    "url": "generated_posts/20250829-121536-Elden_Ring.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 3.5,
+    "cover": "Picture/Elden_Ring.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "FIFA 23",
+    "url": "generated_posts/20250829-121510-FIFA_23.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 3.4,
+    "cover": "Picture/FIFA_23.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "League of Legends",
+    "url": "generated_posts/20250829-121531-League_of_Legends.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-08-29",
+    "rating": 3.4,
+    "cover": "Picture/League_of_Legends.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "GTA V",
+    "url": "generated_posts/20250829-121523-GTA_V.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.8,
+    "cover": "Picture/GTA_V.jpg",
+    "views": 0,
+    "comments": 0
+  }
+];
     // <<< AUTO-GENERATED POSTS END >>>
 
     // UTIL
@@ -150,3 +234,4 @@ button{cursor:pointer}
     document.getElementById('latestGrid').innerHTML = latest.map(card).join("");
     const popular = [...POSTS].sort((a,b)=> (b.views+(b.comments*3)) - (a.views+(a.comments*3))).slice(0,3);
    
+</script></main></body></html>

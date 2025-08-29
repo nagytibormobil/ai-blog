@@ -4,18 +4,21 @@ import argparse
 import datetime
 import json
 from pathlib import Path
-from bs4 import BeautifulSoup
 import requests
+from bs4 import BeautifulSoup
 
-# =====================
+# ===================
 # SETTINGS
-# =====================
+# ===================
 OUTPUT_DIR = "generated_posts"
-PICTURE_DIR = r"C:\ai_blog\Picture"
 INDEX_FILE = "index.html"
-YOUTUBE_API_KEY = "AIzaSyAXedHcSZ4zUaqSaD3MFahLz75IvSmxggM"
+PICTURE_DIR = "Picture"
 
-# Sample game pool
+# Ensure picture dir exists
+Path(PICTURE_DIR).mkdir(parents=True, exist_ok=True)
+Path(OUTPUT_DIR).mkdir(exist_ok=True)
+
+# Sample games pool
 GAMES = [
     {"name": "Elden Ring", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "FromSoftware", "version": "1.09"},
     {"name": "GTA V", "platforms": ["PC", "PS", "Xbox"], "year": 2013, "publisher": "Rockstar Games", "version": "Latest"},
@@ -27,6 +30,9 @@ GAMES = [
     {"name": "FIFA 23", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "EA Sports", "version": "Final"},
 ]
 
+# YouTube API Key
+YOUTUBE_API_KEY = "AIzaSyAXedHcSZ4zUaqSaD3MFahLz75IvSmxggM"
+
 CHEATS_EXAMPLES = [
     "God Mode: IDDQD",
     "Infinite Ammo: GIVEALL",
@@ -35,66 +41,73 @@ CHEATS_EXAMPLES = [
     "No Clip Mode: NOCLIP"
 ]
 
-# =====================
+# ===================
 # HELPER FUNCTIONS
-# =====================
-def sanitize_filename(name):
-    return name.lower().replace(" ", "-").replace(":", "")
-
-def download_game_image(game_name):
-    filename = f"{sanitize_filename(game_name)}.jpg"
-    path = os.path.join(PICTURE_DIR, filename)
-    if not os.path.exists(path):
-        # Placeholder image
-        url = f"https://placehold.co/800x450?text={game_name.replace(' ', '+')}"
-        r = requests.get(url)
-        os.makedirs(PICTURE_DIR, exist_ok=True)
-        with open(path, "wb") as f:
-            f.write(r.content)
-    return os.path.relpath(path).replace("\\", "/")
-
+# ===================
 def fetch_youtube_video(game_name):
-    url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q={game_name}+gameplay&key={YOUTUBE_API_KEY}&type=video"
-    r = requests.get(url).json()
-    items = r.get("items", [])
-    if not items:
+    """Fetch the first relevant YouTube video using API."""
+    import urllib.parse
+    import requests
+    query = urllib.parse.quote(f"{game_name} gameplay")
+    url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&q={query}&key={YOUTUBE_API_KEY}&type=video&maxResults=1"
+    try:
+        resp = requests.get(url).json()
+        video_id = resp["items"][0]["id"]["videoId"]
+        return f"https://www.youtube.com/embed/{video_id}"
+    except Exception:
         return "https://www.youtube.com/embed/dQw4w9WgXcQ"
-    video_id = items[0]["id"]["videoId"]
-    return f"https://www.youtube.com/embed/{video_id}"
 
-# =====================
-# GENERATE POST
-# =====================
+def download_cover_image(game_name):
+    """Download placeholder cover image from RAWG or placeholder if failed."""
+    filename = f"{game_name.replace(' ', '_')}.jpg"
+    filepath = os.path.join(PICTURE_DIR, filename)
+    if not os.path.exists(filepath):
+        # Use RAWG API image search
+        try:
+            rawg_api_key = "2fafa16ea4c147438f3b0cb031f8dbb7"
+            resp = requests.get(f"https://api.rawg.io/api/games?search={game_name}&key={rawg_api_key}").json()
+            img_url = resp["results"][0]["background_image"]
+            r = requests.get(img_url)
+            if r.status_code == 200:
+                with open(filepath, "wb") as f:
+                    f.write(r.content)
+        except Exception:
+            # fallback placeholder
+            r = requests.get(f"https://placehold.co/800x450?text={game_name.replace(' ','+')}")
+            with open(filepath, "wb") as f:
+                f.write(r.content)
+    return filepath.replace("\\","/")
+
 def generate_post(game):
     now = datetime.datetime.now()
     timestamp = now.strftime("%Y%m%d-%H%M%S")
-    filename = f"{timestamp}-{sanitize_filename(game['name'])}.html"
+    filename = f"{timestamp}-{game['name'].replace(' ', '_')}.html"
     filepath = os.path.join(OUTPUT_DIR, filename)
-
     title = f"{game['name']} Review & Guide"
     rating = round(random.uniform(2.5, 5.0), 1)
     youtube = fetch_youtube_video(game['name'])
     cheats = random.sample(CHEATS_EXAMPLES, k=2)
-    cover = download_game_image(game['name'])
+    cover_path = download_cover_image(game['name'])
 
     description = f"""
-    <p><strong>{game['name']}</strong> is one of the most popular games released in {game['year']}, developed by {game['publisher']}. 
-    Platforms: {', '.join(game['platforms'])}. In this review we explore gameplay, graphics, and tips.</p>
-    <p>Discover strategies, secrets, and tricks to enhance your experience. Enjoy replay value and maximize fun with our AI-generated guide.</p>
+    <p><strong>{game['name']}</strong> is one of the most exciting games released in {game['year']}. 
+    Developed by {game['publisher']}, it has become a landmark title for {', '.join(game['platforms'])} gamers worldwide.</p>
+
+    <p>In this review, we explore gameplay mechanics, graphics, and tips unique to {game['name']}.</p>
     """
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>{title}</title>
-<meta name="description" content="Review, cheats, and gameplay tips for {game['name']}." />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8"/>
+  <title>{title}</title>
+  <meta name="description" content="Review, cheats, and gameplay tips for {game['name']}."/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
 <body style="font-family:Arial, sans-serif; max-width:800px; margin:0 auto; line-height:1.6; padding:20px;">
-<a href="../index.html">🏠 Home</a>
+<a href="../index.html">⬅ Back to Home</a>
 <h1>{game['name']}</h1>
-<img src="{cover}" alt="{game['name']} Gameplay & Tips" style="width:100%; border-radius:8px;" />
+<img src="{cover_path}" alt="{game['name']} gameplay cover" style="width:100%; border-radius:8px;"/>
 <h2>About the Game</h2>
 <ul>
 <li><strong>Release Year:</strong> {game['year']}</li>
@@ -115,46 +128,52 @@ def generate_post(game):
 <h2>AI Rating</h2>
 <p>⭐ {rating}/5</p>
 </body>
-</html>"""
-
-    Path(OUTPUT_DIR).mkdir(exist_ok=True)
-    with open(filepath, "w", encoding="utf-8") as f:
+</html>
+"""
+    with open(filepath,"w",encoding="utf-8") as f:
         f.write(html)
 
     return {
         "title": game["name"],
-        "url": f"{OUTPUT_DIR}/{filename}".replace("\\", "/"),
+        "url": filepath.replace("\\","/"),
         "platform": game["platforms"],
         "date": now.strftime("%Y-%m-%d"),
         "rating": rating,
-        "cover": cover,
-        "views": 0,
-        "comments": 0
+        "cover": cover_path,
+        "views":0,
+        "comments":0
     }
 
-# =====================
-# UPDATE INDEX
-# =====================
 def update_index(posts):
-    with open(INDEX_FILE, "r", encoding="utf-8") as f:
-        soup = BeautifulSoup(f, "html.parser")
+    with open(INDEX_FILE,"r",encoding="utf-8") as f:
+        soup = BeautifulSoup(f,"html.parser")
 
-    # Remove duplicates by title
-    unique_posts = []
-    titles = set()
-    for p in posts:
-        if p["title"] not in titles:
-            titles.add(p["title"])
-            unique_posts.append(p)
-
-    # Update POSTS array
     scripts = soup.find_all("script")
     for s in scripts:
         if "AUTO-GENERATED POSTS START" in s.text:
             before = s.text.split("POSTS =")[0]
             after = s.text.split("// <<< AUTO-GENERATED POSTS END >>>")[1]
-            new_json = json.dumps(unique_posts, indent=2)
+            # remove duplicates
+            unique_posts = {p["title"]:p for p in posts}
+            new_json = json.dumps(list(unique_posts.values()), indent=2)
             s.string = f"    // <<< AUTO-GENERATED POSTS START >>>\n    const POSTS = {new_json};\n    // <<< AUTO-GENERATED POSTS END >>>{after}"
             break
 
-    with open(INDEX_FI_
+    with open(INDEX_FILE,"w",encoding="utf-8") as f:
+        f.write(str(soup))
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--num_posts", type=int, default=5)
+    args = parser.parse_args()
+    posts = []
+    for i in range(args.num_posts):
+        game = random.choice(GAMES)
+        post = generate_post(game)
+        posts.append(post)
+        print(f"Generated: {post['title']} → {post['url']}")
+    update_index(posts)
+    print("index.html updated.")
+
+if __name__=="__main__":
+    main()
