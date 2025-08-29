@@ -255,6 +255,7 @@
 ];
     // <<< AUTO-GENERATED POSTS END >>>
 
+    // ======== UTIL ========
     const byDateDesc = (a,b)=> new Date(b.date) - new Date(a.date);
     const clamp = (n,min,max)=> Math.max(min, Math.min(max,n));
     function starHTML(r){
@@ -264,6 +265,7 @@
       return "⭐".repeat(full) + (half?"½":"") + "☆".repeat(empty);
     }
     function placeholder(title){
+      // SVG placeholder with initials
       const init = (title||"Game").split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||"G").join("");
       const svg = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'>
         <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#0f141c'/><stop offset='100%' stop-color='#121821'/></linearGradient></defs>
@@ -289,10 +291,16 @@
       `;
     }
 
+    // ======== RENDER ========
+    // Latest (sorted by date)
     const latest = [...POSTS].sort(byDateDesc).slice(0, 9);
     document.getElementById('latestGrid').innerHTML = latest.map(card).join("");
+
+    // Popular (by views+comments)
     const popular = [...POSTS].sort((a,b)=> (b.views+(b.comments*3)) - (a.views+(a.comments*3))).slice(0,3);
     document.getElementById('popularGrid').innerHTML = popular.map(card).join("");
+
+    // Explore (3 random all different)
     function pick3(arr){
       const used = new Set(); const out=[];
       while(out.length<3 && used.size<arr.length){
@@ -303,6 +311,7 @@
     }
     document.getElementById('exploreGrid').innerHTML = pick3(POSTS).map(card).join("");
 
+    // Search dropdown A–Z
     const pick = document.getElementById('pick');
     [...POSTS].sort((a,b)=> a.title.localeCompare(b.title)).forEach(p=>{
       const o=document.createElement('option'); o.value=p.url; o.textContent=p.title; pick.appendChild(o);
@@ -316,6 +325,7 @@
       else alert("No match.");
     };
 
+    // Year in footer
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
