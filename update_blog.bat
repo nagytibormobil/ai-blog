@@ -1,15 +1,17 @@
 @echo off
 cd /d C:\ai_blog
 
-:: Generál 5 új HTML posztot
-py generate_and_save.py --num_posts 5
+call ai-env\Scripts\activate.bat
 
-:: Frissít GitHubra
+python generate_and_save.py --num_posts 5
+
 git add .
-git commit -m "Automatikus frissítés új HTML posztokkal"
-git push
+git commit -m "Automatikus frissítés új HTML posztokkal" || echo "⚠️ Nincs új változás a commit-hoz"
+git push origin main
 
-echo.
 echo ===============================
 echo ✅ Blog frissítve és feltöltve!
 echo ===============================
+
+:: Automatikusan megnyitja a böngészőben a blog főoldalt
+start https://nagytibormobil.github.io/ai-blog/
