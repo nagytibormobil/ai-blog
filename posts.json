@@ -240,5 +240,63 @@
     "cover": "Picture/elden-ring.jpg",
     "views": 0,
     "comments": 0
+  },
+  {
+    "title": "Fortnite",
+    "slug": "fortnite",
+    "url": "generated_posts/20250829-162321-fortnite.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox",
+      "Mobile"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.5,
+    "cover": "Picture/fortnite.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "The Elder Scrolls VI",
+    "slug": "the-elder-scrolls-vi",
+    "url": "generated_posts/20250829-162323-the-elder-scrolls-vi.html",
+    "platform": [
+      "PC",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.3,
+    "cover": "Picture/the-elder-scrolls-vi.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Cabernet",
+    "slug": "cabernet",
+    "url": "generated_posts/20250829-162330-cabernet.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.0,
+    "cover": "Picture/cabernet.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "No Case Should Remain Unsolved",
+    "slug": "no-case-should-remain-unsolved",
+    "url": "generated_posts/20250829-162338-no-case-should-remain-unsolved.html",
+    "platform": [
+      "PC",
+      "Apple Macintosh",
+      "Nintendo"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.1,
+    "cover": "Picture/no-case-should-remain-unsolved.jpg",
+    "views": 0,
+    "comments": 0
   }
 ]
