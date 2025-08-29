@@ -1,17 +1,21 @@
 @echo off
 cd /d C:\ai_blog
 
-:: Aktiváljuk a Python virtuális környezetet
+:: Virtuális környezet aktiválás
 call ai-env\Scripts\activate.bat
 
-:: Generál új HTML posztokat
-python generate_and_save.py --num_posts 3
+:: Új poszt generálása (ha több kell: --num_posts 5 stb.)
+python generate_and_save.py --num_posts 1
 
-:: GitHub frissítés és feltöltés
+:: Index.html frissítése posts.json alapján
+python rebuild_index.py
+
+:: Git feltöltés
 git add .
-git commit -m "Automatikus frissítés új HTML posztokkal"
+git commit -m "Automatikus frissítés új posztokkal és index frissítéssel"
 git push origin main
 
 echo ===============================
 echo ✅ Blog frissítve és feltöltve!
 echo ===============================
+pause
