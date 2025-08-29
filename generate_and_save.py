@@ -3,9 +3,9 @@ import random
 import argparse
 import datetime
 import json
+import requests
 from pathlib import Path
 from bs4 import BeautifulSoup
-import requests
 
 # ==============
 # SETTINGS
@@ -14,13 +14,14 @@ OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
 YOUTUBE_API_KEY = "AIzaSyAXedHcSZ4zUaqSaD3MFahLz75IvSmxggM"
 
+# Sample game pool
 GAMES = [
     {"name": "Elden Ring", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "FromSoftware", "version": "1.09"},
     {"name": "GTA V", "platforms": ["PC", "PS", "Xbox"], "year": 2013, "publisher": "Rockstar Games", "version": "Latest"},
-    {"name": "The Witcher 3: Wild Hunt", "platforms": ["PC", "PS", "Xbox", "Switch"], "year": 2015, "publisher": "CD Projekt Red", "version": "Next-Gen"},
+    {"name": "The Witcher 3 Wild Hunt", "platforms": ["PC", "PS", "Xbox", "Switch"], "year": 2015, "publisher": "CD Projekt Red", "version": "Next-Gen"},
     {"name": "Minecraft", "platforms": ["PC", "Mobile", "Xbox", "PS"], "year": 2011, "publisher": "Mojang", "version": "1.20"},
     {"name": "Fortnite", "platforms": ["PC", "PS", "Xbox", "Mobile"], "year": 2017, "publisher": "Epic Games", "version": "Chapter 4"},
-    {"name": "Call of Duty: Modern Warfare II", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "Activision", "version": "1.0"},
+    {"name": "Call of Duty Modern Warfare II", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "Activision", "version": "1.0"},
     {"name": "League of Legends", "platforms": ["PC"], "year": 2009, "publisher": "Riot Games", "version": "13.8"},
     {"name": "FIFA 23", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "EA Sports", "version": "Final"},
 ]
@@ -37,19 +38,29 @@ CHEATS_EXAMPLES = [
 # HELPERS
 # ==============
 def slugify(name):
+    # Biztonságos fájlnév GitHub Pages-hez
     return name.lower().replace(" ", "-").replace(":", "").replace("_", "-") + "-cheats-tips.html"
 
-def fetch_youtube_video(game_name):
+def get_youtube_video(game_name):
+    # YouTube API keresés releváns videóért
+    url = "https://www.googleapis.com/youtube/v3/search"
+    params = {
+        "part": "snippet",
+        "q": f"{game_name} gameplay",
+        "type": "video",
+        "maxResults": 1,
+        "key": YOUTUBE_API_KEY
+    }
     try:
-        url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&q={game_name.replace(' ','+')}&type=video&maxResults=1&key={YOUTUBE_API_KEY}"
-        response = requests.get(url, timeout=5)
-        data = response.json()
-        if "items" in data and len(data["items"]) > 0:
-            video_id = data["items"][0]["id"]["videoId"]
+        r = requests.get(url, params=params)
+        r.raise_for_status()
+        items = r.json().get("items", [])
+        if items:
+            video_id = items[0]["id"]["videoId"]
             return f"https://www.youtube.com/embed/{video_id}"
-    except:
-        pass
-    # fallback video
+    except Exception as e:
+        print(f"Error fetching YouTube video for {game_name}: {e}")
+    # Ha hiba, vagy nincs találat, használjunk placeholder videót
     return "https://www.youtube.com/embed/dQw4w9WgXcQ"
 
 # ==============
@@ -62,7 +73,7 @@ def generate_post(game):
 
     title = f"{game['name']} Cheats & Tips"
     rating = round(random.uniform(2.5, 5.0), 1)
-    youtube = fetch_youtube_video(game["name"])
+    youtube = get_youtube_video(game["name"])
     cheats = random.sample(CHEATS_EXAMPLES, k=2)
 
     cover = f"https://placehold.co/800x450?text={game['name'].replace(' ','+')}"
@@ -70,9 +81,15 @@ def generate_post(game):
     description = f"""
     <p><strong>{game['name']}</strong> is one of the most exciting games released in {game['year']}. 
     Developed by {game['publisher']}, it has become a landmark title for {', '.join(game['platforms'])} gamers worldwide.</p>
-    <p>In this in-depth review, we explore the storyline, graphics, gameplay mechanics, and why this game continues to capture players' attention.</p>
-    <p>We also cover tips and tricks to enhance your playthrough, secrets hidden across the game world, and strategies to maximize your performance.</p>
-    <p>Fans of {game['name']} often praise its replay value, and with our AI-generated guide, you’ll uncover even more details.</p>
+
+    <p>In this in-depth review, we explore the storyline, graphics, gameplay mechanics, and why this game continues to capture players' attention. 
+    From immersive open-world exploration to breathtaking visuals, {game['name']} delivers a unique gaming experience.</p>
+
+    <p>We also cover tips and tricks to enhance your playthrough, secrets hidden across the game world, 
+    and strategies to maximize your performance whether you are a casual or hardcore gamer.</p>
+
+    <p>Fans of {game['name']} often praise its replay value, and with our AI-generated guide, 
+    you’ll be able to uncover even more details that make this title worth playing again and again.</p>
     """
 
     html = f"""<!DOCTYPE html>
@@ -84,7 +101,7 @@ def generate_post(game):
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
 <body style="font-family:Arial, sans-serif; max-width:800px; margin:0 auto; line-height:1.6; padding:20px;">
-  <h1>{game['name']} Cheats & Tips</h1>
+  <h1>{title}</h1>
   <img src="{cover}" alt="{game['name']} gameplay and tips" style="width:100%; border-radius:8px;" />
 
   <h2>About the Game</h2>
@@ -93,8 +110,8 @@ def generate_post(game):
     <li><strong>Publisher:</strong> {game['publisher']}</li>
     <li><strong>Version:</strong> {game['version']}</li>
     <li><strong>Platforms:</strong> {', '.join(game['platforms'])}</li>
-    <li><strong>Offline:</strong> {random.choice(['Yes','No'])}</li>
-    <li><strong>Multiplayer:</strong> {random.choice(['Yes','No'])}</li>
+    <li><strong>Offline:</strong> {random.choice(["Yes","No"])}</li>
+    <li><strong>Multiplayer:</strong> {random.choice(["Yes","No"])}</li>
   </ul>
 
   <h2>Full Review</h2>
@@ -118,20 +135,19 @@ def generate_post(game):
 
   <hr>
   <h2>Sponsored</h2>
-  <p><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank">📱 Earn real money while you play – Honeygain</a></p>
+  <p><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank" style="font-size:18px;">📱 Earn real money while you play – Honeygain</a></p>
   <p><a href="https://icmarkets.com/?camp=3992" target="_blank">🌍 ICMarkets – trade like a pro</a></p>
   <p><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">🏦 Dukascopy – promo code: E12831</a></p>
 
   <hr>
   <footer style="font-size:12px; color:#666;">
-    <p><strong>Comment Policy:</strong> No spam, ads, offensive language, or disallowed topics. Max 10 comments/day. All comments moderated.</p>
+    <p><strong>Comment Policy:</strong> No spam, ads, offensive language, or disallowed topics (adult, drugs, war, terrorism). Max 10 comments per day. All comments are moderated.</p>
     <p><strong>Terms:</strong> Informational purposes only. Trademarks belong to their owners. Affiliate links may generate commission.</p>
     <p>© {now.year} AI Gaming Blog</p>
   </footer>
 </body>
 </html>
 """
-
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(html)
 
@@ -153,15 +169,12 @@ def update_index(posts):
     with open(INDEX_FILE, "r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, "html.parser")
 
-    # Latest 12 posts a főoldalon
-    latest_posts = posts[-12:]
-
     scripts = soup.find_all("script")
     for s in scripts:
         if "AUTO-GENERATED POSTS START" in s.text:
             before = s.text.split("POSTS =")[0]
             after = s.text.split("// <<< AUTO-GENERATED POSTS END >>>")[1]
-            new_json = json.dumps(latest_posts, indent=2)
+            new_json = json.dumps(posts, indent=2)
             s.string = f"    // <<< AUTO-GENERATED POSTS START >>>\n    const POSTS = {new_json};\n    // <<< AUTO-GENERATED POSTS END >>>{after}"
             break
 
@@ -179,7 +192,7 @@ def main():
     Path(OUTPUT_DIR).mkdir(exist_ok=True)
 
     posts = []
-    for i in range(args.num_posts):
+    for _ in range(args.num_posts):
         game = random.choice(GAMES)
         post = generate_post(game)
         posts.append(post)
