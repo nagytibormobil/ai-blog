@@ -5,7 +5,7 @@ cd /d C:\ai_blog
 call ai-env\Scripts\activate.bat
 
 :: Generál új HTML posztokat
-python generate_and_save.py --num_posts 1
+python generate_and_save.py --num_posts 3
 
 :: GitHub frissítés és feltöltés
 git add .
