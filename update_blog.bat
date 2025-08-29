@@ -6,10 +6,9 @@ call ai-env\Scripts\activate.bat
 python generate_and_save.py --num_posts 12
 
 git add .
-git commit -m "Automatikus frissítés új HTML posztokkal %DATE% %TIME%"
+git commit -m "Automatikus frissítés új HTML posztokkal"
 git push origin main
 
 echo ===============================
 echo ✅ Blog frissítve és feltöltve!
 echo ===============================
-
