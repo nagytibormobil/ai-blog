@@ -18,4 +18,3 @@ git push origin main
 echo ===============================
 echo ✅ Blog frissítve és feltöltve!
 echo ===============================
-pause

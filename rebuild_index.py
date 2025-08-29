@@ -1,4 +1,12 @@
-<!DOCTYPE html>
+import json
+from datetime import datetime
+
+# Fájlok
+POSTS_JSON = "posts.json"
+INDEX_HTML = "index.html"
+
+# HTML sablon fej + vég (amit küldtél, az alapján szétvágva)
+HTML_HEAD = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -134,50 +142,9 @@
 <script>
     // <<< AUTO-GENERATED POSTS START >>>
     const POSTS = 
-[
-  {
-    "title": "GTA V",
-    "url": "generated_posts/20250829-151941-GTA_V.html",
-    "platform": [
-      "PC",
-      "PS",
-      "Xbox"
-    ],
-    "date": "2025-08-29",
-    "rating": 4.6,
-    "cover": "",
-    "views": 0,
-    "comments": 0
-  },
-  {
-    "title": "GTA V",
-    "url": "generated_posts/20250829-152124-GTA_V.html",
-    "platform": [
-      "PC",
-      "PS",
-      "Xbox"
-    ],
-    "date": "2025-08-29",
-    "rating": 4.6,
-    "cover": "",
-    "views": 0,
-    "comments": 0
-  },
-  {
-    "title": "GTA V",
-    "url": "generated_posts/20250829-152334-GTA_V.html",
-    "platform": [
-      "PC",
-      "PS",
-      "Xbox"
-    ],
-    "date": "2025-08-29",
-    "rating": 4.6,
-    "cover": "",
-    "views": 0,
-    "comments": 0
-  }
-];
+"""
+
+HTML_FOOT = """;
     // <<< AUTO-GENERATED POSTS END >>>
 
     const byDateDesc = (a,b)=> new Date(b.date) - new Date(a.date);
@@ -189,7 +156,7 @@
       return "⭐".repeat(full) + (half?"½":"") + "☆".repeat(empty);
     }
     function placeholder(title){
-      const init = (title||"Game").split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||"G").join("");
+      const init = (title||"Game").split(/\\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||"G").join("");
       const svg = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'>
         <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#0f141c'/><stop offset='100%' stop-color='#121821'/></linearGradient></defs>
         <rect fill='url(#g)' width='100%' height='100%'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' fill='#5cc8ff' font-size='120' font-family='Arial, Helvetica, sans-serif'>${init}</text>
@@ -245,3 +212,25 @@
   </script>
 </body>
 </html>
+"""
+
+def main():
+    try:
+        with open(POSTS_JSON, "r", encoding="utf-8") as f:
+            posts = json.load(f)
+    except FileNotFoundError:
+        print("❌ Nem található a posts.json")
+        return
+
+    # JSON → szépen formázva JS-be
+    posts_js = json.dumps(posts, indent=2, ensure_ascii=False)
+
+    with open(INDEX_HTML, "w", encoding="utf-8") as f:
+        f.write(HTML_HEAD)
+        f.write(posts_js)
+        f.write(HTML_FOOT)
+
+    print(f"✅ {INDEX_HTML} sikeresen frissítve {len(posts)} poszttal.")
+
+if __name__ == "__main__":
+    main()
