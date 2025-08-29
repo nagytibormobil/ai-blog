@@ -5,14 +5,16 @@ import datetime
 import json
 from pathlib import Path
 from bs4 import BeautifulSoup
+import requests
 
 # ==============
 # SETTINGS
 # ==============
 OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
+YOUTUBE_API_KEY = "AIzaSyAXedHcSZ4zUaqSaD3MFahLz75IvSmxggM"
 
-# Sample game pool (népszerűbb címekből válogatva)
+# Sample game pool
 GAMES = [
     {"name": "Elden Ring", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "FromSoftware", "version": "1.09"},
     {"name": "GTA V", "platforms": ["PC", "PS", "Xbox"], "year": 2013, "publisher": "Rockstar Games", "version": "Latest"},
@@ -24,12 +26,6 @@ GAMES = [
     {"name": "FIFA 23", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "EA Sports", "version": "Final"},
 ]
 
-YOUTUBE_EXAMPLES = [
-    "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    "https://www.youtube.com/embed/9bZkp7q19f0",
-    "https://www.youtube.com/embed/3fumBcKC6RE"
-]
-
 CHEATS_EXAMPLES = [
     "God Mode: IDDQD",
     "Infinite Ammo: GIVEALL",
@@ -37,6 +33,28 @@ CHEATS_EXAMPLES = [
     "Max Money: RICHGUY",
     "No Clip Mode: NOCLIP"
 ]
+
+# ==============
+# YOUTUBE SEARCH
+# ==============
+def get_youtube_video(game_name):
+    """Search for a YouTube gameplay video using the API"""
+    query = f"{game_name} gameplay"
+    url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q={query}&key={YOUTUBE_API_KEY}"
+
+    try:
+        resp = requests.get(url)
+        data = resp.json()
+
+        if "items" in data and len(data["items"]) > 0:
+            video_id = data["items"][0]["id"]["videoId"]
+            return f"https://www.youtube.com/embed/{video_id}"
+        else:
+            # fallback ha nincs találat
+            return "https://www.youtube.com/embed/dQw4w9WgXcQ"
+    except Exception as e:
+        print(f"❌ YouTube API error: {e}")
+        return "https://www.youtube.com/embed/dQw4w9WgXcQ"
 
 # ==============
 # GENERATE POST
@@ -49,7 +67,7 @@ def generate_post(game):
 
     title = f"{game['name']} Review & Guide"
     rating = round(random.uniform(2.5, 5.0), 1)
-    youtube = random.choice(YOUTUBE_EXAMPLES)
+    youtube = get_youtube_video(game['name'])
     cheats = random.sample(CHEATS_EXAMPLES, k=2)
 
     description = f"""
@@ -143,11 +161,9 @@ def update_index(posts):
     with open(INDEX_FILE, "r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, "html.parser")
 
-    # Find JS POSTS array
     scripts = soup.find_all("script")
     for s in scripts:
         if "AUTO-GENERATED POSTS START" in s.text:
-            # replace JSON array
             before = s.text.split("POSTS =")[0]
             after = s.text.split("// <<< AUTO-GENERATED POSTS END >>>")[1]
             new_json = json.dumps(posts, indent=2)
