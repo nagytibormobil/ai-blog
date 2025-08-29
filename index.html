@@ -3,18 +3,51 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>AI Gaming Blog</title>
-<meta content="Latest AI-generated game guides, cheats, and tips." name="description"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Gaming Blog</title>
+<meta content="AI-generated gaming blog with reviews, cheats, and gameplay videos for popular games." name="description"/>
+<style>
+    body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+    header, footer { text-align: center; margin-bottom: 20px; }
+    h1, h2 { color: #222; }
+    .post-list { display: flex; flex-wrap: wrap; gap: 20px; }
+    .post-card { width: calc(33% - 20px); border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .post-card img { width: 100%; display: block; }
+    .post-card h3 { margin: 10px; font-size: 1.1rem; }
+    .post-card a { text-decoration: none; color: inherit; }
+    @media(max-width: 768px) { .post-card { width: 48%; } }
+    @media(max-width: 480px) { .post-card { width: 100%; } }
+  </style>
 </head>
-<body style="font-family:Arial, sans-serif; max-width:1000px; margin:0 auto; padding:20px;">
+<body>
+<header>
 <h1>AI Gaming Blog</h1>
+<p>Automated gaming reviews, cheats, and gameplay videos</p>
+</header>
+<section>
 <h2>Latest Posts</h2>
-<div id="latest-posts"></div>
+<div class="post-list" id="latest-posts"></div>
+</section>
+<section>
 <h2>Browse A–Z</h2>
-<div id="all-posts"></div>
+<div class="post-list" id="all-posts"></div>
+</section>
 <script>// <<< AUTO-GENERATED POSTS START >>>
 const POSTS = [
+  {
+    "title": "Elden Ring",
+    "url": "generated_posts/elden-ring-cheats-tips.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 2.8,
+    "cover": "https://placehold.co/800x450?text=Elden+Ring",
+    "views": 0,
+    "comments": 0
+  },
   {
     "title": "FIFA 23",
     "url": "generated_posts/fifa-23-cheats-tips.html",
@@ -24,37 +57,8 @@ const POSTS = [
       "Xbox"
     ],
     "date": "2025-08-29",
-    "rating": 2.9,
+    "rating": 4.1,
     "cover": "https://placehold.co/800x450?text=FIFA+23",
-    "views": 0,
-    "comments": 0
-  },
-  {
-    "title": "Fortnite",
-    "url": "generated_posts/fortnite-cheats-tips.html",
-    "platform": [
-      "PC",
-      "PS",
-      "Xbox",
-      "Mobile"
-    ],
-    "date": "2025-08-29",
-    "rating": 3.4,
-    "cover": "https://placehold.co/800x450?text=Fortnite",
-    "views": 0,
-    "comments": 0
-  },
-  {
-    "title": "GTA V",
-    "url": "generated_posts/gta-v-cheats-tips.html",
-    "platform": [
-      "PC",
-      "PS",
-      "Xbox"
-    ],
-    "date": "2025-08-29",
-    "rating": 3.2,
-    "cover": "https://placehold.co/800x450?text=GTA+V",
     "views": 0,
     "comments": 0
   },
@@ -68,12 +72,41 @@ const POSTS = [
       "PS"
     ],
     "date": "2025-08-29",
-    "rating": 3.2,
+    "rating": 4.2,
     "cover": "https://placehold.co/800x450?text=Minecraft",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Call of Duty: Modern Warfare II",
+    "url": "generated_posts/call-of-duty-modern-warfare-ii-cheats-tips.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 3.5,
+    "cover": "https://placehold.co/800x450?text=Call+of+Duty:+Modern+Warfare+II",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "League of Legends",
+    "url": "generated_posts/league-of-legends-cheats-tips.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-08-29",
+    "rating": 3.6,
+    "cover": "https://placehold.co/800x450?text=League+of+Legends",
     "views": 0,
     "comments": 0
   }
 ];
 // <<< AUTO-GENERATED POSTS END >>></script>
+<footer>
+<p>© AI Gaming Blog, 2025. All posts are AI-generated for informational purposes only.</p>
+</footer>
 </body>
 </html>
