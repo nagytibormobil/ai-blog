@@ -14,27 +14,7 @@ from urllib.parse import quote
 OUTPUT_DIR = "generated_posts"
 PICTURE_DIR = "Picture"
 INDEX_FILE = "index.html"
-
-# Játék adatbázis (példa)
-GAMES = [
-    {"name": "Elden Ring", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "FromSoftware", "version": "1.09"},
-    {"name": "GTA V", "platforms": ["PC", "PS", "Xbox"], "year": 2013, "publisher": "Rockstar Games", "version": "Latest"},
-    {"name": "The Witcher 3 Wild Hunt", "platforms": ["PC", "PS", "Xbox", "Switch"], "year": 2015, "publisher": "CD Projekt Red", "version": "Next-Gen"},
-    {"name": "Minecraft", "platforms": ["PC", "Mobile", "Xbox", "PS"], "year": 2011, "publisher": "Mojang", "version": "1.20"},
-    {"name": "Fortnite", "platforms": ["PC", "PS", "Xbox", "Mobile"], "year": 2017, "publisher": "Epic Games", "version": "Chapter 4"},
-    {"name": "Call of Duty Modern Warfare II", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "Activision", "version": "1.0"},
-    {"name": "League of Legends", "platforms": ["PC"], "year": 2009, "publisher": "Riot Games", "version": "13.8"},
-    {"name": "FIFA 23", "platforms": ["PC", "PS", "Xbox"], "year": 2022, "publisher": "EA Sports", "version": "Final"},
 ]
-
-CHEATS_EXAMPLES = [
-    "God Mode: IDDQD",
-    "Infinite Ammo: GIVEALL",
-    "Unlock All Levels: LEVELUP",
-    "Max Money: RICHGUY",
-    "No Clip Mode: NOCLIP"
-]
-
 BAD_WORDS = ["sex", "porn", "fuck", "shit", "drugs", "violence"]  # például
 
 # =========================
