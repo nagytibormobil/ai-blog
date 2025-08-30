@@ -1,7 +1,6 @@
 import os
-import datetime
-import random
 from pathlib import Path
+import datetime
 
 # Mappák
 BASE_DIR = Path("C:/ai_blog")
@@ -9,7 +8,7 @@ PICTURE_DIR = BASE_DIR / "Picture"
 POST_DIR = BASE_DIR / "generated_posts"
 TEMPLATE_FILE = BASE_DIR / "templates/post_template.html"
 
-# Példa játék adatok (később lehet API-val tölteni)
+# Példa játék adatok (API vagy bővíthető)
 GAMES = [
     {
         "title": "GTA V",
@@ -52,7 +51,6 @@ def generate_post(game):
     filename = sanitize_filename(game["title"]) + ".html"
     post_path = POST_DIR / filename
 
-    # Ellenőrizzük, hogy már létezik-e
     if post_path.exists():
         print(f"Skipping '{game['title']}' (already exists).")
         return
@@ -62,18 +60,18 @@ def generate_post(game):
     cheats_html = "".join(f"<li>{c}</li>" for c in cheats)
     extra_instruction = ""
     if len(game["cheats"]) > 15:
-        extra_instruction = "Use the following keys to activate extra cheats in-game."
+        extra_instruction = "<p>Use the following keys to activate extra cheats in-game.</p>"
 
-    # Betöltjük a template-et
+    # Betöltjük a sablont
     with open(TEMPLATE_FILE, "r", encoding="utf-8") as f:
         template = f.read()
 
-    # Cseréljük a placeholder-eket
+    # Helyettesítések
     html = template.replace("{{title}}", game["title"])
     html = html.replace("{{short_description}}", game["about"])
     html = html.replace("{{about}}", game["about"])
     html = html.replace("{{rating}}", str(game["rating"]))
-    html = html.replace("{{image}}", game["image_name"])
+    html = html.replace("{{image}}", str(PICTURE_DIR / game["image_name"]))
     html = html.replace("{{cheats}}", cheats_html)
     html = html.replace("{{extra_cheats_instruction}}", extra_instruction)
     html = html.replace("{{affiliate_links}}", "\n".join(game["affiliate_links"]))
