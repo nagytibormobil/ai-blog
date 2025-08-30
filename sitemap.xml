@@ -133,6 +133,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/ghost-of-tsushima.html</loc>
+    <lastmod>2025-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/ghostrunner.html</loc>
     <lastmod>2025-08-30</lastmod>
     <changefreq>daily</changefreq>
@@ -278,6 +284,12 @@
   </url>
   <url>
     <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/the-wolf-among-us.html</loc>
+    <lastmod>2025-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/tom-clancys-the-division.html</loc>
     <lastmod>2025-08-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
