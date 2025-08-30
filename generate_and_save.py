@@ -1,107 +1,87 @@
 import os
 import json
-import random
-import datetime
-from jinja2 import Template
+import requests
+from datetime import datetime
+from pathlib import Path
+from slugify import slugify
 
-# --- Config ---
-POSTS_DIR = "generated_posts"
-PICTURE_DIR = "Picture"
-TEMPLATE_PATH = "templates/post_template.html"
-NUM_POSTS = 5  # Alapértelmezett, --num_posts opcióval felülírható
+# Config
+POSTS_DIR = Path("generated_posts")
+PICTURES_DIR = Path("Picture")
+TEMPLATE_FILE = Path("templates/post_template.html")
+RAWG_API_KEY = "2fafa16ea4c147438f3b0cb031f8dbb7"
+NUM_POSTS = 12
 
-# Példa játék lista, a valós adat lehet API-ból
-GAMES = [
-    {"title": "GTA V", "platforms": ["PC", "PS", "Xbox"], "description": "Open-world action game by Rockstar."},
-    {"title": "FIFA 23", "platforms": ["PC", "PS", "Xbox"], "description": "Soccer simulation with realistic gameplay."},
-    {"title": "Minecraft", "platforms": ["PC", "Mobile", "Xbox", "PS"], "description": "Block-building sandbox adventure."},
-    {"title": "The Witcher 3 Wild Hunt", "platforms": ["PC", "PS", "Xbox", "Switch"], "description": "Story-driven fantasy RPG."},
-    {"title": "Half-Life 2 Episode Two", "platforms": ["PC"], "description": "Sci-fi FPS sequel with immersive story."},
-    # ... további játékok
-]
+# Ensure folders exist
+POSTS_DIR.mkdir(exist_ok=True)
+PICTURES_DIR.mkdir(exist_ok=True)
 
-# --- Segéd függvények ---
-def load_template():
-    with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
-        return Template(f.read())
+# Load games list (example: from RAWG)
+def fetch_random_games(n):
+    url = f"https://api.rawg.io/api/games?key={RAWG_API_KEY}&page_size={n}&ordering=-rating"
+    r = requests.get(url)
+    r.raise_for_status()
+    data = r.json()
+    games = []
+    for g in data["results"]:
+        games.append({
+            "title": g["name"],
+            "platform": [p["platform"]["name"] for p in g.get("platforms", [])],
+            "rating": g.get("rating", 0),
+            "image_url": g.get("background_image", ""),
+            "release": g.get("released", ""),
+            "id": g.get("id")
+        })
+    return games
 
-def sanitize_filename(title):
-    # kisbetű, szóköz -> aláhúzás
-    return "".join(c.lower() if c.isalnum() else "_" for c in title)
+# Check existing posts
+existing_slugs = set(p.stem for p in POSTS_DIR.glob("*.html"))
 
-def generate_cheats():
-    num = random.randint(5, 15)
-    cheats = [f"Cheat tip {i+1}" for i in range(num)]
-    if num >= 15:
-        cheats.append("How to activate cheats: press specific keys as indicated in the game.")
-    return cheats
+# Load post template
+with open(TEMPLATE_FILE, encoding="utf-8") as f:
+    POST_TEMPLATE = f.read()
 
-def get_image_path(title):
-    # ellenőrzi, hogy létezik-e kép a Picture mappában
-    filename = sanitize_filename(title) + ".jpg"
-    path = os.path.join(PICTURE_DIR, filename)
-    if os.path.exists(path):
-        return f"../{PICTURE_DIR}/{filename}"
-    else:
-        return ""  # placeholder sablon template fogja kezelni
+# Generate posts
+games = fetch_random_games(NUM_POSTS * 2)  # Fetch more to avoid duplicates
+generated_count = 0
 
-# --- Fő logika ---
-def main(num_posts=NUM_POSTS):
-    os.makedirs(POSTS_DIR, exist_ok=True)
-    template = load_template()
+for game in games:
+    slug = slugify(game["title"])
+    if slug in existing_slugs:
+        continue  # Skip existing
+    filename = POSTS_DIR / f"{slug}.html"
 
-    # Beolvasott már létező posztok
-    existing_files = set(os.listdir(POSTS_DIR))
+    # Download image
+    image_path = PICTURES_DIR / f"{slug}.jpg"
+    if game["image_url"]:
+        try:
+            img_data = requests.get(game["image_url"]).content
+            with open(image_path, "wb") as img_file:
+                img_file.write(img_data)
+        except Exception as e:
+            print(f"⚠️ Image download failed for {game['title']}: {e}")
+            image_path = ""
 
-    new_posts = []
-    random.shuffle(GAMES)
-    for game in GAMES:
-        file_name = sanitize_filename(game["title"]) + ".html"
-        if file_name in existing_files:
-            print(f"Skipping '{game['title']}' (already exists).")
-            continue
+    # Cheats & Tips placeholder (max 15)
+    cheats = [f"Cheat tip {i+1}" for i in range(min(15, 5))]
 
-        post_path = os.path.join(POSTS_DIR, file_name)
+    # Fill template
+    post_html = POST_TEMPLATE.format(
+        title=game["title"],
+        rating=game["rating"],
+        release=game["release"] or datetime.now().strftime("%Y-%m-%d"),
+        platforms=", ".join(game["platform"]) or "PC",
+        image=str(image_path).replace("\\", "/"),
+        cheats="\n".join(f"<li>{c}</li>" for c in cheats)
+    )
 
-        # Cheats & Tips
-        cheats_list = generate_cheats()
+    # Save post
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(post_html)
+    generated_count += 1
+    existing_slugs.add(slug)
 
-        # AI Rating random
-        ai_rating = round(random.uniform(3.0, 5.0), 1)
+    if generated_count >= NUM_POSTS:
+        break
 
-        # Affiliate link példa (később API-val bővíthető)
-        affiliate_links = [
-            {"name": "Honeygain", "url": "https://r.honeygain.me/NAGYT86DD6"},
-            {"name": "IC Markets", "url": "https://icmarkets.com/?camp=3992"},
-            {"name": "Dukascopy", "url": "https://www.dukascopy.com/api/es/12831/type-S/target-id-149"}
-        ]
-
-        # Generálás sablon alapján
-        html = template.render(
-            title=game["title"],
-            date=datetime.datetime.now().strftime("%Y-%m-%d"),
-            platforms=", ".join(game["platforms"]),
-            description=game["description"],
-            cheats_list=cheats_list,
-            ai_rating=ai_rating,
-            image=get_image_path(game["title"]),
-            affiliate_links=affiliate_links
-        )
-
-        with open(post_path, "w", encoding="utf-8") as f:
-            f.write(html)
-
-        new_posts.append(file_name)
-        print(f"Generated post: {post_path}")
-
-        if len(new_posts) >= num_posts:
-            break
-
-    print(f"✅ Generated {len(new_posts)} new posts.")
-
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--num_posts", type=int, default=NUM_POSTS)
-    args = parser.parse_args()
-    main(args.num_posts)
+print(f"✅ Generated {generated_count} new posts in {POSTS_DIR}")
