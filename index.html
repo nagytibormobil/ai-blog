@@ -135,71 +135,60 @@
 // <<< AUTO-GENERATED POSTS START >>>
     const POSTS = [
   {
-    "title": "Micro Mages",
-    "url": "generated_posts/micro-mages.html",
+    "title": "Guilty Parade",
+    "url": "generated_posts/guilty-parade.html",
     "platform": [
-      "NES",
-      "PC"
-    ],
-    "date": "2025-08-30",
-    "rating": 3.7,
-    "cover": "Picture/micro-mages.jpg",
-    "views": 0,
-    "comments": 0
-  },
-  {
-    "title": "Gimmick!",
-    "url": "generated_posts/gimmick.html",
-    "platform": [
-      "NES"
-    ],
-    "date": "2025-08-30",
-    "rating": 3.1,
-    "cover": "Picture/gimmick.jpg",
-    "views": 0,
-    "comments": 0
-  },
-  {
-    "title": "Championship Manager Season 03/04",
-    "url": "generated_posts/championship-manager-season-03-04.html",
-    "platform": [
-      "PC"
-    ],
-    "date": "2025-08-30",
-    "rating": 4.8,
-    "cover": "Picture/championship-manager-season-03-04.jpg",
-    "views": 0,
-    "comments": 0
-  },
-  {
-    "title": "The Witcher 3 Wild Hunt - Complete Edition",
-    "url": "generated_posts/the-witcher-3-wild-hunt-complete-edition.html",
-    "platform": [
-      "Xbox One",
-      "Xbox Series S/X",
       "PC",
-      "Nintendo Switch",
-      "PlayStation 4",
-      "PlayStation 5"
+      "macOS",
+      "Linux"
     ],
     "date": "2025-08-30",
-    "rating": 4.9,
-    "cover": "Picture/the-witcher-3-wild-hunt-complete-edition.jpg",
+    "rating": 4.3,
+    "cover": "Picture/guilty-parade.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Cabernet",
+    "url": "generated_posts/cabernet.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-08-30",
+    "rating": 3.3,
+    "cover": "Picture/cabernet.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Athanasy",
+    "url": "generated_posts/athanasy.html",
+    "platform": [
+      "macOS",
+      "PC",
+      "Linux"
+    ],
+    "date": "2025-08-30",
+    "rating": 4.7,
+    "cover": "Picture/athanasy.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "The Witcher 3: Wild Hunt – Blood and Wine",
+    "url": "generated_posts/the-witcher-3-wild-hunt-blood-and-wine.html",
+    "platform": [
+      "PlayStation 4",
+      "PC",
+      "Xbox One"
+    ],
+    "date": "2025-08-30",
+    "rating": 3.6,
+    "cover": "Picture/the-witcher-3-wild-hunt-blood-and-wine.jpg",
     "views": 0,
     "comments": 0
   }
-]
-    // <<< AUTO-GENERATED POSTS END >>>
-
-const byDateDesc = (a,b)=> new Date(b.date) - new Date(a.date);
-const clamp = (n,min,max)=> Math.max(min, Math.min(max,n));
-function starHTML(r){ const full=Math.floor(r); const half=(r-full)>=0.5?1:0; const empty=5-full-half; return '⭐'.repeat(full)+(half?'½':'')+'☆'.repeat(empty);}
-function placeholder(title){ const init=(title||'Game').split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||'G').join(''); const svg=encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#0f141c'/><stop offset='100%' stop-color='#121821'/></linearGradient></defs><rect fill='url(#g)' width='100%' height='100%'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' fill='#5cc8ff' font-size='120' font-family='Arial, Helvetica, sans-serif'>${init}</text></svg>`); return `data:image/svg+xml,${svg}`;}
-function card(p){ const img=p.cover&&p.cover.length?p.cover:placeholder(p.title); const platforms=(p.platform||[]).join(' • '); return `<article class='card'><a class='thumb' href='${p.url}'><img alt='${p.title}' loading='lazy' src='${img}'></a><div class='content'><h3 class='title'><a href='${p.url}'>${p.title}</a></h3><div class='meta'><span class='badge'>${platforms||'Game'}</span><span class='muted'>${new Date(p.date).toLocaleDateString()}</span><span class='stars' title='${p.rating}/5'>${starHTML(clamp(p.rating||0,0,5))}</span></div></div></article>`;}
-const latest=[...POSTS].sort(byDateDesc).slice(0,9); document.getElementById('latestGrid').innerHTML=latest.map(card).join('');
-const popular=[...POSTS].sort((a,b)=> (b.views+(b.comments*3))-(a.views+(a.comments*3))).slice(0,3);
-document.getElementById('popularGrid').innerHTML=popular.map(card).join('');
-function pick3(arr){ const used=new Set(); const out=[]; while(out.length<3 && used.size<arr.length){ const i=Math.floor(Math.random()*arr.length); if(!used.has(i)){ used.add(i); out.push(arr[i]); } } return out;}
+] while(out.length<3 && used.size<arr.length){ const i=Math.floor(Math.random()*arr.length); if(!used.has(i)){ used.add(i); out.push(arr[i]); } } return out;}
 document.getElementById('exploreGrid').innerHTML=pick3(POSTS).map(card).join('');
 const pick=document.getElementById('pick'); [...POSTS].sort((a,b)=>a.title.localeCompare(b.title)).forEach(p=>{ const o=document.createElement('option'); o.value=p.url; o.textContent=p.title; pick.appendChild(o);});
 document.getElementById('go').onclick=()=>{ const u=pick.value; if(u) location.href=u; };
