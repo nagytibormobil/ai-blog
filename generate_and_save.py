@@ -1,87 +1,94 @@
 import os
-import json
-import requests
-from datetime import datetime
+import datetime
+import random
 from pathlib import Path
-from slugify import slugify
 
-# Config
-POSTS_DIR = Path("generated_posts")
-PICTURES_DIR = Path("Picture")
-TEMPLATE_FILE = Path("templates/post_template.html")
-RAWG_API_KEY = "2fafa16ea4c147438f3b0cb031f8dbb7"
-NUM_POSTS = 12
+# Mappák
+BASE_DIR = Path("C:/ai_blog")
+PICTURE_DIR = BASE_DIR / "Picture"
+POST_DIR = BASE_DIR / "generated_posts"
+TEMPLATE_FILE = BASE_DIR / "templates/post_template.html"
 
-# Ensure folders exist
-POSTS_DIR.mkdir(exist_ok=True)
-PICTURES_DIR.mkdir(exist_ok=True)
+# Példa játék adatok (később lehet API-val tölteni)
+GAMES = [
+    {
+        "title": "GTA V",
+        "about": "Open world action-adventure game set in Los Santos.",
+        "image_name": "gta-v.jpg",
+        "rating": 4.7,
+        "cheats": [
+            "Unlimited ammo",
+            "Invincibility",
+            "Spawn vehicle",
+            "Lower wanted level",
+            "Increase wanted level"
+        ],
+        "affiliate_links": [
+            '<p><a href="https://example.com/affiliate1" target="_blank">Buy Game Here</a></p>',
+            '<p><a href="https://example.com/affiliate2" target="_blank">Get Bonus Items</a></p>'
+        ]
+    },
+    {
+        "title": "FIFA 23",
+        "about": "Realistic football simulation game with updated rosters.",
+        "image_name": "fifa-23.jpg",
+        "rating": 4.4,
+        "cheats": [
+            "Unlock all stadiums",
+            "Max player stats",
+            "Infinite coins"
+        ],
+        "affiliate_links": [
+            '<p><a href="https://example.com/affiliate3" target="_blank">Buy FIFA 23</a></p>'
+        ]
+    }
+]
 
-# Load games list (example: from RAWG)
-def fetch_random_games(n):
-    url = f"https://api.rawg.io/api/games?key={RAWG_API_KEY}&page_size={n}&ordering=-rating"
-    r = requests.get(url)
-    r.raise_for_status()
-    data = r.json()
-    games = []
-    for g in data["results"]:
-        games.append({
-            "title": g["name"],
-            "platform": [p["platform"]["name"] for p in g.get("platforms", [])],
-            "rating": g.get("rating", 0),
-            "image_url": g.get("background_image", ""),
-            "release": g.get("released", ""),
-            "id": g.get("id")
-        })
-    return games
+def sanitize_filename(title):
+    return "".join(c if c.isalnum() else "_" for c in title.lower())
 
-# Check existing posts
-existing_slugs = set(p.stem for p in POSTS_DIR.glob("*.html"))
+def generate_post(game):
+    # Fájl név
+    filename = sanitize_filename(game["title"]) + ".html"
+    post_path = POST_DIR / filename
 
-# Load post template
-with open(TEMPLATE_FILE, encoding="utf-8") as f:
-    POST_TEMPLATE = f.read()
+    # Ellenőrizzük, hogy már létezik-e
+    if post_path.exists():
+        print(f"Skipping '{game['title']}' (already exists).")
+        return
 
-# Generate posts
-games = fetch_random_games(NUM_POSTS * 2)  # Fetch more to avoid duplicates
-generated_count = 0
+    # Cheats HTML (max 15)
+    cheats = game["cheats"][:15]
+    cheats_html = "".join(f"<li>{c}</li>" for c in cheats)
+    extra_instruction = ""
+    if len(game["cheats"]) > 15:
+        extra_instruction = "Use the following keys to activate extra cheats in-game."
 
-for game in games:
-    slug = slugify(game["title"])
-    if slug in existing_slugs:
-        continue  # Skip existing
-    filename = POSTS_DIR / f"{slug}.html"
+    # Betöltjük a template-et
+    with open(TEMPLATE_FILE, "r", encoding="utf-8") as f:
+        template = f.read()
 
-    # Download image
-    image_path = PICTURES_DIR / f"{slug}.jpg"
-    if game["image_url"]:
-        try:
-            img_data = requests.get(game["image_url"]).content
-            with open(image_path, "wb") as img_file:
-                img_file.write(img_data)
-        except Exception as e:
-            print(f"⚠️ Image download failed for {game['title']}: {e}")
-            image_path = ""
+    # Cseréljük a placeholder-eket
+    html = template.replace("{{title}}", game["title"])
+    html = html.replace("{{short_description}}", game["about"])
+    html = html.replace("{{about}}", game["about"])
+    html = html.replace("{{rating}}", str(game["rating"]))
+    html = html.replace("{{image}}", game["image_name"])
+    html = html.replace("{{cheats}}", cheats_html)
+    html = html.replace("{{extra_cheats_instruction}}", extra_instruction)
+    html = html.replace("{{affiliate_links}}", "\n".join(game["affiliate_links"]))
 
-    # Cheats & Tips placeholder (max 15)
-    cheats = [f"Cheat tip {i+1}" for i in range(min(15, 5))]
+    # Mentés
+    POST_DIR.mkdir(parents=True, exist_ok=True)
+    with open(post_path, "w", encoding="utf-8") as f:
+        f.write(html)
 
-    # Fill template
-    post_html = POST_TEMPLATE.format(
-        title=game["title"],
-        rating=game["rating"],
-        release=game["release"] or datetime.now().strftime("%Y-%m-%d"),
-        platforms=", ".join(game["platform"]) or "PC",
-        image=str(image_path).replace("\\", "/"),
-        cheats="\n".join(f"<li>{c}</li>" for c in cheats)
-    )
+    print(f"Generated post: {post_path}")
 
-    # Save post
-    with open(filename, "w", encoding="utf-8") as f:
-        f.write(post_html)
-    generated_count += 1
-    existing_slugs.add(slug)
+def main():
+    for game in GAMES:
+        generate_post(game)
+    print("All posts generated.")
 
-    if generated_count >= NUM_POSTS:
-        break
-
-print(f"✅ Generated {generated_count} new posts in {POSTS_DIR}")
+if __name__ == "__main__":
+    main()
