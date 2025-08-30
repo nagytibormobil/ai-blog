@@ -157,6 +157,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/middle-earth-shadow-of-mordor.html</loc>
+    <lastmod>2025-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/never-alone.html</loc>
     <lastmod>2025-08-30</lastmod>
     <changefreq>daily</changefreq>
@@ -206,6 +212,12 @@
   </url>
   <url>
     <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/the-long-dark.html</loc>
+    <lastmod>2025-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/the-witcher-2-assassins-of-kings-enhanced-edition.html</loc>
     <lastmod>2025-08-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
