@@ -1,72 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>{{title}} – AI Gaming Blog</title>
-<meta name="description" content="{{short_description}}">
-<meta property="og:title" content="{{title}} – AI Gaming Blog">
-<meta property="og:description" content="{{short_description}}">
-<meta property="og:type" content="website">
+<meta name="description" content="{{short_description}}"/>
+<meta name="robots" content="index,follow"/>
 <style>
     :root {
-        --bg: #0b0f14; --panel: #121821; --muted: #9fb0c3; --text: #eaf1f8; --accent: #5cc8ff; --card: #0f141c; --border: #1f2a38;
+      --bg:#0b0f14; --panel:#121821; --muted:#9fb0c3; --text:#eaf1f8; --accent:#5cc8ff; --warn:#ffd166;
+      --card:#0f141c; --border:#1f2a38;
     }
-    body {background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin:0; padding:0;}
-    a {color: var(--accent); text-decoration: none;}
-    a:hover {text-decoration: underline;}
-    .wrap {max-width: 900px; margin:0 auto; padding:24px;}
-    h1,h2,h3{margin:0 0 12px 0;}
-    .card img{width:100%; border-radius:12px;}
-    ul {padding-left: 20px;}
-    .footer {margin-top:36px; padding:18px; border-top:1px solid var(--border); color: var(--muted); font-size:13px;}
-    .btn-home {display:inline-block; margin-top:20px; padding:8px 12px; background: var(--card); border:1px solid var(--border); border-radius:10px;}
+    body {margin:0; padding:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;}
+    a{color:var(--accent); text-decoration:none;} a:hover{text-decoration:underline;}
+    .wrap{max-width:900px; margin:0 auto; padding:24px;}
+    h1,h2,h3{margin:0 0 10px 0;}
+    .meta{font-size:12px; color:var(--muted);}
+    .rating{margin:10px 0;}
+    ul{padding-left:20px;}
+    .footer{margin-top:36px;padding:18px;border-top:1px solid var(--border);color:var(--muted);font-size:13px;}
+    img.cover{width:100%; height:auto; border-radius:10px;}
+    .home-btn{display:inline-block;margin-top:20px;padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--card);}
 </style>
 </head>
 <body>
 <div class="wrap">
-    <h1>{{title}}</h1>
-    <img src="{{image}}" alt="{{title}}">
-    <h2>About the Game</h2>
-    <p>{{about}}</p>
-    <h2>AI Rating</h2>
-    <p>⭐ {{rating}}/5</p>
-    <h2>Cheats & Tips</h2>
-    <ul>
-        {{cheats}}
-    </ul>
-    {{extra_cheats_instruction}}
-    <h2>User Comments</h2>
-    <p>Leave your comment (max 10/day)</p>
-    <form>
-        <textarea rows="4" cols="50" placeholder="Write your comment..."></textarea><br>
-        <button type="submit">Post Comment</button>
-    </form>
+  <h1>{{title}}</h1>
+  <img src="../Picture/{{image}}" alt="{{title}}" class="cover"/>
+  <p>{{about}}</p>
 
-    <div class="footer">
-        <div>
-            <strong>Comment Policy</strong>
-            <ul>
-                <li>No spam, ads, or offensive content.</li>
-                <li>No adult/drugs/war/terror topics.</li>
-                <li>Max 10 comments/day per person.</li>
-                <li>Be respectful. We moderate strictly.</li>
-            </ul>
-        </div>
-        <div>
-            <strong>Terms</strong>
-            <p>All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
-        </div>
-        <div>
-            <strong>Affiliate</strong>
-            {{affiliate_links}}
-        </div>
-        <p>© <span id="year"></span> AI Gaming Blog</p>
-        <a class="btn-home" href="../index.html">Home</a>
-    </div>
+  <div class="rating">
+    <strong>AI Rating:</strong> ⭐ {{rating}}/5
+  </div>
+
+  <h2>Cheats & Tips</h2>
+  <ul>
+    {{cheats}}
+  </ul>
+  <p>{{extra_cheats_instruction}}</p>
+
+  <h2>User Comments</h2>
+  <p>Leave your comment (max 10/day)</p>
+  <!-- Comment moderation logic handled server-side or via JS -->
+
+  {{affiliate_links}}
+
+  <a href="../index.html" class="home-btn">Home</a>
 </div>
+
+<div class="footer">
+  <div>
+    <strong>Comment Policy</strong>
+    <ul>
+      <li>No spam, ads, or offensive content.</li>
+      <li>No adult/drugs/war/terror topics.</li>
+      <li>Max 10 comments/day per person.</li>
+      <li>Be respectful. We moderate strictly.</li>
+    </ul>
+  </div>
+  <div>
+    <strong>Terms</strong>
+    <p>All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
+  </div>
+  <p>© <span id="year"></span> AI Gaming Blog</p>
+</div>
+
 <script>
-document.getElementById("year").textContent = new Date().getFullYear();
+  document.getElementById("year").textContent = new Date().getFullYear();
 </script>
 </body>
 </html>
