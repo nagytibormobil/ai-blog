@@ -1,122 +1,99 @@
 <!DOCTYPE html>
-<html lang="hu">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>{{game_title}} – Cheats, Tips & Review</title>
-    <meta name="description" content="{{game_title}} tippek, trükkök és értékelés. Nézd meg hogyan játszhatsz jobban és fedezd fel a rejtett lehetőségeket.">
-    <meta name="keywords" content="{{game_title}}, cheats, tips, review, guide, ai gaming blog">
-    <link rel="stylesheet" href="../style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ title }} – AI Gaming Blog</title>
+<meta name="description" content="{{ description }}">
+<meta name="robots" content="index,follow">
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#121821; --muted:#9fb0c3; --text:#eaf1f8; --accent:#5cc8ff;
+    --card:#0f141c; --border:#1f2a38; --warn:#ffd166;
+  }
+  body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:var(--bg);color:var(--text);}
+  a{color:var(--accent);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  .wrap{max-width:900px;margin:0 auto;padding:24px;}
+  h1,h2,h3{margin:0 0 12px 0;}
+  .section{margin-top:28px;}
+  .card img{width:100%;border-radius:10px;}
+  .cheats li{margin-bottom:4px;}
+  .affiliate a{color:var(--accent);}
+  .footer{margin-top:36px;padding:18px;border-top:1px solid var(--border);color:var(--muted);font-size:13px;}
+  button{cursor:pointer;}
+</style>
 </head>
-<body class="post-page">
+<body>
+<div class="wrap">
+  <a href="../index.html">🏠 Home</a>
+  <h1>{{ title }}</h1>
+  <p><strong>Platforms:</strong> {{ platforms }}</p>
+  <p><strong>Published:</strong> {{ date }}</p>
 
-    <header>
-        <h1>{{game_title}}</h1>
-    </header>
+  {% if image %}
+  <div class="section">
+    <img src="{{ image }}" alt="{{ title }}">
+  </div>
+  {% endif %}
 
-    <main>
-        <img src="../Picture/{{image_filename}}" alt="{{game_title}} borítókép" class="game-image">
+  <div class="section">
+    <h2>About the Game</h2>
+    <p>{{ description }}</p>
+  </div>
 
-        <section class="review">
-            <h2>Review</h2>
-            <p>{{review}}</p>
-        </section>
+  <div class="section">
+    <h2>AI Rating</h2>
+    <p>⭐ {{ ai_rating }}/5</p>
+  </div>
 
-        <section class="about">
-            <h2>About the Game</h2>
-            <p>{{about}}</p>
-        </section>
+  <div class="section">
+    <h2>Cheats & Tips</h2>
+    <ul class="cheats">
+      {% for cheat in cheats_list %}
+      <li>{{ cheat }}</li>
+      {% endfor %}
+    </ul>
+  </div>
 
-        <section class="rating">
-            <h2>AI Rating</h2>import json
-import os
-from datetime import datetime
+  <div class="section affiliate">
+    <h2>Affiliate Links</h2>
+    <ul>
+      {% for link in affiliate_links %}
+      <li><a href="{{ link.url }}" target="_blank">{{ link.name }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
 
-# Paths
-TEMPLATE_PATH = "templates/index_template.html"
-OUTPUT_PATH = "index.html"
-GENERATED_POSTS_DIR = "generated_posts"
+  <div class="section">
+    <h2>User Comments</h2>
+    <p>Leave your comment (max 10/day). All comments are moderated. No offensive language or links/images allowed.</p>
+    <form>
+      <textarea placeholder="Your comment..." rows="4" cols="50"></textarea><br>
+      <button type="submit">Post Comment</button>
+    </form>
+  </div>
 
-# Beolvassuk az összes generált post adatát
-posts = []
+  <div class="footer">
+    <div>
+      <strong>Comment Policy</strong>
+      <ul>
+        <li>No spam, ads, or offensive content.</li>
+        <li>No adult/drugs/war/terror topics.</li>
+        <li>Max 10 comments/day per person.</li>
+        <li>Be respectful. We moderate strictly.</li>
+      </ul>
+    </div>
+    <div>
+      <strong>Terms</strong>
+      <p>All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
+    </div>
+    <p>© <span id="year"></span> AI Gaming Blog</p>
+  </div>
+</div>
 
-for filename in os.listdir(GENERATED_POSTS_DIR):
-    if filename.endswith(".html"):
-        filepath = os.path.join(GENERATED_POSTS_DIR, filename)
-        # Feltételezzük, hogy minden post file-nál van egy metadata rész JSON-ben vagy
-        # a file nevéből generáljuk az adatokat
-        title = filename.replace(".html", "").replace("_", " ").title()
-        url = os.path.join(GENERATED_POSTS_DIR, filename).replace("\\", "/")
-        cover_name = filename.replace(".html", ".jpg")
-        cover = f"Picture/{cover_name}"
-        # Alapadatok, később módosíthatók
-        post_data = {
-            "title": title,
-            "url": url,
-            "platform": ["PC", "PS", "Xbox"],
-            "date": datetime.now().strftime("%Y-%m-%d"),
-            "rating": round(3 + 2 * os.urandom(1)[0] / 255, 1),  # random 3-5
-            "cover": cover,
-            "views": 0,
-            "comments": 0
-        }
-        posts.append(post_data)
-
-# Sort by date descending
-posts.sort(key=lambda x: x["date"], reverse=True)
-
-# Beolvassuk a template HTML-t
-with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
-    template_html = f.read()
-
-# Generáljuk a POSTS tömb JSON formátumban
-posts_json = json.dumps(posts, indent=2)
-
-# Cseréljük ki a POSTS tömböt a template-ben
-import re
-pattern = r'// <<< AUTO-GENERATED POSTS START >>>.*// <<< AUTO-GENERATED POSTS END >>>'
-replacement = f'// <<< AUTO-GENERATED POSTS START >>>\n    const POSTS = {posts_json};\n    // <<< AUTO-GENERATED POSTS END >>>'
-updated_html = re.sub(pattern, replacement, template_html, flags=re.DOTALL)
-
-# Kiírjuk az index.html-t
-with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-    f.write(updated_html)
-
-print(f"✅ {OUTPUT_PATH} frissítve {len(posts)} poszttal.")
-
-            <p>⭐ {{rating}}/5</p>
-        </section>
-
-        <section class="cheats">
-            <h2>Cheats & Tips</h2>
-            <ul>
-                {{cheats_list}}
-            </ul>
-            <p><strong>Cheats aktiválása:</strong> Nyomd meg a <kbd>~</kbd> billentyűt, majd írd be a kívánt kódot.</p>
-        </section>
-
-        <section class="affiliate">
-            <h2>Affiliate ajánlatok</h2>
-            <p>Szerezd be a játékot itt:</p>
-            <ul>
-                <li><a href="https://www.amazon.com/" target="_blank">Amazon</a></li>
-                <li><a href="https://www.g2a.com/" target="_blank">G2A</a></li>
-                <li><a href="https://www.ebay.com/" target="_blank">eBay</a></li>
-            </ul>
-        </section>
-
-        <section class="comments">
-            <h2>User Comments</h2>
-            <p>Leave your thoughts below. Max 10 comments/day. All comments are moderated.</p>
-            {{comments_section}}
-        </section>
-    </main>
-
-    <footer>
-        <p><a href="../index.html">🏠 Home</a></p>
-        <p><strong>Comment Policy:</strong> No spam, ads, offensive content. No adult/drugs/war topics. Max 10 comments/day.</p>
-        <p><strong>Terms:</strong> Információ és szórakozás céljából. Trademarks belong to owners. Affiliate linkek jutalékot hozhatnak.</p>
-        <p>© 2025 AI Gaming Blog</p>
-    </footer>
-
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
 </body>
 </html>
