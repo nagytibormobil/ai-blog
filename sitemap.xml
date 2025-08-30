@@ -85,6 +85,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/dying-light-2-stay-human.html</loc>
+    <lastmod>2025-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/everlasting-summer.html</loc>
     <lastmod>2025-08-30</lastmod>
     <changefreq>daily</changefreq>
@@ -122,6 +128,12 @@
   </url>
   <url>
     <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/gone-home.html</loc>
+    <lastmod>2025-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/greedfall.html</loc>
     <lastmod>2025-08-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
