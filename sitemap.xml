@@ -265,6 +265,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/the-lab.html</loc>
+    <lastmod>2025-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/the-last-of-us-part-ii.html</loc>
     <lastmod>2025-08-30</lastmod>
     <changefreq>daily</changefreq>
@@ -284,6 +290,12 @@
   </url>
   <url>
     <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/the-wolf-among-us.html</loc>
+    <lastmod>2025-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/this-is-the-police.html</loc>
     <lastmod>2025-08-30</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
