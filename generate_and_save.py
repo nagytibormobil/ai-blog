@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
-import random
+import datetime
 
+# Mappák
 BASE_DIR = Path("C:/ai_blog")
 PICTURE_DIR = BASE_DIR / "Picture"
 POST_DIR = BASE_DIR / "generated_posts"
@@ -15,11 +16,15 @@ GAMES = [
         "image_name": "gta-v.jpg",
         "rating": 4.7,
         "cheats": [
-            "Unlimited ammo", "Invincibility", "Spawn vehicle",
-            "Lower wanted level", "Increase wanted level"
+            "Unlimited ammo",
+            "Invincibility",
+            "Spawn vehicle",
+            "Lower wanted level",
+            "Increase wanted level"
         ],
         "affiliate_links": [
-            '<p><a href="https://example.com/affiliate1" target="_blank">Buy Game Here</a></p>'
+            '<p><a href="https://example.com/affiliate1" target="_blank">Buy Game Here</a></p>',
+            '<p><a href="https://example.com/affiliate2" target="_blank">Get Bonus Items</a></p>'
         ]
     },
     {
@@ -28,10 +33,12 @@ GAMES = [
         "image_name": "fifa-23.jpg",
         "rating": 4.4,
         "cheats": [
-            "Unlock all stadiums", "Max player stats", "Infinite coins"
+            "Unlock all stadiums",
+            "Max player stats",
+            "Infinite coins"
         ],
         "affiliate_links": [
-            '<p><a href="https://example.com/affiliate2" target="_blank">Buy FIFA 23</a></p>'
+            '<p><a href="https://example.com/affiliate3" target="_blank">Buy FIFA 23</a></p>'
         ]
     }
 ]
@@ -47,14 +54,18 @@ def generate_post(game):
         print(f"Skipping '{game['title']}' (already exists).")
         return
 
-    cheats_html = "".join(f"<li>{c}</li>" for c in game["cheats"][:15])
+    # Cheats HTML max 15
+    cheats = game["cheats"][:15]
+    cheats_html = "".join(f"<li>{c}</li>" for c in cheats)
     extra_instruction = ""
     if len(game["cheats"]) > 15:
-        extra_instruction = "Use the following keys to activate extra cheats in-game."
+        extra_instruction = "<p>Use the following keys to activate extra cheats in-game.</p>"
 
+    # Betöltjük a template-et
     with open(TEMPLATE_FILE, "r", encoding="utf-8") as f:
         template = f.read()
 
+    # Placeholder cserék
     html = template.replace("{{title}}", game["title"])
     html = html.replace("{{short_description}}", game["about"])
     html = html.replace("{{about}}", game["about"])
@@ -63,6 +74,7 @@ def generate_post(game):
     html = html.replace("{{cheats}}", cheats_html)
     html = html.replace("{{extra_cheats_instruction}}", extra_instruction)
     html = html.replace("{{affiliate_links}}", "\n".join(game["affiliate_links"]))
+    html = html.replace("{{year}}", str(datetime.datetime.now().year))
 
     POST_DIR.mkdir(parents=True, exist_ok=True)
     with open(post_path, "w", encoding="utf-8") as f:
@@ -73,7 +85,7 @@ def generate_post(game):
 def main():
     for game in GAMES:
         generate_post(game)
-    print("All posts generated.")
+    print("All posts generated successfully.")
 
 if __name__ == "__main__":
     main()
