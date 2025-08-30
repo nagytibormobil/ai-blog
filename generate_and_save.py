@@ -1,134 +1,128 @@
 import os
-from datetime import date
+import random
+import requests
+from datetime import datetime
+from bs4 import BeautifulSoup
 
-# Példapostok – ezeket te írod majd saját adatbázisból
-POSTS = [
-    {
-        "title": "GTA V",
-        "filename": "gta-v-cheats-tips.html",
-        "rating": 4.7,
-        "cover": "../Picture/gta-v-cheats-tips.jpg",
-        "cheats": [
-            "Infinite health cheat",
-            "Spawn tank cheat",
-            "Max ammo cheat",
-            "Lower wanted level",
-            "Fast run cheat"
-        ],
-        "review": "GTA V egy nyílt világú akciójáték, ami elképesztő szabadságot ad. A sztori erős, a világ tele van részletekkel, és a többjátékos mód folyamatosan frissül.",
-        "about": "A Rockstar Games legendás játéka, amely Los Santos városában játszódik. Három főhős története fonódik össze akcióval, rablásokkal és humorral."
-    },
-    {
-        "title": "Minecraft",
-        "filename": "minecraft-cheats-tips.html",
-        "rating": 3.5,
-        "cover": "../Picture/minecraft-cheats-tips.jpg",
-        "cheats": [
-            "Give item command",
-            "Teleport command",
-            "Change time cheat",
-            "Creative mode toggle",
-            "Instant health"
-        ],
-        "review": "A Minecraft végtelen kreatív lehetőségeket kínál, de kezdők számára zavaró lehet a sok parancs és mod.",
-        "about": "Egy sandbox játék, ahol kockákból építhetsz világokat, túlélhetsz a természetben, vagy kalandokra indulhatsz barátaiddal."
+# --- PATHOK ---
+BASE_DIR = r"C:\ai_blog"
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+GENERATED_POSTS_DIR = os.path.join(BASE_DIR, "generated_posts")
+PICTURE_DIR = os.path.join(BASE_DIR, "Picture")
+
+# API KEY RAWG.IO
+RAWG_API_KEY = "2fafa16ea4c147438f3b0cb031f8dbb7"
+RAWG_URL = "https://api.rawg.io/api/games"
+
+# --- SEGÉDFÜGGVÉNYEK ---
+
+def get_game_data():
+    """Lekér egy random népszerű játékot RAWG API-ról"""
+    page = random.randint(1, 50)
+    params = {"key": RAWG_API_KEY, "page": page, "page_size": 1}
+    r = requests.get(RAWG_URL, params=params)
+    r.raise_for_status()
+    data = r.json()["results"][0]
+    return {
+        "title": data["name"],
+        "about": f"{data['name']} is a {data.get('genres',[{'name':'game'}])[0]['name']} game released on {data.get('released','N/A')}.",
+        "image_url": data["background_image"]
     }
-]
 
-# HTML sablon a posztoldalakhoz
-POST_TEMPLATE = """<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>{title} – Cheats, Tips & Review</title>
-  <meta name="description" content="AI-generated review, cheats, and tips for {title}. Ratings, tricks, and gameplay insights."/>
-  <style>
-    :root {{
-      --bg:#0b0f14; --panel:#121821; --muted:#9fb0c3; --text:#eaf1f8; --accent:#5cc8ff; --accent-2:#9bff9b; --warn:#ffd166;
-      --card:#0f141c; --border:#1f2a38;
-    }}
-    body {{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif}}
-    a{{color:var(--accent);text-decoration:none}} a:hover{{text-decoration:underline}}
-    header{{padding:16px;border-bottom:1px solid var(--border)}}
-    .wrap{{max-width:900px;margin:0 auto;padding:20px}}
-    .hero-img img{{width:100%;border-radius:12px}}
-    h1{{font-size:clamp(26px,4vw,38px)}}
-    h2{{margin-top:28px;font-size:clamp(20px,3vw,26px)}}
-    .stars{{color:var(--warn);}}
-    ul{{padding-left:20px}}
-    .ad{{background:linear-gradient(180deg,rgba(255,209,102,.12),transparent);border:1px dashed var(--warn);padding:14px;border-radius:12px;margin-top:20px}}
-    .footer{{margin-top:40px;padding:20px;border-top:1px solid var(--border);color:var(--muted);font-size:13px}}
-    input,textarea,button{{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px}}
-    button{{cursor:pointer}}
-  </style>
-</head>
-<body>
-<header>
-  <div class="wrap">
-    <a href="../index.html">🏠 Home</a>
-  </div>
-</header>
-<main class="wrap">
-  <h1>{title}</h1>
-  <div class="hero-img"><img src="{cover}" alt="{title}"></div>
-  <p><strong>AI Rating</strong><br><span class="stars">⭐ {rating:.1f}/5</span></p>
+def download_image(image_url, title):
+    """Kép letöltése a Picture mappába"""
+    if not os.path.exists(PICTURE_DIR):
+        os.makedirs(PICTURE_DIR)
 
-  <h2>Review</h2>
-  <p>{review}</p>
+    safe_name = title.lower().replace(" ", "_").replace(":", "") + ".jpg"
+    image_path = os.path.join(PICTURE_DIR, safe_name)
 
-  <h2>About the Game</h2>
-  <p>{about}</p>
+    if not os.path.exists(image_path):  # csak akkor töltsük le, ha nincs meg
+        img_data = requests.get(image_url).content
+        with open(image_path, "wb") as f:
+            f.write(img_data)
 
-  <h2>Cheats & Tips</h2>
-  <ul>
-    {cheats}
-  </ul>
+    return safe_name  # relatív név kell majd a HTML-hez
 
-  <div class="ad">
-    <h3>Earn Real Money While You Play 📱</h3>
-    <p>Simple passive income by sharing a bit of your internet. Runs in the background while you game.</p>
-    <p><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank"><strong>Try Honeygain now</strong></a></p>
-    <p class="tiny">Sponsored. Use at your own discretion.</p>
-  </div>
+def load_template(template_name):
+    with open(os.path.join(TEMPLATES_DIR, template_name), "r", encoding="utf-8") as f:
+        return f.read()
 
-  <h2>User Comments</h2>
-  <form>
-    <textarea rows="3" placeholder="Leave your comment (max 10/day)"></textarea><br>
-    <button type="button">Post Comment</button>
-  </form>
-</main>
-<section class="footer">
-  <div>
-    <strong>Comment Policy</strong>
-    <ul>
-      <li>No spam, ads, or offensive content.</li>
-      <li>No adult/drugs/war/terror topics.</li>
-      <li>Max 10 comments/day per person.</li>
-      <li>Be respectful. We moderate strictly.</li>
-    </ul>
-  </div>
-  <p>© {year} AI Gaming Blog</p>
-</section>
-</body>
-</html>
-"""
+def save_html(content, filename):
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(content)
 
-# Generálás
-os.makedirs("generated_posts", exist_ok=True)
+# --- POSZT GENERÁLÁSA ---
 
-for post in POSTS:
-    cheats_html = "".join(f"<li>{c}</li>" for c in post["cheats"])
-    html = POST_TEMPLATE.format(
-        title=post["title"],
-        cover=post["cover"],
-        rating=post["rating"],
-        cheats=cheats_html,
-        review=post["review"],
-        about=post["about"],
-        year=date.today().year
+def generate_post():
+    game = get_game_data()
+
+    # kép letöltése
+    image_file = download_image(game["image_url"], game["title"])
+
+    # review + cheats dummy tartalom
+    review = f"{game['title']} offers an immersive experience with dynamic gameplay and exciting features."
+    cheats = "".join([f"<li>Cheat tip {i}</li>" for i in range(1, random.randint(3, 15))])
+    rating = round(random.uniform(3.0, 5.0), 1)
+
+    # post sablon betöltése
+    template = load_template("post_template.html")
+
+    html = (
+        template.replace("{{TITLE}}", game["title"])
+        .replace("{{ABOUT}}", game["about"])
+        .replace("{{REVIEW}}", review)
+        .replace("{{CHEATS}}", cheats)
+        .replace("{{IMAGE}}", image_file)
+        .replace("{{RATING}}", str(rating))
     )
-    with open(os.path.join("generated_posts", post["filename"]), "w", encoding="utf-8") as f:
-        f.write(html)
 
-print("✅ Post oldalak legenerálva.")
+    # fájlnév
+    safe_name = game["title"].lower().replace(" ", "_").replace(":", "")
+    filename = os.path.join(GENERATED_POSTS_DIR, f"{safe_name}.html")
+
+    # ha már létezik, ne írjuk felül → keresünk másik játékot
+    if os.path.exists(filename):
+        print(f"Skipping '{game['title']}' (already exists).")
+        return None
+
+    save_html(html, filename)
+    print(f"Generated post: {filename}")
+    return {"title": game["title"], "file": filename, "image": image_file}
+
+# --- INDEX FRISSÍTÉSE ---
+
+def update_index(posts):
+    index_template = load_template("index_template.html")
+
+    posts_html = ""
+    for post in posts:
+        posts_html += f"""
+        <article>
+            <h3><a href="generated_posts/{os.path.basename(post['file'])}">{post['title']}</a></h3>
+            <img src="Picture/{post['image']}" alt="{post['title']} image">
+        </article>
+        """
+
+    final_html = index_template.replace("<!-- POSTS_BLOCK -->", posts_html)
+
+    save_html(final_html, os.path.join(BASE_DIR, "index.html"))
+    print("Updated index.html")
+
+# --- FŐ FOLYAMAT ---
+
+def main(num_posts=3):
+    if not os.path.exists(GENERATED_POSTS_DIR):
+        os.makedirs(GENERATED_POSTS_DIR)
+
+    new_posts = []
+    for _ in range(num_posts):
+        post = generate_post()
+        if post:
+            new_posts.append(post)
+
+    if new_posts:
+        update_index(new_posts)
+
+if __name__ == "__main__":
+    main(num_posts=5)
