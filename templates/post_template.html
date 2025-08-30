@@ -1,99 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ title }} – AI Gaming Blog</title>
-<meta name="description" content="{{ description }}">
-<meta name="robots" content="index,follow">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>{title} – AI Gaming Blog</title>
+<meta name="description" content="AI-generated review, cheats, and tips for {title}."/>
+<meta name="robots" content="index,follow"/>
 <style>
-  :root{
-    --bg:#0b0f14; --panel:#121821; --muted:#9fb0c3; --text:#eaf1f8; --accent:#5cc8ff;
-    --card:#0f141c; --border:#1f2a38; --warn:#ffd166;
-  }
-  body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:var(--bg);color:var(--text);}
-  a{color:var(--accent);text-decoration:none;}
-  a:hover{text-decoration:underline;}
-  .wrap{max-width:900px;margin:0 auto;padding:24px;}
-  h1,h2,h3{margin:0 0 12px 0;}
-  .section{margin-top:28px;}
-  .card img{width:100%;border-radius:10px;}
-  .cheats li{margin-bottom:4px;}
-  .affiliate a{color:var(--accent);}
-  .footer{margin-top:36px;padding:18px;border-top:1px solid var(--border);color:var(--muted);font-size:13px;}
-  button{cursor:pointer;}
+:root{
+  --bg:#0b0f14; --panel:#121821; --muted:#9fb0c3; --text:#eaf1f8; --accent:#5cc8ff; --warn:#ffd166; --card:#0f141c; --border:#1f2a38;
+}
+body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:var(--bg);color:var(--text);}
+a{color:var(--accent);text-decoration:none;}
+a:hover{text-decoration:underline;}
+.wrap{max-width:900px;margin:0 auto;padding:24px;}
+header,main,section,footer{display:block;}
+h1,h2,h3{margin:0 0 12px 0;}
+h1{font-size:2em;}
+h2{font-size:1.5em;}
+h3{font-size:1.2em;}
+img{max-width:100%;border-radius:8px;}
+ul{padding-left:20px;}
+.button{padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer;}
+.footer{margin-top:36px;padding:18px;border-top:1px solid var(--border);color:var(--muted);font-size:13px;}
+.comment-box{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--panel);}
+.comment-input, .comment-submit{width:100%;padding:8px;margin-top:4px;border-radius:6px;border:1px solid var(--border);}
+.comment-submit{background:var(--accent);color:#000;cursor:pointer;}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <a href="../index.html">🏠 Home</a>
-  <h1>{{ title }}</h1>
-  <p><strong>Platforms:</strong> {{ platforms }}</p>
-  <p><strong>Published:</strong> {{ date }}</p>
+<header class="wrap">
+<h1>{title}</h1>
+<p>Platforms: {platforms} | Released: {release}</p>
+</header>
 
-  {% if image %}
-  <div class="section">
-    <img src="{{ image }}" alt="{{ title }}">
-  </div>
-  {% endif %}
+<main class="wrap">
+<section>
+<img src="{image}" alt="{title} Cover"/>
+</section>
 
-  <div class="section">
-    <h2>About the Game</h2>
-    <p>{{ description }}</p>
-  </div>
+<section>
+<h2>AI Rating</h2>
+<p>⭐ {rating}/5</p>
+</section>
 
-  <div class="section">
-    <h2>AI Rating</h2>
-    <p>⭐ {{ ai_rating }}/5</p>
-  </div>
+<section>
+<h2>Cheats & Tips</h2>
+<ul>
+{cheats}
+</ul>
+<p>Max 15 tips shown. Use the appropriate keys in-game to activate cheats.</p>
+</section>
 
-  <div class="section">
-    <h2>Cheats & Tips</h2>
-    <ul class="cheats">
-      {% for cheat in cheats_list %}
-      <li>{{ cheat }}</li>
-      {% endfor %}
-    </ul>
-  </div>
-
-  <div class="section affiliate">
-    <h2>Affiliate Links</h2>
-    <ul>
-      {% for link in affiliate_links %}
-      <li><a href="{{ link.url }}" target="_blank">{{ link.name }}</a></li>
-      {% endfor %}
-    </ul>
-  </div>
-
-  <div class="section">
-    <h2>User Comments</h2>
-    <p>Leave your comment (max 10/day). All comments are moderated. No offensive language or links/images allowed.</p>
-    <form>
-      <textarea placeholder="Your comment..." rows="4" cols="50"></textarea><br>
-      <button type="submit">Post Comment</button>
-    </form>
-  </div>
-
-  <div class="footer">
-    <div>
-      <strong>Comment Policy</strong>
-      <ul>
-        <li>No spam, ads, or offensive content.</li>
-        <li>No adult/drugs/war/terror topics.</li>
-        <li>Max 10 comments/day per person.</li>
-        <li>Be respectful. We moderate strictly.</li>
-      </ul>
-    </div>
-    <div>
-      <strong>Terms</strong>
-      <p>All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
-    </div>
-    <p>© <span id="year"></span> AI Gaming Blog</p>
-  </div>
+<section>
+<h2>User Comments</h2>
+<div class="comment-box">
+<textarea class="comment-input" placeholder="Leave your comment (max 10/day)"></textarea>
+<button class="comment-submit">Post Comment</button>
 </div>
+</section>
+
+<section class="wrap">
+<h2>Affiliate & Sponsored Links</h2>
+<ul>
+<li><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank">Try Honeygain – Earn passive income while gaming</a></li>
+<li><a href="https://icmarkets.com/?camp=3992" target="_blank">IC Markets – Trade like a pro</a></li>
+<li><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">Dukascopy – Promo code: E12831</a></li>
+</ul>
+</section>
+
+<footer class="footer">
+<div>
+<strong>Comment Policy</strong>
+<ul>
+<li>No spam, ads, or offensive content.</li>
+<li>No adult/drugs/war/terror topics.</li>
+<li>Max 10 comments/day per person.</li>
+<li>Be respectful. We moderate strictly.</li>
+</ul>
+</div>
+<div>
+<strong>Terms</strong>
+<p>All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
+</div>
+<p>© <span id="year"></span> AI Gaming Blog</p>
+<p><a href="../index.html">Home</a></p>
+</footer>
 
 <script>
-  document.getElementById('year').textContent = new Date().getFullYear();
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// Comments logic
+const commentBox = document.querySelector('.comment-box');
+const submitBtn = commentBox.querySelector('.comment-submit');
+const textarea = commentBox.querySelector('.comment-input');
+let commentCount = 0;
+submitBtn.onclick = () => {
+    const val = textarea.value.trim();
+    if(!val){ alert("Comment cannot be empty"); return; }
+    if(commentCount >= 10){ alert("Max 10 comments/day reached"); return; }
+    const forbidden = ["sex","porn","fuck","shit","drug","war"];
+    if(forbidden.some(w=> val.toLowerCase().includes(w))){ alert("Comment contains forbidden words."); return; }
+    alert("Comment submitted! (Moderated by admin)");
+    commentCount++;
+    textarea.value="";
+}
 </script>
 </body>
 </html>
