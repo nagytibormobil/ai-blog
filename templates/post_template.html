@@ -1,77 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hu">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{TITLE}} - AI Gaming Blog</title>
-  <meta name="description" content="AI-generated review, cheats, tips and gameplay info about {{TITLE}}.">
-  <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <title>{{game_title}} – Cheats, Tips & Review</title>
+    <meta name="description" content="{{game_title}} tippek, trükkök és értékelés. Nézd meg hogyan játszhatsz jobban és fedezd fel a rejtett lehetőségeket.">
+    <meta name="keywords" content="{{game_title}}, cheats, tips, review, guide, ai gaming blog">
+    <link rel="stylesheet" href="../style.css">
 </head>
-<body>
-  <header>
-    <h1>{{TITLE}}</h1>
-    <nav>
-      <a href="../index.html">🏠 Home</a>
-    </nav>
-  </header>
+<body class="post-page">
 
-  <main>
-    <article>
-      <img src="../Picture/{{IMAGE}}" alt="{{TITLE}} screenshot" class="game-image">
+    <header>
+        <h1>{{game_title}}</h1>
+    </header>
 
-      <section>
-        <h2>About the Game</h2>
-        <p>{{ABOUT}}</p>
-      </section>
+    <main>
+        <img src="../Picture/{{image_filename}}" alt="{{game_title}} borítókép" class="game-image">
 
-      <section>
-        <h2>Review</h2>
-        <p>{{REVIEW}}</p>
-      </section>
+        <section class="review">
+            <h2>Review</h2>
+            <p>{{review}}</p>
+        </section>
 
-      <section>
-        <h2>Cheats & Tips</h2>
-        <ul>
-          {{CHEATS}}
-        </ul>
-        <p><strong>How to activate cheats:</strong> Usually by pressing the <code>~</code> (tilde) key to open the console, then typing in the cheat code. Controller versions may use button combinations.</p>
-      </section>
+        <section class="about">
+            <h2>About the Game</h2>
+            <p>{{about}}</p>
+        </section>
 
-      <section>
-        <h2>AI Rating</h2>
-        <p>⭐ {{RATING}}/5</p>
-      </section>
+        <section class="rating">
+            <h2>AI Rating</h2>
+            <p>⭐ {{rating}}/5</p>
+        </section>
 
-      <section>
-        <h2>Affiliate Links</h2>
-        <p><a href="https://store.steampowered.com/">Buy {{TITLE}} on Steam</a></p>
-        <p><a href="https://www.g2a.com/">Get {{TITLE}} cheaper on G2A</a></p>
-      </section>
+        <section class="cheats">
+            <h2>Cheats & Tips</h2>
+            <ul>
+                {{cheats_list}}
+            </ul>
+            <p><strong>Cheats aktiválása:</strong> Nyomd meg a <kbd>~</kbd> billentyűt, majd írd be a kívánt kódot.</p>
+        </section>
 
-      <section>
-        <h2>User Comments</h2>
-        <form id="comment-form">
-          <textarea name="comment" placeholder="Leave your comment (max 10/day)" required></textarea>
-          <button type="submit">Post Comment</button>
-        </form>
-        <div id="comments-section"></div>
-      </section>
-    </article>
-  </main>
+        <section class="affiliate">
+            <h2>Affiliate ajánlatok</h2>
+            <p>Szerezd be a játékot itt:</p>
+            <ul>
+                <li><a href="https://www.amazon.com/" target="_blank">Amazon</a></li>
+                <li><a href="https://www.g2a.com/" target="_blank">G2A</a></li>
+                <li><a href="https://www.ebay.com/" target="_blank">eBay</a></li>
+            </ul>
+        </section>
 
-  <footer>
-    <nav>
-      <a href="../index.html">🏠 Home</a>
-    </nav>
-    <section>
-      <h3>Comment Policy</h3>
-      <p>No spam, ads, or offensive content. No adult/drugs/war/terror topics. Max 10 comments/day per person. Be respectful. We moderate strictly.</p>
-    </section>
-    <section>
-      <h3>Terms</h3>
-      <p>All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
-    </section>
-    <p>© 2025 AI Gaming Blog</p>
-  </footer>
+        <section class="comments">
+            <h2>User Comments</h2>
+            <p>Leave your thoughts below. Max 10 comments/day. All comments are moderated.</p>
+            {{comments_section}}
+        </section>
+    </main>
+
+    <footer>
+        <p><a href="../index.html">🏠 Home</a></p>
+        <p><strong>Comment Policy:</strong> No spam, ads, offensive content. No adult/drugs/war topics. Max 10 comments/day.</p>
+        <p><strong>Terms:</strong> Információ és szórakozás céljából. Trademarks belong to owners. Affiliate linkek jutalékot hozhatnak.</p>
+        <p>© 2025 AI Gaming Blog</p>
+    </footer>
+
 </body>
 </html>
