@@ -14,3 +14,5 @@ call update_blog.bat
 
 REM Várakozás, hogy lássuk az eredményt
 
+call sitemap.py
+
