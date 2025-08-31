@@ -14,11 +14,11 @@ echo 🔹 Új posztok generálása 12 db (lépcsőzetesen)...
 echo ===============================
 
 REM Generálás 4-es blokkokban, hogy ne akadjon le
-set TOTAL=8
+set TOTAL=12
 for /L %%i in (1,4,%TOTAL%) do (
     set /a remaining=%TOTAL%-%%i+1
     if !remaining! GTR 3 (
-        set /a to_generate=2
+        set /a to_generate=4
     ) else (
         set /a to_generate=!remaining!
     )
