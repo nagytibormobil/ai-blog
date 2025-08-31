@@ -15,10 +15,10 @@ echo ===============================
 
 REM Generálás 4-es blokkokban, hogy ne akadjon le
 set TOTAL=4
-for /L %%i in (1,2,%TOTAL%) do (
+for /L %%i in (1,4,%TOTAL%) do (
     set /a remaining=%TOTAL%-%%i+1
     if !remaining! GTR 3 (
-        set /a to_generate=2
+        set /a to_generate=4
     ) else (
         set /a to_generate=!remaining!
     )
