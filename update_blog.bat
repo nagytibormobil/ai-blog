@@ -10,10 +10,21 @@ echo ===============================
 call ai-env\Scripts\activate.bat
 
 echo ===============================
-echo 🔹 Új posztok generálása 1 db 
+echo 🔹 Új posztok generálása 5 db (lépcsőzetesen)...
 echo ===============================
 
-set TOTAL=1
+REM Generálás 4-es blokkokban, hogy ne akadjon le
+set TOTAL=4
+for /L %%i in (1,2,%TOTAL%) do (
+    set /a remaining=%TOTAL%-%%i+1
+    if !remaining! GTR 3 (
+        set /a to_generate=4
+    ) else (
+        set /a to_generate=!remaining!
+    )
+    echo 🔹 Generálás %%i - %%i+!to_generate!-1 (összesen !to_generate! poszt)
+    python generate_and_save.py --num_posts !to_generate!
+)
 
 echo ===============================
 echo 🔹 Git add/commit/push (új képek és posztok)...
