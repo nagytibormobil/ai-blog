@@ -55,6 +55,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/call-of-duty.html</loc>
+    <lastmod>2025-08-31</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/clicker-heroes.html</loc>
     <lastmod>2025-08-30</lastmod>
     <changefreq>daily</changefreq>
@@ -231,6 +237,12 @@
   <url>
     <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/persona-5-royal.html</loc>
     <lastmod>2025-08-30</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nagytibormobil.github.io/ai-blog/generated_posts/rime.html</loc>
+    <lastmod>2025-08-31</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
