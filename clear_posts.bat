@@ -4,6 +4,8 @@ REM call ai-env\Scripts\activate.bat
 
 REM 1. Törli az összes HTML fájlt a generated_posts mappából
 del /Q "C:\ai_blog\generated_posts\*.html"
+del /Q "C:\ai_blog\Picture\*.jpg"
+
 
 REM 2. Teljesen eltávolítja a generated_posts mappát
 rmdir /S /Q "C:\ai_blog\generated_posts"
@@ -18,4 +20,4 @@ git push origin main
 
 echo.
 echo ✅ Minden poszt törölve, a repository frissítve!
-pause
+
