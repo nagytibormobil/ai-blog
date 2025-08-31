@@ -10,12 +10,12 @@ echo ===============================
 call ai-env\Scripts\activate.bat
 
 echo ===============================
-echo 🔹 Új posztok generálása 5 db (lépcsőzetesen)...
+echo 🔹 Új posztok generálása 12 db (lépcsőzetesen)...
 echo ===============================
 
 REM Generálás 4-es blokkokban, hogy ne akadjon le
-set TOTAL=4
-for /L %%i in (1,2,%TOTAL%) do (
+set TOTAL=12
+for /L %%i in (1,4,%TOTAL%) do (
     set /a remaining=%TOTAL%-%%i+1
     if !remaining! GTR 3 (
         set /a to_generate=4
