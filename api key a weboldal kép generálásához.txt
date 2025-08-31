@@ -1,3 +1,0 @@
-api key
-2fafa16ea4c147438f3b0cb031f8dbb7
-https://rawg.io/@tiboraiblog/apikey
