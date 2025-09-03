@@ -233,7 +233,6 @@ def post_footer_html():
     """
 
 def generate_comment_section_html():
-    # This HTML+JS is injected into every post to provide comment functionality
     return """
     <section id="comments-section" style="margin-top: 40px; border-top: 2px solid #0366d6; padding-top: 20px;">
       <h2>Comments</h2>
@@ -359,6 +358,7 @@ def generate_post_for_game(game):
     cover_src = f"../{PICTURE_DIR}/{img_filename}"
     footer_block = post_footer_html()
     comment_section = generate_comment_section_html()
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -624,4 +624,45 @@ def main():
     parser.add_argument("--num_posts", type=int, default=NUM_TOTAL)
     args = parser.parse_args()
     total = args.num_posts
-    existing_posts = read_index_posts
+    existing_posts = read_index_posts()
+    existing_titles = set(p.get("title","").lower() for p in existing_posts)
+    existing_filenames = set(os.path.basename(p.get("url","")) for p in existing_posts if p.get("url"))
+    random_candidates, popular_candidates = gather_candidates(total, NUM_POPULAR)
+    candidates = []
+    candidates.extend(popular_candidates)
+    candidates.extend(random_candidates)
+    posts_added = []
+    for cand in candidates:
+        name = cand.get("name","").strip()
+        if not name:
+            continue
+        slug = slugify(name)
+        filename = f"{slug}.html"
+        if name.lower() in existing_titles or filename in existing_filenames or os.path.exists(os.path.join(PICTURE_DIR, f"{slug}.jpg")):
+            print(f"Skipping '{name}' (already exists).")
+            continue
+        post = generate_post_for_game(cand)
+        if post:
+            posts_added.append(post)
+            existing_titles.add(post["title"].lower())
+            existing_filenames.add(os.path.basename(post["url"]))
+        time.sleep(0.7)
+    combined = posts_added + existing_posts
+    seen = set()
+    unique_posts = []
+    for p in combined:
+        t = p.get("title","").lower()
+        if t in seen:
+            continue
+        seen.add(t)
+        unique_posts.append(p)
+    unique_posts.sort(key=lambda x: x.get("date",""), reverse=True)
+    write_index_posts(unique_posts)
+    generate_index_html(unique_posts)
+    print(f"Done. New posts added: {len(posts_added)}")
+    if posts_added:
+        for p in posts_added:
+            print(" -", p["title"], "->", p["url"])
+
+if __name__ == "__main__":
+    main()
