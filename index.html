@@ -1,162 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>AI Gaming Blog – Game Cheats, Tips & Reviews</title>
-  <meta name="description" content="Discover game cheats, tips, and full reviews. Updated automatically with the latest PC and console games.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Gaming Blog - Game Reviews, Cheats & Tips</title>
+  <meta name="description" content="Discover game reviews, cheats, tips, and guides. Stay updated with the latest posts and support the AI Gaming Blog community.">
   <style>
-    :root {
-      --bg: #0b0f14;
-      --panel: #121821;
-      --muted: #9fb0c3;
-      --text: #eaf1f8;
-      --accent: #5cc8ff;
-      --card: #0f141c;
-      --border: #1f2a38;
-    }
-    html, body {
-      margin:0;
-      padding:0;
-      background:var(--bg);
-      color:var(--text);
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
-    }
-    .wrap { max-width: 960px; margin: 0 auto; padding: 18px; }
-    h1 { font-size: 32px; margin: 16px 0; }
-    h2 { margin-top: 24px; font-size: 22px; }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .post-list { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:18px; }
-    .post-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .post-card img { width:100%; height:auto; border-radius:8px; }
-    .post-card h3 { margin: 8px 0 4px; font-size:18px; }
-    .tiny { font-size:13px; color:var(--muted); }
-    .search-box { margin:18px 0; }
-    .search-box input {
-      width:100%; padding:10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--text);
-    }
-    .ad-block {
-      margin: 24px 0;
-      padding: 16px;
-      border: 1px dashed #ffd166;
-      border-radius: 10px;
-      background: linear-gradient(180deg,rgba(255,209,102,.06),transparent);
-    }
-    .paypal-support {
-      text-align: center;
-      margin: 40px 0;
-    }
-    .paypal-button {
-      background:#0070ba;
-      color:#fff;
-      padding:12px 24px;
-      border:none;
-      border-radius:8px;
-      font-size:16px;
-      cursor:pointer;
-    }
-    footer {
-      margin-top: 40px;
-      padding: 20px;
-      font-size: 13px;
-      color: var(--muted);
-      border-top: 1px solid var(--border);
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; color: #222; }
+    header { background: #222; color: #fff; padding: 1rem; text-align: center; }
+    header h1 { margin: 0; font-size: 1.8rem; }
+    .container { max-width: 1100px; margin: auto; padding: 1rem; }
+    .search-box { text-align: center; margin: 1rem 0; }
+    .search-box input { padding: 0.6rem; width: 70%; max-width: 400px; }
+    .post-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
+    .post { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s; }
+    .post:hover { transform: scale(1.02); }
+    .post img { width: 100%; height: 150px; object-fit: cover; }
+    .post-content { padding: 0.8rem; }
+    .post h3 { margin: 0; font-size: 1.1rem; }
+    .newsletter, .affiliate { background: #fff; margin: 2rem 0; padding: 1.2rem; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .newsletter input { padding: 0.6rem; width: 60%; max-width: 300px; margin-right: 0.5rem; }
+    .newsletter button, .affiliate button { padding: 0.6rem 1rem; background: #0070ba; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    .newsletter button:hover, .affiliate button:hover { background: #005a94; }
+    footer { background: #222; color: #fff; text-align: center; padding: 1rem; margin-top: 2rem; font-size: 0.9rem; }
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <header>
     <h1>AI Gaming Blog</h1>
-    <p>Latest cheats, tips, and AI-generated reviews of your favorite games.</p>
+    <p>Your source for reviews, cheats & gaming tips</p>
+  </header>
 
+  <div class="container">
     <div class="search-box">
-      <input type="text" id="search" placeholder="Search games... (e.g. Grand Theft Auto)">
+      <input type="text" id="search" placeholder="Search for a game...">
     </div>
 
-    <h2>Latest Posts</h2>
     <div id="posts" class="post-list"></div>
 
-    <div class="ad-block">
-      <!-- Affiliate block placeholder -->
-      <h3>Earn Real Money While You Play 📱</h3>
-      <p>Passive income while gaming. Runs safely in the background.</p>
-      <p><a href="#">[Affiliate Link Here]</a></p>
+    <div class="newsletter">
+      <h2>Subscribe for Weekly Cheats & Tips</h2>
+      <p>Get the latest game reviews, cheats, and guides directly to your inbox.</p>
+      <input type="email" placeholder="Enter your email">
+      <button>Subscribe</button>
     </div>
 
-    <h2>Top 3 Popular</h2>
-    <div id="popular" class="post-list"></div>
-
-    <div class="paypal-support">
-      <p><strong>Support this site via PayPal</strong></p>
-      <p>Help us keep improving! Monthly supporters join exclusive giveaways 🎁</p>
+    <div class="affiliate">
+      <h2>Support AI Gaming Blog</h2>
+      <p>Your support helps us create more guides and tips. We even run monthly giveaways for supporters!</p>
       <form action="https://www.paypal.com/donate" method="post" target="_blank">
-        <input type="hidden" name="business" value="nagytibormobil@gmail.com" />
-        <input type="hidden" name="currency_code" value="USD" />
-        <button type="submit" class="paypal-button">Donate with PayPal</button>
+        <input type="hidden" name="business" value="nagytibormobil@gmail.com">
+        <input type="hidden" name="currency_code" value="USD">
+        <button type="submit">Donate via PayPal</button>
       </form>
     </div>
-
-    <footer>
-      <strong>Terms</strong>
-      <p>All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions. 
-      We take no responsibility for purchases or use of games. Video games may cause addiction or health issues — use responsibly.</p>
-      <p>© 2025 AI Gaming Blog</p>
-    </footer>
   </div>
 
+  <footer>
+    <p>⚠️ Disclaimer: All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions. We take no responsibility for game purchases or their effects. Games can cause addiction or health risks – use responsibly.</p>
+    <p>© 2025 AI Gaming Blog</p>
+  </footer>
+
   <script>
-    // <<< AUTO-GENERATED POSTS START >>>
-    const POSTS = [];
-    // <<< AUTO-GENERATED POSTS END >>>
-
-    function renderPosts(list, elementId, limit=null) {
-      const container = document.getElementById(elementId);
-      container.innerHTML = "";
-      let items = list;
-      if(limit) items = list.slice(0, limit);
-      items.forEach(p => {
-        const card = document.createElement("div");
-        card.className = "post-card";
-        card.innerHTML = `
-          <a href="${p.url}">
-            <img src="${p.cover}" alt="${p.title} cover"/>
-            <h3>${p.title}</h3>
-          </a>
-          <div class="tiny">${p.date} · ⭐ ${p.rating}/5</div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function searchPosts(q) {
-      q = q.toLowerCase();
-      return POSTS.filter(p => p.title.toLowerCase().includes(q));
-    }
-
-    document.getElementById("search").addEventListener("input", function(e) {
-      const q = e.target.value;
-      if(q.length < 2) { renderPosts(POSTS,"posts"); return; }
-      const results = searchPosts(q);
-      renderPosts(results,"posts");
-    });
-
-    renderPosts(POSTS,"posts");
-    // Top 3 popular by views
-    const popular = [...POSTS].sort((a,b)=>b.views-a.views).slice(0,3);
-    renderPosts(popular,"popular");
-  </script>
-</body>
-</html>
+    // Ez a rész a generate_and_save.py tölti fel
+    POSTS = [
+      // Példa dummy, a script majd feltölti valós adatokkal
+      {title: "Half-Life 2: Episode Two", url: "generated_posts/half-life-2-episode-two.html", cover: "img/hl2.jpg"_
