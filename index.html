@@ -134,69 +134,7 @@
 </main>
 <script>    // <<< AUTO-GENERATED POSTS START >>>
     const POSTS = [
-  
-];
-    // <<< AUTO-GENERATED POSTS END >>>
 
-    const byDateDesc = (a,b)=> new Date(b.date) - new Date(a.date);
-    const clamp = (n,min,max)=> Math.max(min, Math.min(max,n));
-    function starHTML(r){
-      const full = Math.floor(r);
-      const half = (r - full)>=0.5 ? 1 : 0;
-      const empty = 5 - full - half;
-      return "⭐".repeat(full) + (half?"½":"") + "☆".repeat(empty);
-    }
-    function placeholder(title){
-      const init = (title||"Game").split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||"G").join("");
-      const svg = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'>
-        <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#0f141c'/><stop offset='100%' stop-color='#121821'/></linearGradient></defs>
-        <rect fill='url(#g)' width='100%' height='100%'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' fill='#5cc8ff' font-size='120' font-family='Arial, Helvetica, sans-serif'>${init}</text>
-      </svg>`);
-      return `data:image/svg+xml,${svg}`;
-    }
-    function card(p){
-      const img = p.cover && p.cover.length ? p.cover : placeholder(p.title);
-      const platforms = (p.platform||[]).join(" • ");
-      return `
-        <article class="card">
-          <a class="thumb" href="${p.url}"><img alt="${p.title}" loading="lazy" src="${img}"></a>
-          <div class="content">
-            <h3 class="title"><a href="${p.url}">${p.title}</a></h3>
-            <div class="meta">
-              <span class="badge">${platforms||"Game"}</span>
-              <span class="muted">${new Date(p.date).toLocaleDateString()}</span>
-              <span class="stars" title="${p.rating}/5">${starHTML(clamp(p.rating||0,0,5))}</span>
-            </div>
-          </div>
-        </article>
-      `;
-    }
-
-    const latest = [...POSTS].sort(byDateDesc).slice(0, 9);
-    document.getElementById('latestGrid').innerHTML = latest.map(card).join("");
-    const popular = [...POSTS].sort((a,b)=> (b.views+(b.comments*3)) - (a.views+(a.comments*3))).slice(0,3);
-    document.getElementById('popularGrid').innerHTML = popular.map(card).join("");
-    function pick3(arr){
-      const used = new Set(); const out=[];
-      while(out.length<3 && used.size<arr.length){
-        const i = Math.floor(Math.random()*arr.length);
-        if(!used.has(i)){ used.add(i); out.push(arr[i]); }
-      }
-      return out;
-    }
-    document.getElementById('exploreGrid').innerHTML = pick3(POSTS).map(card).join("");
-
-    const pick = document.getElementById('pick');
-    [...POSTS].sort((a,b)=> a.title.localeCompare(b.title)).forEach(p=>{
-      const o=document.createElement('option'); o.value=p.url; o.textContent=p.title; pick.appendChild(o);
-    });
-    document.getElementById('go').onclick = ()=> { const u=pick.value; if(u) location.href=u; }
-    document.getElementById('find').onclick = ()=> {
-      const q = document.getElementById('q').value.trim().toLowerCase();
-      if(!q) return;
-      const hit = POSTS.find(p=> p.title.toLowerCase().includes(q));
-      if(hit) location.href = hit.url;
-      else alert("No match.");
     };
 
     document.getElementById('year').textContent = new Date().getFullYear();
