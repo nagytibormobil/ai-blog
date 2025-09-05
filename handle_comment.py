@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # handle_comment.py
-# Kommentek kezelése minden poszthoz, moderációval
+# Kommentek kezelése minden poszthoz, moderációval és CORS engedéllyel
 
 import os
 import json
 import datetime
 import re
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # ← CORS importálása
 
 # Mindig ide mentjük a kommenteket
 COMMENT_DIR = r"C:\ai_blog\comments"
@@ -20,7 +21,7 @@ MAX_COMMENT_LENGTH = 200
 FORBIDDEN_PATTERNS = [
     r"http[s]?://",        # semmilyen link
     r"\.com", r"\.net", r"\.org", r"\.ru", r"\.cn",
-    r"fuck", r"shit", r"bitch",        # csúnya szavak
+    r"fuck", r"shit", r"bitch",  # csúnya szavak
     r"nigger", r"hitler", r"terror", r"isis",
     r"drug", r"cocaine", r"heroin", r"sex", r"porn"
 ]
@@ -70,8 +71,11 @@ def save_comment(slug, name, text):
 
     return True, "Comment saved."
 
-# Flask API a HTML-es beküldéshez
+# =========================
+# Flask API
+# =========================
 app = Flask(__name__)
+CORS(app)  # ← CORS engedélyezése minden oldalról
 
 @app.route("/api/comment", methods=["POST"])
 def api_comment():
@@ -86,23 +90,26 @@ def api_comment():
     ok, msg = save_comment(slug, name, text)
     return jsonify({"success": ok, "message": msg})
 
-
+# Példa futtatás parancssorból
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) > 1:
-        # Parancssoros futtatás
-        import argparse
-        parser = argparse.ArgumentParser(description="Add a comment to a post.")
-        parser.add_argument("slug", help="Post slug (pl. jatek-neve)")
-        parser.add_argument("name", help="Kommentelő neve (max 12 karakter)")
-        parser.add_argument("text", help="Komment szöveg (max 200 karakter)")
-        args = parser.parse_args()
+    import argparse
 
-        if not is_valid_comment(args.name, args.text):
-            print("❌ Comment rejected by moderation rules.")
-        else:
-            ok, msg = save_comment(args.slug, args.name, args.text)
-            print("✅" if ok else "❌", msg)
+    parser = argparse.ArgumentParser(description="Add a comment to a post.")
+    parser.add_argument("slug", help="Post slug (pl. jatek-neve)")
+    parser.add_argument("name", help="Kommentelő neve (max 12 karakter)")
+    parser.add_argument("text", help="Komment szöveg (max 200 karakter)")
+
+    args = parser.parse_args()
+
+    if not is_valid_comment(args.name, args.text):
+        print("❌ Comment rejected by moderation rules.")
     else:
-        # Flask szerver indítása
-        app.run(host="0.0.0.0", port=5000, debug=True)
+        ok, msg = save_comment(args.slug, args.name, args.text)
+        if ok:
+            print("✅", msg)
+        else:
+            print("❌", msg)
+
+    # Flask szerver indítása
+    # API indítása pl. http://127.0.0.1:5000/api/comment
+    app.run(host="0.0.0.0", port=5000, debug=True)
