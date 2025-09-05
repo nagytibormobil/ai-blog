@@ -1,70 +1,95 @@
+import os
+import requests
+import random
+from datetime import datetime
+
+# ===============================
+# Konfigurációk
+# ===============================
+RAWG_API_KEY = "ide_kerül_az_api_kulcsod"  # Ha van API kulcsod
+RAWG_PAGE_SIZE = 20  # hány játékot kérünk le egyszerre
+OUTPUT_DIR = "generated_posts"
+PICTURE_DIR = "Picture"
+USER_AGENT = "Mozilla/5.0"
+
+# Mappák ellenőrzése
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(PICTURE_DIR, exist_ok=True)
+
+# ===============================
+# RAWG API véletlenszerű játék lekérés
+# ===============================
 def rawg_search_random(page=1, page_size=RAWG_PAGE_SIZE):
-    url = "https://api.rawg.io/api/games"
-    params = {"key": RAWG_API_KEY, "page": page, "page_size": page_size}
+    url = f"https://api.rawg.io/api/games?page={page}&page_size={page_size}&key={RAWG_API_KEY}"
     headers = {"User-Agent": USER_AGENT}
-    try:
-        r = requests.get(url, params=params, headers=headers, timeout=15)
-        r.raise_for_status()
-        results = r.json().get("results", [])
-        print(f"[DEBUG] RAWG random search page {page} returned {len(results)} games")
-        return results
-    except Exception as e:
-        print(f"[ERROR] RAWG random search failed: {e}")
-        return []
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    data = response.json()
+    return data.get("results", [])
 
-def rawg_get_popular(page=1, page_size=RAWG_PAGE_SIZE):
-    url = "https://api.rawg.io/api/games"
-    params = {"key": RAWG_API_KEY, "page": page, "page_size": page_size, "ordering": "-added"}
-    headers = {"User-Agent": USER_AGENT}
-    try:
-        r = requests.get(url, params=params, headers=headers, timeout=15)
-        r.raise_for_status()
-        results = r.json().get("results", [])
-        print(f"[DEBUG] RAWG popular search page {page} returned {len(results)} games")
-        return results
-    except Exception as e:
-        print(f"[ERROR] RAWG popular search failed: {e}")
-        return []
+# ===============================
+# Poszt mentése HTML-be
+# ===============================
+def save_post(game):
+    title = game.get("name", "Név nélkül")
+    description = game.get("description_raw", "Nincs leírás")
+    image_url = game.get("background_image")
 
-def generate_post_for_game(game):
-    name = game.get("name") or "Unknown Game"
-    slug = slugify(name)
-    filename = f"{slug}.html"
-    out_path = os.path.join(OUTPUT_DIR, filename)
-    print(f"[DEBUG] Generating post for: {name} (slug: {slug}) -> {filename}")
+    # Kép letöltés
+    image_filename = None
+    if image_url:
+        ext = os.path.splitext(image_url)[-1]
+        image_filename = os.path.join(PICTURE_DIR, f"{title[:20].replace(' ', '_')}{ext}")
+        try:
+            r = requests.get(image_url, headers={"User-Agent": USER_AGENT})
+            with open(image_filename, "wb") as f:
+                f.write(r.content)
+        except Exception as e:
+            print(f"⚠️ Hiba kép letöltésénél: {e}")
+            image_filename = None
 
-    if os.path.exists(out_path):
-        print(f"[DEBUG] Post already exists, skipping: {out_path}")
-        return None
+    # HTML fájl mentése
+    safe_title = title.replace(" ", "_")[:30]
+    filename = os.path.join(OUTPUT_DIR, f"{safe_title}.html")
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(f"<h1>{title}</h1>\n")
+        f.write(f"<p>{description}</p>\n")
+        if image_filename:
+            f.write(f"<img src='../{PICTURE_DIR}/{os.path.basename(image_filename)}' alt='{title}'>\n")
+    print(f"✅ Poszt mentve: {filename}")
 
-    img_url = game.get("background_image") or game.get("background_image_additional") or ""
-    img_filename = f"{slug}.jpg"
-    img_path = os.path.join(PICTURE_DIR, img_filename)
+# ===============================
+# Több poszt generálása
+# ===============================
+def generate_posts(num_posts=4):
+    page = 1
+    count = 0
+    while count < num_posts:
+        try:
+            games = rawg_search_random(page=page)
+            if not games:
+                print("⚠️ Nincs több játék az API-tól.")
+                break
+            for game in games:
+                if count >= num_posts:
+                    break
+                save_post(game)
+                count += 1
+            page += 1
+        except Exception as e:
+            print(f"⚠️ Hiba poszt generálásánál: {e}")
+            break
 
-    if not os.path.exists(img_path):
-        if img_url:
-            ok = download_image(img_url, img_path)
-            if ok:
-                print(f"[DEBUG] Image downloaded: {img_filename}")
-            else:
-                print(f"[WARNING] Image download failed for {img_filename}")
-        else:
-            print(f"[WARNING] No image URL for {name}, creating placeholder")
-            ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
-            download_image(ph_url, img_path)
-    else:
-        print(f"[DEBUG] Image already exists: {img_filename}")
+# ===============================
+# Fő
+# ===============================
+if __name__ == "__main__":
+    import argparse
 
-    # További debug: YouTube embed
-    youtube_embed = get_youtube_embed(name)
-    print(f"[DEBUG] YouTube embed URL: {youtube_embed}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--num_posts", type=int, default=4, help="Hány posztot generáljon")
+    args = parser.parse_args()
 
-    # HTML generálás
-    try:
-        with open(out_path, "w", encoding="utf-8") as f:
-            f.write("<html>DEBUG CONTENT</html>")  # Ide jön a teljes HTML kód
-        print(f"[DEBUG] HTML post created: {out_path}")
-    except Exception as e:
-        print(f"[ERROR] Failed to write HTML: {e}")
-
-    return {"title": name, "url": filename}
+    print(f"🔹 Posztok generálása: {args.num_posts} db")
+    generate_posts(args.num_posts)
+    print("✅ Poszt generálás kész!")
