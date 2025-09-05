@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # generate_and_save.py
 # Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés.
+# Kiegészítve: statikus komment rendszer + moderáció (pending -> approved), Comment Policy megjelenítése.
 # Elvárások: requests, bs4 telepítve (pip install requests beautifulsoup4)
 
 import os
@@ -30,9 +31,20 @@ NUM_POPULAR = 2       # hány "népszerű" (popular) legyen a futáson belül
 RAWG_PAGE_SIZE = 40   # mennyi játékot kérünk le egy hívással (max 40)
 USER_AGENT = "AI-Gaming-Blog-Agent/1.0"
 
+# Comments configuration
+COMMENTS_DIR = os.path.join(OUTPUT_DIR, "comments")
+PENDING_DIR = os.path.join(COMMENTS_DIR, "pending")
+REJECTED_DIR = os.path.join(COMMENTS_DIR, "rejected")
+MAX_COMMENT_LEN = 200
+MAX_COMMENTS_PER_DAY_PER_NAME = 10
+GAMING_KEYWORDS = ["cheat", "tip", "tips", "boss", "level", "weapon", "build", "strategy", "quest", "map", "glitch", "exploit", "guide", "skill", "loot", "help", "how", "where"]
+
 # Ensure folders exist
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
 Path(PICTURE_DIR).mkdir(exist_ok=True)
+Path(COMMENTS_DIR).mkdir(exist_ok=True)
+Path(PENDING_DIR).mkdir(exist_ok=True)
+Path(REJECTED_DIR).mkdir(exist_ok=True)
 
 # ==============
 # HELPERS
@@ -159,7 +171,7 @@ def write_index_posts(all_posts):
             html
         )
     else:
-        # Fallback replace POSTS = [...]
+        # Fallback replace POSTS = [...]. Keep semicolon if present.
         new_html = re.sub(r"POSTS\s*=\s*\[[\s\S]*?\]", f"POSTS = {new_json}", html)
 
     with open(INDEX_FILE, "w", encoding="utf-8") as f:
@@ -207,7 +219,7 @@ def build_long_review(game_name, publisher, year):
     return "\n".join(parts)
 
 def post_footer_html():
-    """Return the footer HTML (affiliate + policies) identical to index footer."""
+    """Return the footer HTML (affiliate + policies) identical to index footer, extended Comment Policy."""
     footer = """
     <hr>
     <section class="ad">
@@ -235,6 +247,9 @@ def post_footer_html():
             <li>No adult/drugs/war/terror topics.</li>
             <li>Max 10 comments/day per person.</li>
             <li>Be respectful. We moderate strictly.</li>
+            <li>Comments must be max 200 characters and plain text only (no links, no images, no HTML).</li>
+            <li>Comments must be related to the game (mention the game's name or a gameplay-related keyword like "cheat", "tip", "boss", "level", "build", "guide").</li>
+            <li>All new comments are moderated before publication.</li>
           </ul>
         </div>
         <div>
@@ -246,6 +261,150 @@ def post_footer_html():
     </section>
     """.format(year=datetime.datetime.now().year)
     return footer
+
+# ==============
+# COMMENTS: utilities for reading/writing approved comments
+# ==============
+def approved_comments_file(slug):
+    return os.path.join(COMMENTS_DIR, f"{slug}.json")
+
+def load_approved_comments(slug):
+    path = approved_comments_file(slug)
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def save_approved_comments(slug, comments):
+    path = approved_comments_file(slug)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(comments, f, ensure_ascii=False, indent=2)
+
+# simple profanity/ad detection list (expand as needed)
+BAD_WORDS = [
+    "fuck", "shit", "bitch", "nigger", "faggot", "cunt", "asshole", "damn", "whore"
+]
+AD_KEYWORDS = ["buy now", "subscribe", "free money", "visit", "order now", "discount", "promo", "click here"]
+
+def contains_url(text):
+    return bool(re.search(r"https?://|www\.|\.com|\.net|\.org|\.io|http:", text, re.IGNORECASE))
+
+def contains_bad_words(text):
+    t = text.lower()
+    for w in BAD_WORDS:
+        if w in t:
+            return True
+    for a in AD_KEYWORDS:
+        if a in t:
+            return True
+    return False
+
+def is_game_related(text, game_name):
+    t = text.lower()
+    if game_name and game_name.lower() in t:
+        return True
+    for kw in GAMING_KEYWORDS:
+        if kw in t:
+            return True
+    return False
+
+def moderate_pending_files():
+    """
+    Scan PENDING_DIR for pending_*.json, validate and either approve (move to approved comments file)
+    or reject (move to rejected/ with reason).
+    """
+    files = [f for f in os.listdir(PENDING_DIR) if f.endswith(".json")]
+    if not files:
+        print("Nincs függő komment fájl a pending mappában.")
+        return
+
+    for fname in files:
+        ppath = os.path.join(PENDING_DIR, fname)
+        try:
+            with open(ppath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception as e:
+            print(f"Hiba a pending fájl olvasásánál {fname}: {e}")
+            continue
+
+        slug = data.get("slug")
+        name = data.get("name", "Anon")
+        text = data.get("text", "").strip()
+        timestamp = data.get("timestamp") or datetime.datetime.now().isoformat()
+        date_str = timestamp.split("T")[0] if "T" in timestamp else timestamp.split(" ")[0]
+
+        reasons = []
+        if not text:
+            reasons.append("Empty text.")
+        if len(text) > MAX_COMMENT_LEN:
+            reasons.append(f"Too long ({len(text)} > {MAX_COMMENT_LEN}).")
+        if contains_url(text):
+            reasons.append("Contains URL or link.")
+        if contains_bad_words(text):
+            reasons.append("Contains disallowed words or ad keywords.")
+        # requires game relation
+        # attempt to extract game name from pending file or fallback to slug
+        game_name = data.get("game_name", "") or (slug.replace("-", " ") if slug else "")
+        if not is_game_related(text, game_name):
+            reasons.append("Not clearly related to the game (must contain game name or gameplay keyword).")
+
+        # check daily limit for this name
+        approved = load_approved_comments(slug)
+        today = date_str
+        cnt_today = sum(1 for c in approved if c.get("name","").lower() == name.lower() and c.get("date","") == today)
+        if cnt_today >= MAX_COMMENTS_PER_DAY_PER_NAME:
+            reasons.append(f"User '{name}' reached daily limit ({MAX_COMMENTS_PER_DAY_PER_NAME}).")
+
+        if reasons:
+            # reject: move to rejected dir with reason
+            rej_name = f"rejected_{fname}"
+            rej_path = os.path.join(REJECTED_DIR, rej_name)
+            data["rejected_at"] = datetime.datetime.now().isoformat()
+            data["rejected_reasons"] = reasons
+            with open(rej_path, "w", encoding="utf-8") as rf:
+                json.dump(data, rf, ensure_ascii=False, indent=2)
+            os.remove(ppath)
+            print(f"Rejected pending comment {fname} -> reasons: {reasons}")
+            continue
+
+        # else approve: append to approved comments for slug
+        approved.append({
+            "name": name,
+            "text": text,
+            "date": today,
+            "time": timestamp
+        })
+        save_approved_comments(slug, approved)
+        os.remove(ppath)
+        print(f"Approved comment for '{slug}' by '{name}'.")
+
+    # After moderating, update index's comments counters
+    update_index_comment_counts()
+
+def update_index_comment_counts():
+    """
+    Reads index posts and replaces 'comments' counts with actual approved comments counts.
+    """
+    posts = read_index_posts()
+    if not posts:
+        return
+    changed = False
+    for p in posts:
+        url = p.get("url", "")
+        slug = os.path.basename(url).replace(".html", "")
+        approved = load_approved_comments(slug)
+        count = len(approved) if approved else 0
+        if p.get("comments", None) != count:
+            p["comments"] = count
+            changed = True
+    if changed:
+        write_index_posts(posts)
+        print("Index comment counts frissítve.")
+    else:
+        print("Index comment counts már naprakész.")
 
 # ==============
 # POST GENERATION
@@ -291,11 +450,75 @@ def generate_post_for_game(game):
     publisher = game.get("publisher") or game.get("developers", [{}])[0].get("name", "") if isinstance(game.get("developers"), list) else ""
     review_html = build_long_review(name, publisher or "the studio", year)
 
+    # Load approved comments for this slug (to render into post)
+    approved_comments = load_approved_comments(slug)
+    comments_html = ""
+    if approved_comments:
+        for c in approved_comments:
+            safe_name = re.sub(r"[^\w\s\-\.]", "", c.get("name",""))[:40]
+            text = c.get("text","")
+            dt = c.get("date","")
+            comments_html += f'<div class="comment"><strong>{safe_name}</strong> <span class="tiny">({dt})</span><p>{text}</p></div>\n'
+    else:
+        comments_html = "<p class='tiny'>No comments yet.</p>"
+
     # Build HTML content (keeps dark theme style but inline minimal CSS to avoid external dependencies)
     now = datetime.datetime.now()
     title = f"{name} Cheats, Tips & Full Review"
     cover_src = f"../{PICTURE_DIR}/{img_filename}"  # relative to generated_posts/
     footer_block = post_footer_html()
+
+    # Client-side comment form: validates locally and produces a pending JSON file for moderator upload.
+    # This avoids server-side dependencies on static hosting: moderator runs script to process pending files.
+    comment_form_js = f"""
+    <script>
+    function sanitizeFilename(name) {{
+      return name.replace(/[^a-z0-9_-]/gi,'_').toLowerCase();
+    }}
+    function createPendingJson() {{
+      const name = document.getElementById('c_name').value.trim() || 'Anon';
+      const text = document.getElementById('c_text').value.trim();
+      if(!text) {{ alert('Please write a comment.'); return; }}
+      if(text.length > {MAX_COMMENT_LEN}) {{ alert('Comment too long (max {MAX_COMMENT_LEN} chars).'); return; }}
+      // simple link detection
+      if(/https?:\\/\\//i.test(text) || /www\\./i.test(text) || /\\.com\\b/i.test(text)) {{
+        alert('Links are not allowed in comments.'); return;
+      }}
+      // must be related: check contains game name or keyword
+      const gameName = {json.dumps(name)};
+      const lower = text.toLowerCase();
+      let related = false;
+      if(gameName && gameName.toLowerCase().length>0 && lower.indexOf(gameName.toLowerCase())>=0) related = true;
+      const keywords = {json.dumps(GAMING_KEYWORDS)};
+      for(let k of keywords) {{
+        if(lower.indexOf(k) >= 0) {{ related = true; break; }}
+      }}
+      if(!related) {{
+        if(!confirm('Your comment does not appear to mention the game or a gameplay keyword. Submit anyway to pending moderation?')) return;
+      }}
+      const payload = {{
+        slug: {json.dumps(slug)},
+        game_name: {json.dumps(name)},
+        name: name,
+        text: text,
+        timestamp: new Date().toISOString()
+      }};
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {{type: 'application/json'}});
+      const fname = 'pending_{slug}_' + sanitizeFilename(name) + '_' + Date.now() + '.json';
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fname;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      alert('A pending comment file has been generated. Please upload the downloaded file to the site owner for moderation (place in generated_posts/comments/pending/).');
+      // clear form
+      document.getElementById('c_text').value = '';
+      document.getElementById('c_name').value = '';
+    }}
+    </script>
+    """
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -314,6 +537,11 @@ def generate_post_for_game(game):
     .tiny{{color:var(--muted);font-size:13px}}
     .ad{{background:linear-gradient(180deg,rgba(255,209,102,.06),transparent);padding:12px;border-radius:10px;border:1px dashed #ffd166;color:var(--text)}}
     a{{color:var(--accent)}}
+    .comment{{background:rgba(255,255,255,0.02);padding:8px;border-radius:6px;margin:8px 0}}
+    .comment p{{margin:6px 0 0}}
+    .comment-form input[type="text"], .comment-form textarea{{width:100%;padding:8px;border-radius:6px;border:1px solid #233240;background:transparent;color:var(--text)}}
+    .comment-form button{{margin-top:8px;padding:8px 12px;border-radius:8px;border:0;background:var(--accent);color:#041223;cursor:pointer}}
+    .hint{{font-size:12px;color:var(--muted)}}
   </style>
 </head>
 <body>
@@ -338,11 +566,25 @@ def generate_post_for_game(game):
       <li>Balance risk and reward when tackling optional bosses.</li>
     </ul>
 
+    <h3>Comments</h3>
+    <div id="comments">
+      {comments_html}
+    </div>
+
+    <h3>Leave a comment (will be moderated)</h3>
+    <div class="comment-form">
+      <input id="c_name" type="text" maxlength="40" placeholder="Your name (max 40 chars)"/>
+      <textarea id="c_text" rows="3" maxlength="{MAX_COMMENT_LEN}" placeholder="Write a comment related to this game (max {MAX_COMMENT_LEN} chars)"></textarea>
+      <div class="hint tiny">Plain text only — no links or images. Comments are moderated and must be related to the game. Submitting this will download a pending file for moderation.</div>
+      <button onclick="createPendingJson()">Create pending comment file (download)</button>
+    </div>
+
     <h2 class="tiny">AI Rating</h2>
     <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
 
     {footer_block}
   </div>
+  {comment_form_js}
 </body>
 </html>
 """
@@ -358,7 +600,7 @@ def generate_post_for_game(game):
         "rating": round(random.uniform(2.5,5.0),1),
         "cover": f"{PICTURE_DIR}/{img_filename}",
         "views": 0,
-        "comments": 0
+        "comments": len(approved_comments) if approved_comments else 0
     }
     print(f"✅ Generated post: {out_path}")
     return post_dict
@@ -413,7 +655,12 @@ def gather_candidates(total_needed, num_popular):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_posts", type=int, default=NUM_TOTAL)
+    parser.add_argument("--moderate", action="store_true", help="Process pending comments (move pending -> approved/rejected)")
     args = parser.parse_args()
+    if args.moderate:
+        moderate_pending_files()
+        return
+
     total = args.num_posts
 
     # load existing posts from index -> to not duplicate titles/URLs
@@ -425,7 +672,7 @@ def main():
     random_candidates, popular_candidates = gather_candidates(total, NUM_POPULAR)
     # combine: make sure popular are included
     candidates = []
-    # interleave popular for visibility: place 2 popular among the list
+    # interleave popular for visibility: place popular first
     candidates.extend(popular_candidates)
     candidates.extend(random_candidates)
 
@@ -462,11 +709,6 @@ def main():
         unique_posts.append(p)
 
     # Sort by date desc (newer first) — ensure date present
-    def date_key(item):
-        try:
-            return item.get("date","")
-        except:
-            return ""
     unique_posts.sort(key=lambda x: x.get("date",""), reverse=True)
 
     # write back to index
