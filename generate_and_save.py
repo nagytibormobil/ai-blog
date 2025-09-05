@@ -191,8 +191,8 @@ def post_footer_html():
 <li>No adult/drugs/war/terror topics.</li>
 <li>Max 10 comments/day per person.</li>
 <li>Be respectful. We moderate strictly.</li>
-<li>Text only — no links or images allowed.</li>
-<li>Comments up to 200 characters.</li>
+<li>Plain text only — no links or images.</li>
+<li>Each comment max 200 characters.</li>
 </ul>
 </div>
 <div>
@@ -205,11 +205,15 @@ def post_footer_html():
 """.format(year=datetime.datetime.now().year)
     return footer
 
+# ==============
+# POST GENERATION
+# ==============
 def generate_post_for_game(game):
     name = game.get("name") or "Unknown Game"
     slug = slugify(name)
     filename = f"{slug}.html"
     out_path = os.path.join(OUTPUT_DIR, filename)
+
     if os.path.exists(out_path):
         print(f"⚠️ Post already exists for '{name}' -> {filename} (skipping)")
         return None
@@ -217,24 +221,15 @@ def generate_post_for_game(game):
     img_url = game.get("background_image") or game.get("background_image_additional") or ""
     img_filename = f"{slug}.jpg"
     img_path = os.path.join(PICTURE_DIR, img_filename)
-    if os.path.exists(img_path):
-        print(f"⚠️ Image already exists for '{name}' -> {img_filename} (skipping)")
-        return None
-
-    if img_url:
-        ok = download_image(img_url, img_path)
-        if not ok:
+    if not os.path.exists(img_path):
+        if not download_image(img_url, img_path):
             ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
             download_image(ph_url, img_path)
-    else:
-        ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
-        download_image(ph_url, img_path)
 
     youtube_embed = get_youtube_embed(name)
     year = game.get("released") or ""
     publisher = game.get("publisher") or game.get("developers", [{}])[0].get("name", "") if isinstance(game.get("developers"), list) else ""
     review_html = build_long_review(name, publisher or "the studio", year)
-
     now = datetime.datetime.now()
     title = f"{name} Cheats, Tips & Full Review"
     cover_src = f"../{PICTURE_DIR}/{img_filename}"
@@ -243,12 +238,26 @@ def generate_post_for_game(game):
     # --- COMMENT BLOCK ---
     comment_html = """
 <h2>Comments</h2>
-<div class="comments">
-<p>Write a comment (will be automatically moderated)</p>
-<p>Your name (max 40 chars)</p>
-<p>Write a comment (max 200 chars)</p>
-<p>Plain text only — no links or images. Comments are moderated and must follow the site policy. Submitting this will download a pending file for moderation.</p>
-</div>
+<form id="comment-form">
+  <label>Your name (max 40 chars)</label><br>
+  <input type="text" id="comment-name" maxlength="40" style="width:100%"><br><br>
+  <label>Write a comment (max 200 chars)</label><br>
+  <textarea id="comment-text" maxlength="200" rows="4" style="width:100%"></textarea><br><br>
+  <small>Plain text only — no links or images. Comments are moderated and must follow the site policy.</small><br>
+  <button type="button" onclick="submitComment()">Submit</button>
+</form>
+
+<script>
+function submitComment() {
+  const name = document.getElementById("comment-name").value.trim();
+  const text = document.getElementById("comment-text").value.trim();
+  if(!name || !text) { alert("Fill in both fields."); return; }
+  if(name.length>40 || text.length>200) { alert("Too long."); return; }
+  alert("Your comment has been submitted for moderation.");
+  document.getElementById("comment-name").value = "";
+  document.getElementById("comment-text").value = "";
+}
+</script>
 """
 
     html = f"""<!DOCTYPE html>
@@ -291,14 +300,11 @@ a{{color:var(--accent)}}
 <li>Balance risk and reward when tackling optional bosses.</li>
 </ul>
 {comment_html}
-<h2 class="tiny">AI Rating</h2>
-<p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
 {footer_block}
 </div>
 </body>
 </html>
 """
-
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
 
@@ -326,11 +332,9 @@ def gather_candidates(total_needed, num_popular):
     while len(popular_candidates) < num_popular and attempts < 8:
         try:
             res = rawg_get_popular(page=page)
-            if not res:
-                break
+            if not res: break
             for g in res:
-                if len(popular_candidates) >= num_popular:
-                    break
+                if len(popular_candidates) >= num_popular: break
                 popular_candidates.append(g)
             page += 1
         except Exception as e:
@@ -339,13 +343,13 @@ def gather_candidates(total_needed, num_popular):
         attempts += 1
 
     collected = []
+    page = 1
     attempts = 0
     while len(collected) < (total_needed - len(popular_candidates)) and attempts < 12:
         try:
             page_rand = random.randint(1, 20)
             res = rawg_search_random(page=page_rand)
-            if res:
-                collected.extend(res)
+            if res: collected.extend(res)
         except Exception as e:
             print("RAWG fetch error:", e)
         attempts += 1
@@ -360,7 +364,6 @@ def main():
     parser.add_argument("--num_posts", type=int, default=NUM_TOTAL)
     args = parser.parse_args()
     total = args.num_posts
-
     existing_posts = read_index_posts()
     existing_titles = set(p.get("title","").lower() for p in existing_posts)
     existing_filenames = set(os.path.basename(p.get("url","")) for p in existing_posts if p.get("url"))
@@ -373,8 +376,7 @@ def main():
     posts_added = []
     for cand in candidates:
         name = cand.get("name","").strip()
-        if not name:
-            continue
+        if not name: continue
         slug = slugify(name)
         filename = f"{slug}.html"
         if name.lower() in existing_titles or filename in existing_filenames or os.path.exists(os.path.join(PICTURE_DIR, f"{slug}.jpg")):
