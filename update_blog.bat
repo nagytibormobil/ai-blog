@@ -1,13 +1,19 @@
 @echo off
 cd /d C:\ai_blog
 
-REM enable delayed expansion for variable math in loops
+REM Enable delayed expansion for variable math in loops
 setlocal enabledelayedexpansion
 
 echo ===============================
 echo 🔹 Virtuális környezet aktiválása...
 echo ===============================
 call ai-env\Scripts\activate.bat
+
+echo ===============================
+echo 🔹 Flask és szükséges modulok telepítése...
+echo ===============================
+pip install --upgrade pip
+pip install flask flask-cors
 
 echo ===============================
 echo 🔹 Új posztok generálása 12 db (lépcsőzetesen)...
