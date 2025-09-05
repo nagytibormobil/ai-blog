@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # generate_and_save.py
-# Automatikus post-generálás + fájl-alapú komment moderálás és beillesztés a generált posztokba.
+# Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés.
+# Kiegészítve: statikus komment rendszer + moderáció (pending -> approved), Comment Policy megjelenítése.
 # Elvárások: requests, bs4 telepítve (pip install requests beautifulsoup4)
 
 import os
@@ -21,63 +22,51 @@ OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
 PICTURE_DIR = "Picture"
 
-RAWG_API_KEY = "2fafa16ea4c147438f3b0cb031f8dbb7"  # provided
+RAWG_API_KEY = "2fafa16ea4c147438f3b0cb031f8dbb7"    # provided
 YOUTUBE_API_KEY = "AIzaSyAXedHcSZ4zUaqSaD3MFahLz75IvSmxggM"  # provided
 
-# Komment-mappák (fájlrendszeres workflow)
-PENDING_COMMENTS_DIR = "comments_pending"  # ide helyezd a beküldött komment JSON fájlokat
-APPROVED_COMMENTS_DIR = os.path.join(OUTPUT_DIR, "comments")  # ide kerülnek az elfogadott kommentek, per-post json fájlok
-REJECTED_COMMENTS_DIR = "comments_rejected"  # ide kerülnek az elutasított kommentek (with reason)
 # Generálási beállítások
-NUM_TOTAL = 12  # alapértelmezett ha futtatod --num_posts nélkül
-NUM_POPULAR = 2  # hány "népszerű" (popular) legyen a futáson belül
-RAWG_PAGE_SIZE = 40  # mennyi játékot kérünk le egy hívással (max 40)
+NUM_TOTAL = 12        # alapértelmezett ha futtatod --num_posts nélkül
+NUM_POPULAR = 2       # hány "népszerű" (popular) legyen a futáson belül
+RAWG_PAGE_SIZE = 40   # mennyi játékot kérünk le egy hívással (max 40)
 USER_AGENT = "AI-Gaming-Blog-Agent/1.0"
 
-# Biztonsági / moderációs beállítások
-COMMENT_MAX_LENGTH = 200
-COMMENT_MAX_PER_AUTHOR_PER_DAY = 10
-# egyszerű tiltott kulcsszavak listája (bővíthető)
-BANNED_KEYWORDS = [
-    "http://", "https://", "www.", ".com", ".ru", ".cz", ".biz", "buy now", "click here",
-    "sex", "porn", "drug", "drugs", "terror", "bomb", "kill", "war", "nazi",
-    "f***", "fuck", "bitch", "asshole", "shit", "szar", "kurva", "basz", "háború"
-]
-
-PROFANITY_LIST = [
-    # rövid, egyszerű magyar és angol trágár szavak (nem teljes lista - bővíthető)
-    "kurva", "baszd", "basz", "fasz", "fasz", "picsa", "segg", "seggfej", "szar",
-    "fuck", "shit", "bitch", "asshole"
-]
+# Comments configuration
+COMMENTS_DIR = os.path.join(OUTPUT_DIR, "comments")
+PENDING_DIR = os.path.join(COMMENTS_DIR, "pending")
+REJECTED_DIR = os.path.join(COMMENTS_DIR, "rejected")
+MAX_COMMENT_LEN = 200
+MAX_COMMENTS_PER_DAY_PER_NAME = 10
 
 # Ensure folders exist
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
 Path(PICTURE_DIR).mkdir(exist_ok=True)
-Path(PENDING_COMMENTS_DIR).mkdir(exist_ok=True)
-Path(APPROVED_COMMENTS_DIR).mkdir(parents=True, exist_ok=True)
-Path(REJECTED_COMMENTS_DIR).mkdir(exist_ok=True)
-
+Path(COMMENTS_DIR).mkdir(exist_ok=True)
+Path(PENDING_DIR).mkdir(exist_ok=True)
+Path(REJECTED_DIR).mkdir(exist_ok=True)
 
 # ==============
 # HELPERS
 # ==============
 def slugify(name):
     s = name.strip().lower()
-    s = re.sub(r"[^\w\s-]", "", s)  # remove punctuation
-    s = re.sub(r"\s+", "-", s)  # spaces -> hyphens
-    s = re.sub(r"-+", "-", s)  # collapse hyphens
+    s = re.sub(r"[^\w\s-]", "", s)            # remove punctuation
+    s = re.sub(r"\s+", "-", s)               # spaces -> hyphens
+    s = re.sub(r"-+", "-", s)                # collapse hyphens
     return s
-
 
 def rawg_search_random(page=1, page_size=RAWG_PAGE_SIZE):
     """Fetch a page of RAWG games (general popular list). Returns JSON list 'results'."""
     url = "https://api.rawg.io/api/games"
-    params = {"key": RAWG_API_KEY, "page": page, "page_size": page_size}
+    params = {
+        "key": RAWG_API_KEY,
+        "page": page,
+        "page_size": page_size
+    }
     headers = {"User-Agent": USER_AGENT}
     r = requests.get(url, params=params, headers=headers, timeout=15)
     r.raise_for_status()
     return r.json().get("results", [])
-
 
 def rawg_get_popular(page=1, page_size=RAWG_PAGE_SIZE):
     """Fetch popular games (ordering by -added or -rating)."""
@@ -88,9 +77,8 @@ def rawg_get_popular(page=1, page_size=RAWG_PAGE_SIZE):
     r.raise_for_status()
     return r.json().get("results", [])
 
-
 def download_image(url, dest_path):
-    """Download image from URL and save to dest_path as binary."""
+    """Download image from URL and save to dest_path as JPG-like binary."""
     try:
         headers = {"User-Agent": USER_AGENT}
         r = requests.get(url, headers=headers, stream=True, timeout=20)
@@ -100,9 +88,8 @@ def download_image(url, dest_path):
                 f.write(chunk)
         return True
     except Exception as e:
-        print(f"⚠️ Image download failed: {e}")
+        print(f"⚠️  Image download failed: {e}")
         return False
-
 
 def get_youtube_embed(game_name):
     """Use YouTube Data API v3 to get first relevant video id for 'game_name gameplay' search."""
@@ -114,7 +101,7 @@ def get_youtube_embed(game_name):
         "q": f"{game_name} gameplay",
         "type": "video",
         "maxResults": 1,
-        "key": YOUTUBE_API_KEY,
+        "key": YOUTUBE_API_KEY
     }
     try:
         r = requests.get(url, params=params, timeout=8)
@@ -128,9 +115,8 @@ def get_youtube_embed(game_name):
         print(f"Error fetching YouTube video for {game_name}: {he}")
     except Exception as e:
         print(f"Error fetching YouTube video for {game_name}: {e}")
-    # Fallback: rickroll id as last resort
+    # Fallback: return a generic search embed (works as redirect) or rickroll id as last resort
     return "https://www.youtube.com/embed/dQw4w9WgXcQ"
-
 
 def read_index_posts():
     """Read existing POSTS array from index.html (if exists) and return list of post dicts."""
@@ -145,10 +131,7 @@ def read_index_posts():
         m = re.search(r"POSTS\s*=\s*(\[\s*[\s\S]*?\])\s*\n", html)
     if not m:
         # fallback: try to find between our markers
-        m2 = re.search(
-            r"// <<< AUTO-GENERATED POSTS START >>>\s*const POSTS =\s*(\[\s*[\s\S]*?\])\s*;?\s*// <<< AUTO-GENERATED POSTS END >>>",
-            html,
-        )
+        m2 = re.search(r"// <<< AUTO-GENERATED POSTS START >>>\s*const POSTS =\s*(\[\s*[\s\S]*?\])\s*;?\s*// <<< AUTO-GENERATED POSTS END >>>", html)
         if m2:
             arr_text = m2.group(1)
         else:
@@ -168,7 +151,6 @@ def read_index_posts():
             print("Could not parse existing POSTS JSON:", e)
             return []
 
-
 def write_index_posts(all_posts):
     """Replace the POSTS array in index.html with all_posts (list)."""
     if not os.path.exists(INDEX_FILE):
@@ -176,31 +158,31 @@ def write_index_posts(all_posts):
         return
     with open(INDEX_FILE, "r", encoding="utf-8") as f:
         html = f.read()
+
     # Prepare JSON string
     new_json = json.dumps(all_posts, indent=2, ensure_ascii=False)
+
     # Insert between markers if present
     if "// <<< AUTO-GENERATED POSTS START >>>" in html and "// <<< AUTO-GENERATED POSTS END >>>" in html:
         new_html = re.sub(
             r"// <<< AUTO-GENERATED POSTS START >>>[\s\S]*?// <<< AUTO-GENERATED POSTS END >>>",
-            f"// <<< AUTO-GENERATED POSTS START >>>\n const POSTS = {new_json};\n // <<< AUTO-GENERATED POSTS END >>>",
-            html,
+            f"// <<< AUTO-GENERATED POSTS START >>>\n    const POSTS = {new_json};\n    // <<< AUTO-GENERATED POSTS END >>>",
+            html
         )
     else:
-        # Fallback replace POSTS = [...]
+        # Fallback replace POSTS = [...]. Keep semicolon if present.
         new_html = re.sub(r"POSTS\s*=\s*\[[\s\S]*?\]", f"POSTS = {new_json}", html)
+
     with open(INDEX_FILE, "w", encoding="utf-8") as f:
         f.write(new_html)
     print("✅ index.html POSTS updated.")
 
-
 def build_long_review(game_name, publisher, year):
     """Return a long review text — ~25-30 short paragraphs (SEO-friendly)."""
     parts = []
-    intro = (
-        f"<p><strong>{game_name}</strong> ({year}), developed by {publisher}, "
-        "is explored in depth below. This review focuses on gameplay, mechanics, graphics, "
-        "and tips to help both newcomers and veterans.</p>"
-    )
+    intro = (f"<p><strong>{game_name}</strong> ({year}), developed by {publisher}, "
+             "is explored in depth below. This review focuses on gameplay, mechanics, graphics, "
+             "and tips to help both newcomers and veterans.</p>")
     parts.append(intro)
     templates = [
         "The world design offers a blend of open exploration and carefully crafted encounters that reward curiosity.",
@@ -235,10 +217,9 @@ def build_long_review(game_name, publisher, year):
     parts.append(conclusion)
     return "\n".join(parts)
 
-
 def post_footer_html():
-    """Return the footer HTML (affiliate + policies) identical to index footer, expanded Comment Policy."""
-    footer = """ 
+    """Return the footer HTML (affiliate + policies) identical to index footer, extended Comment Policy."""
+    footer = """
     <hr>
     <section class="ad">
       <h3>Earn Real Money While You Play 📱</h3>
@@ -246,7 +227,6 @@ def post_footer_html():
       <p><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank"><strong>Try Honeygain now</strong></a></p>
       <div class="tiny">Sponsored. Use at your own discretion.</div>
     </section>
-
     <div class="row" style="margin-top:12px">
       <div class="ad" style="border-style:solid;border-color:#1f2a38">
         <h3>IC Markets – Trade like a pro 🌍</h3>
@@ -257,7 +237,6 @@ def post_footer_html():
         <p><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">Start here</a></p>
       </div>
     </div>
-
     <section class="footer">
       <div class="row">
         <div>
@@ -267,10 +246,8 @@ def post_footer_html():
             <li>No adult/drugs/war/terror topics.</li>
             <li>Max 10 comments/day per person.</li>
             <li>Be respectful. We moderate strictly.</li>
-            <li>Only plain text allowed — <strong>no images, no links, no HTML</strong>.</li>
-            <li>Max 200 characters per comment.</li>
-            <li>Comments containing profanity, hate speech, calls to violence, or advertising will be rejected.</li>
-            <li>All comments are automatically moderated; csak az elfogadott kommentek jelennek meg.</li>
+            <li>Comments must be max 200 characters and plain text only (no links, no images, no HTML).</li>
+            <li>All new comments are moderated before publication.</li>
           </ul>
         </div>
         <div>
@@ -283,274 +260,236 @@ def post_footer_html():
     """.format(year=datetime.datetime.now().year)
     return footer
 
+# ==============
+# COMMENTS: utilities for reading/writing approved comments
+# ==============
+def approved_comments_file(slug):
+    return os.path.join(COMMENTS_DIR, f"{slug}.json")
 
-# ==============
-# COMMENT MODERATION
-# ==============
-def load_json_file(path):
+def load_approved_comments(slug):
+    path = approved_comments_file(slug)
+    if not os.path.exists(path):
+        return []
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception as e:
-        print(f"Could not load JSON {path}: {e}")
-        return None
+    except Exception:
+        return []
 
+def save_approved_comments(slug, comments):
+    path = approved_comments_file(slug)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(comments, f, ensure_ascii=False, indent=2)
 
-def save_json_file(path, data):
-    try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        return True
-    except Exception as e:
-        print(f"Could not save JSON {path}: {e}")
-        return False
+# simple profanity/ad detection list (expand as needed)
+BAD_WORDS = [
+    "fuck", "shit", "bitch", "nigger", "faggot", "cunt", "asshole", "damn", "whore"
+]
+AD_KEYWORDS = ["buy now", "subscribe", "free money", "visit", "order now", "discount", "promo", "click here"]
 
+def contains_url(text):
+    return bool(re.search(r"https?://|www\.|\.com|\.net|\.org|\.io|http:", text, re.IGNORECASE))
 
-def sanitize_comment_text(text):
-    """Strip tags and reduce whitespace. Return None if text contains HTML tags."""
-    if not isinstance(text, str):
-        return None
-    # reject if contains HTML tags
-    if re.search(r"<[^>]+>", text):
-        return None
-    # normalize whitespace
-    t = text.strip()
-    t = re.sub(r"\s+", " ", t)
-    return t
-
-
-def contains_banned_keyword(text):
-    low = text.lower()
-    for k in BANNED_KEYWORDS:
-        if k in low:
+def contains_bad_words(text):
+    t = text.lower()
+    for w in BAD_WORDS:
+        if w in t:
             return True
-    for p in PROFANITY_LIST:
-        if p in low:
+    for a in AD_KEYWORDS:
+        if a in t:
             return True
-    # basic link detection
-    if re.search(r"https?://", low) or re.search(r"www\.", low) or re.search(r"\.[a-z]{2,4}", low):
-        return True
     return False
 
+def moderate_pending_files():
+    """
+    Scan PENDING_DIR for pending_*.json, validate and either approve (move to approved comments file)
+    or reject (move to rejected/ with reason).
+    """
+    files = [f for f in os.listdir(PENDING_DIR) if f.endswith(".json")]
+    if not files:
+        print("Nincs függő komment fájl a pending mappában.")
+        return
 
-def count_author_comments_today(author):
-    """Count approved comments for this author today across all posts."""
-    if not author:
-        return 0
-    today = datetime.date.today().isoformat()
-    count = 0
-    # iterate approved comment files
-    for fn in os.listdir(APPROVED_COMMENTS_DIR):
-        if not fn.endswith(".json"):
-            continue
-        path = os.path.join(APPROVED_COMMENTS_DIR, fn)
-        j = load_json_file(path)
-        if not isinstance(j, list):
-            continue
-        for c in j:
-            if c.get("author", "").strip().lower() == author.strip().lower():
-                # expect c["date"] in ISO or with datetime; check prefix
-                d = c.get("date", "")
-                if d.startswith(today):
-                    count += 1
-    return count
-
-
-def process_pending_comments():
-    """Process all JSON files in PENDING_COMMENTS_DIR. Move them to approved or rejected."""
-    files = [f for f in os.listdir(PENDING_COMMENTS_DIR) if f.lower().endswith(".json")]
-    processed = 0
-    for fn in files:
-        path = os.path.join(PENDING_COMMENTS_DIR, fn)
-        data = load_json_file(path)
-        if not data:
-            # move to rejected with reason
-            reason = "Invalid JSON"
-            move_to_rejected(path, fn, reason)
+    for fname in files:
+        ppath = os.path.join(PENDING_DIR, fname)
+        try:
+            with open(ppath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception as e:
+            print(f"Hiba a pending fájl olvasásánál {fname}: {e}")
             continue
 
-        # Expected fields: post_slug OR post_url OR post_title, author, text, date (optional)
-        post_slug = data.get("post_slug") or data.get("slug") or ""
-        post_url = data.get("post_url") or data.get("url") or ""
-        post_title = data.get("post_title") or data.get("title") or ""
-        author = data.get("author", "").strip() or "Anonymous"
-        text = data.get("text", "") or ""
-        now_iso = datetime.datetime.now().isoformat(sep=" ")
-        # Basic sanitation
-        text_clean = sanitize_comment_text(text)
-        if text_clean is None:
-            move_to_rejected(path, fn, "Contains HTML/tags or invalid characters")
-            continue
-        if len(text_clean) == 0:
-            move_to_rejected(path, fn, "Empty comment")
-            continue
-        if len(text_clean) > COMMENT_MAX_LENGTH:
-            move_to_rejected(path, fn, f"Too long (> {COMMENT_MAX_LENGTH} chars)")
-            continue
-        if contains_banned_keyword(text_clean):
-            move_to_rejected(path, fn, "Contains banned words/links/ads/profanity")
-            continue
-        # determine slug if not set: try from post_url or title
-        if not post_slug:
-            if post_url:
-                # attempt to extract filename
-                base = os.path.basename(post_url)
-                post_slug = os.path.splitext(base)[0]
-            elif post_title:
-                post_slug = slugify(post_title)
-            else:
-                # no target post/info => reject
-                move_to_rejected(path, fn, "No target post (slug/url/title missing)")
-                continue
+        slug = data.get("slug")
+        name = data.get("name", "Anon")
+        text = data.get("text", "").strip()
+        timestamp = data.get("timestamp") or datetime.datetime.now().isoformat()
+        date_str = timestamp.split("T")[0] if "T" in timestamp else timestamp.split(" ")[0]
 
-        # enforce per-author per-day limit
-        cnt_today = count_author_comments_today(author)
-        if cnt_today >= COMMENT_MAX_PER_AUTHOR_PER_DAY:
-            move_to_rejected(path, fn, "Author exceeded daily comment limit")
+        reasons = []
+        if not text:
+            reasons.append("Empty text.")
+        if len(text) > MAX_COMMENT_LEN:
+            reasons.append(f"Too long ({len(text)} > {MAX_COMMENT_LEN}).")
+        if contains_url(text):
+            reasons.append("Contains URL or link.")
+        if contains_bad_words(text):
+            reasons.append("Contains disallowed words or ad keywords.")
+
+        # check daily limit for this name
+        approved = load_approved_comments(slug)
+        today = date_str
+        cnt_today = sum(1 for c in approved if c.get("name","").lower() == name.lower() and c.get("date","") == today)
+        if cnt_today >= MAX_COMMENTS_PER_DAY_PER_NAME:
+            reasons.append(f"User '{name}' reached daily limit ({MAX_COMMENTS_PER_DAY_PER_NAME}).")
+
+        if reasons:
+            # reject: move to rejected dir with reason
+            rej_name = f"rejected_{fname}"
+            rej_path = os.path.join(REJECTED_DIR, rej_name)
+            data["rejected_at"] = datetime.datetime.now().isoformat()
+            data["rejected_reasons"] = reasons
+            with open(rej_path, "w", encoding="utf-8") as rf:
+                json.dump(data, rf, ensure_ascii=False, indent=2)
+            os.remove(ppath)
+            print(f"Rejected pending comment {fname} -> reasons: {reasons}")
             continue
 
-        # Build approved comment record
-        comment_record = {
-            "author": author,
-            "text": text_clean,
-            "date": now_iso,
-        }
+        # else approve: append to approved comments for slug
+        approved.append({
+            "name": name,
+            "text": text,
+            "date": today,
+            "time": timestamp
+        })
+        save_approved_comments(slug, approved)
+        os.remove(ppath)
+        print(f"Approved comment for '{slug}' by '{name}'.")
 
-        # Save into APPROVED_COMMENTS_DIR per post slug
-        approved_path = os.path.join(APPROVED_COMMENTS_DIR, f"{post_slug}.json")
-        comments_list = []
-        if os.path.exists(approved_path):
-            existing = load_json_file(approved_path)
-            if isinstance(existing, list):
-                comments_list = existing
-        comments_list.append(comment_record)
-        # keep at most e.g. 500 comments per post to avoid huge files
-        if len(comments_list) > 500:
-            comments_list = comments_list[-500:]
-        ok = save_json_file(approved_path, comments_list)
-        if ok:
-            # remove pending file
-            try:
-                os.remove(path)
-            except Exception as e:
-                print(f"Warning: unable to remove pending file {path}: {e}")
-            processed += 1
-            print(f"✅ Approved comment by '{author}' for post '{post_slug}'")
-        else:
-            move_to_rejected(path, fn, "Failed to save approved comment")
-    if processed:
-        print(f"Processed and approved {processed} pending comments.")
+    # After moderating, update index's comments counters
+    update_index_comment_counts()
+
+def update_index_comment_counts():
+    """
+    Reads index posts and replaces 'comments' counts with actual approved comments counts.
+    """
+    posts = read_index_posts()
+    if not posts:
+        return
+    changed = False
+    for p in posts:
+        url = p.get("url", "")
+        slug = os.path.basename(url).replace(".html", "")
+        approved = load_approved_comments(slug)
+        count = len(approved) if approved else 0
+        if p.get("comments", None) != count:
+            p["comments"] = count
+            changed = True
+    if changed:
+        write_index_posts(posts)
+        print("Index comment counts frissítve.")
     else:
-        print("No pending comments processed.")
-
-
-def move_to_rejected(pending_path, filename, reason):
-    """Move pending file to rejected folder with a reason (create metadata)."""
-    try:
-        with open(pending_path, "r", encoding="utf-8") as f:
-            content = f.read()
-    except Exception:
-        content = ""
-    now_iso = datetime.datetime.now().isoformat(sep=" ")
-    rej = {
-        "rejected_at": now_iso,
-        "reason": reason,
-        "original_filename": filename,
-        "original_content": content,
-    }
-    ts = int(time.time())
-    rej_fn = f"rejected_{ts}_{filename}"
-    rej_path = os.path.join(REJECTED_COMMENTS_DIR, rej_fn)
-    try:
-        with open(rej_path, "w", encoding="utf-8") as f:
-            json.dump(rej, f, ensure_ascii=False, indent=2)
-        os.remove(pending_path)
-    except Exception as e:
-        print(f"Could not move to rejected: {e}")
-    print(f"❌ Rejected comment file {filename}: {reason}")
-
+        print("Index comment counts már naprakész.")
 
 # ==============
 # POST GENERATION
 # ==============
-def load_approved_comments_for_slug(slug):
-    """Return list of approved comments for given post slug (most recent first)."""
-    path = os.path.join(APPROVED_COMMENTS_DIR, f"{slug}.json")
-    if not os.path.exists(path):
-        return []
-    j = load_json_file(path)
-    if isinstance(j, list):
-        # Return reverse chronological
-        return sorted(j, key=lambda x: x.get("date", ""), reverse=True)
-    return []
-
-
 def generate_post_for_game(game):
     """game is a RAWG result dict containing 'name', 'released', 'background_image', etc."""
     name = game.get("name") or "Unknown Game"
     slug = slugify(name)
-    filename = f"{slug}.html"
+    filename = f"{slug}.html"   # SEO-friendly filename (no timestamp)
     out_path = os.path.join(OUTPUT_DIR, filename)
-    # If post already exists, skip (we do not overwrite) — keep behavior
+
+    # If post already exists, skip (we do not overwrite)
     if os.path.exists(out_path):
-        print(f"⚠️ Post already exists for '{name}' -> {filename} (skipping)")
+        print(f"⚠️  Post already exists for '{name}' -> {filename} (skipping)")
         return None
+
     # Image download: pick background_image if available
     img_url = game.get("background_image") or game.get("background_image_additional") or ""
     img_filename = f"{slug}.jpg"
     img_path = os.path.join(PICTURE_DIR, img_filename)
+
     # If image file already exists, skip this game to avoid duplicates (user requested unique pics too)
     if os.path.exists(img_path):
-        print(f"⚠️ Image already exists for '{name}' -> {img_filename} (skipping)")
+        print(f"⚠️  Image already exists for '{name}' -> {img_filename} (skipping)")
         return None
-    # Try download image if img_url:
+
+    # Try download image
     if img_url:
         ok = download_image(img_url, img_path)
         if not ok:
-            # fallback placeholder
+            # fallback placeholder download
             ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
             download_image(ph_url, img_path)
     else:
         ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
         download_image(ph_url, img_path)
+
     # YouTube embed
     youtube_embed = get_youtube_embed(name)
+
     # long review
     year = game.get("released") or ""
-    publisher = ""
-    if isinstance(game.get("developers"), list) and game.get("developers"):
-        publisher = game.get("developers", [{}])[0].get("name", "") or ""
+    publisher = game.get("publisher") or game.get("developers", [{}])[0].get("name", "") if isinstance(game.get("developers"), list) else ""
+    review_html = build_long_review(name, publisher or "the studio", year)
+
+    # Load approved comments for this slug (to render into post)
+    approved_comments = load_approved_comments(slug)
+    comments_html = ""
+    if approved_comments:
+        for c in approved_comments:
+            safe_name = re.sub(r"[^\w\s\-\.]", "", c.get("name",""))[:40]
+            text = c.get("text","")
+            dt = c.get("date","")
+            comments_html += f'<div class="comment"><strong>{safe_name}</strong> <span class="tiny">({dt})</span><p>{text}</p></div>\n'
     else:
-        publisher = game.get("publisher") or ""
-    if not publisher:
-        publisher = "the studio"
-    review_html = build_long_review(name, publisher, year)
+        comments_html = "<p class='tiny'>No comments yet.</p>"
+
     # Build HTML content (keeps dark theme style but inline minimal CSS to avoid external dependencies)
     now = datetime.datetime.now()
     title = f"{name} Cheats, Tips & Full Review"
     cover_src = f"../{PICTURE_DIR}/{img_filename}"  # relative to generated_posts/
     footer_block = post_footer_html()
 
-    # Load approved comments for this post (will be displayed under Cheats & Tips)
-    approved_comments = load_approved_comments_for_slug(slug)
-    comments_html = ""
-    if approved_comments:
-        comments_html += '<div id="comments" style="margin-top:12px">'
-        comments_html += '<h3>Comments</h3>'
-        comments_html += '<ul class="comments-list">'
-        # Show up to 50 recent comments to keep page light
-        for c in approved_comments[:50]:
-            author = c.get("author", "Anonymous")
-            text = c.get("text", "")
-            date = c.get("date", "")
-            comments_html += f'<li><div class="comment-meta tiny">{author} — {date}</div><div class="comment-text">{text}</div></li>'
-        comments_html += "</ul></div>"
-    else:
-        # Display comment box placeholder (submission disabled here — backend file workflow)
-        comments_html += '<div id="comments" style="margin-top:12px">'
-        comments_html += '<h3>Comments</h3>'
-        comments_html += '<p class="tiny">Nincsenek még kommentek. Komment beküldéshez helyezz el egy JSON fájlt a <code>comments_pending/</code> mappába (a rendszer automatikusan moderálja a kommenteket).</p>'
-        comments_html += "</div>"
+    # Client-side comment form: validates locally and produces a pending JSON file for moderator upload.
+    # This avoids server-side dependencies on static hosting: moderator runs script to process pending files.
+    comment_form_js = f"""
+    <script>
+    function sanitizeFilename(name) {{
+      return name.replace(/[^a-z0-9_-]/gi,'_').toLowerCase();
+    }}
+    function createPendingJson() {{
+      const name = document.getElementById('c_name').value.trim() || 'Anon';
+      const text = document.getElementById('c_text').value.trim();
+      if(!text) {{ alert('Please write a comment.'); return; }}
+      if(text.length > {MAX_COMMENT_LEN}) {{ alert('Comment too long (max {MAX_COMMENT_LEN} chars).'); return; }}
+      // simple link detection
+      if(/https?:\\/\\//i.test(text) || /www\\./i.test(text) || /\\.com\\b/i.test(text)) {{
+        alert('Links are not allowed in comments.'); return;
+      }}
+      const payload = {{
+        slug: {json.dumps(slug)},
+        game_name: {json.dumps(name)},
+        name: name,
+        text: text,
+        timestamp: new Date().toISOString()
+      }};
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {{type: 'application/json'}});
+      const fname = 'pending_{slug}_' + sanitizeFilename(name) + '_' + Date.now() + '.json';
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fname;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      alert('A pending comment file has been generated. Please upload the downloaded file to the site owner for moderation (place in generated_posts/comments/pending/).');
+      // clear form
+      document.getElementById('c_text').value = '';
+      document.getElementById('c_name').value = '';
+    }}
+    </script>
+    """
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -570,10 +509,11 @@ def generate_post_for_game(game):
     .tiny{{color:var(--muted);font-size:13px}}
     .ad{{background:linear-gradient(180deg,rgba(255,209,102,.06),transparent);padding:12px;border-radius:10px;border:1px dashed #ffd166;color:var(--text)}}
     a{{color:var(--accent)}}
-    .comments-list{{list-style:none;padding:0;margin:0}}
-    .comments-list li{{background:var(--card);padding:10px;border-radius:8px;margin-bottom:6px;border:1px solid var(--border)}}
-    .comment-meta{{font-size:12px;color:var(--muted);margin-bottom:6px}}
-    .comment-text{{font-size:15px;color:var(--text)}}
+    .comment{{background:rgba(255,255,255,0.02);padding:8px;border-radius:6px;margin:8px 0}}
+    .comment p{{margin:6px 0 0}}
+    .comment-form input[type="text"], .comment-form textarea{{width:100%;padding:8px;border-radius:6px;border:1px solid #233240;background:transparent;color:var(--text)}}
+    .comment-form button{{margin-top:8px;padding:8px 12px;border-radius:8px;border:0;background:var(--accent);color:#041223;cursor:pointer}}
+    .hint{{font-size:12px;color:var(--muted)}}
   </style>
 </head>
 <body>
@@ -587,13 +527,10 @@ def generate_post_for_game(game):
       <li><strong>Publisher/Developer:</strong> {publisher or '—'}</li>
       <li><strong>Platforms:</strong> {', '.join([p['platform']['name'] for p in game.get('platforms', [])]) if game.get('platforms') else '—'}</li>
     </ul>
-
     <h2>Full Review</h2>
     {review_html}
-
     <h2>Gameplay Video</h2>
     <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
-
     <h2>Cheats & Tips</h2>
     <ul>
       <li>Use adaptive playstyles and experiment with builds.</li>
@@ -601,39 +538,51 @@ def generate_post_for_game(game):
       <li>Balance risk and reward when tackling optional bosses.</li>
     </ul>
 
-    <!-- Comments are displayed here under Cheats & Tips -->
-    {comments_html}
+    <h3>Comments</h3>
+    <div id="comments">
+      {comments_html}
+    </div>
+
+    <h3>Leave a comment (will be moderated)</h3>
+    <div class="comment-form">
+      <input id="c_name" type="text" maxlength="40" placeholder="Your name (max 40 chars)"/>
+      <textarea id="c_text" rows="3" maxlength="{MAX_COMMENT_LEN}" placeholder="Write a comment (max {MAX_COMMENT_LEN} chars)"></textarea>
+      <div class="hint tiny">Plain text only — no links or images. Comments are moderated and must follow the site policy. Submitting this will download a pending file for moderation.</div>
+      <button onclick="createPendingJson()">Create pending comment file (download)</button>
+    </div>
 
     <h2 class="tiny">AI Rating</h2>
     <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
 
     {footer_block}
   </div>
+  {comment_form_js}
 </body>
 </html>
 """
     # Save post
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
+
     post_dict = {
         "title": name,
         "url": f"{OUTPUT_DIR}/{filename}",
-        "platform": [p["platform"]["name"] for p in game.get("platforms", [])] if game.get("platforms") else [],
+        "platform": [p['platform']['name'] for p in game.get('platforms', [])] if game.get('platforms') else [],
         "date": now.strftime("%Y-%m-%d"),
-        "rating": round(random.uniform(2.5, 5.0), 1),
+        "rating": round(random.uniform(2.5,5.0),1),
         "cover": f"{PICTURE_DIR}/{img_filename}",
         "views": 0,
-        "comments": len(load_approved_comments_for_slug(slug)),
+        "comments": len(approved_comments) if approved_comments else 0
     }
     print(f"✅ Generated post: {out_path}")
     return post_dict
-
 
 # ==============
 # MAIN FLOW
 # ==============
 def gather_candidates(total_needed, num_popular):
-    """ Return two lists: random_candidates, popular_candidates
+    """
+    Return two lists: random_candidates, popular_candidates
     We will sample from RAWG pages until we collect enough unique candidates.
     """
     random_candidates = []
@@ -658,6 +607,7 @@ def gather_candidates(total_needed, num_popular):
 
     # then random fill (fetch a few pages and sample)
     collected = []
+    page = 1
     attempts = 0
     while len(collected) < (total_needed - len(popular_candidates)) and attempts < 12:
         try:
@@ -668,62 +618,55 @@ def gather_candidates(total_needed, num_popular):
         except Exception as e:
             print("RAWG fetch error:", e)
         attempts += 1
+    # shuffle and trim
     random.shuffle(collected)
     needed = total_needed - len(popular_candidates)
     random_candidates = collected[:needed]
     return random_candidates, popular_candidates
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_posts", type=int, default=NUM_TOTAL)
-    parser.add_argument("--process_comments_only", action="store_true", help="Csak a pending kommentek feldolgozása (ne generáljon új posztokat).")
+    parser.add_argument("--moderate", action="store_true", help="Process pending comments (move pending -> approved/rejected)")
     args = parser.parse_args()
-    total = args.num_posts
-
-    # FIRST: process pending comments automatically (this implements the 'azonnali' ellenőrzést)
-    print("Processing pending comments...")
-    process_pending_comments()
-
-    if args.process_comments_only:
-        print("process_comments_only flag set — exiting after processing comments.")
+    if args.moderate:
+        moderate_pending_files()
         return
+
+    total = args.num_posts
 
     # load existing posts from index -> to not duplicate titles/URLs
     existing_posts = read_index_posts()
-    existing_titles = set(p.get("title", "").lower() for p in existing_posts)
-    existing_filenames = set(os.path.basename(p.get("url", "")) for p in existing_posts if p.get("url"))
+    existing_titles = set(p.get("title","").lower() for p in existing_posts)
+    existing_filenames = set(os.path.basename(p.get("url","")) for p in existing_posts if p.get("url"))
 
     # gather candidates
     random_candidates, popular_candidates = gather_candidates(total, NUM_POPULAR)
     # combine: make sure popular are included
     candidates = []
+    # interleave popular for visibility: place popular first
     candidates.extend(popular_candidates)
     candidates.extend(random_candidates)
 
     posts_added = []
     for cand in candidates:
-        name = cand.get("name", "").strip()
+        name = cand.get("name","").strip()
         if not name:
             continue
         slug = slugify(name)
         filename = f"{slug}.html"
-        # skip if already exists
+        # skip if title exists or filename exists or picture exists
         if name.lower() in existing_titles or filename in existing_filenames or os.path.exists(os.path.join(PICTURE_DIR, f"{slug}.jpg")):
             print(f"Skipping '{name}' (already exists).")
             continue
         # attempt to generate post for this candidate
-        try:
-            post = generate_post_for_game(cand)
-            if post:
-                posts_added.append(post)
-                existing_titles.add(post["title"].lower())
-                existing_filenames.add(os.path.basename(post["url"]))
-            # small delay to respect APIs
-            time.sleep(0.7)
-        except Exception as e:
-            print(f"Error generating post for {name}: {e}")
-            continue
+        post = generate_post_for_game(cand)
+        if post:
+            posts_added.append(post)
+            existing_titles.add(post["title"].lower())
+            existing_filenames.add(os.path.basename(post["url"]))
+        # small delay to respect APIs
+        time.sleep(0.7)
 
     # merge posts_added into existing_posts (keep existing first, then new on top)
     combined = posts_added + existing_posts
@@ -731,21 +674,23 @@ def main():
     seen = set()
     unique_posts = []
     for p in combined:
-        t = p.get("title", "").lower()
+        t = p.get("title","").lower()
         if t in seen:
             continue
         seen.add(t)
         unique_posts.append(p)
-    # Sort by date desc (newer first)
-    unique_posts.sort(key=lambda x: x.get("date", ""), reverse=True)
+
+    # Sort by date desc (newer first) — ensure date present
+    unique_posts.sort(key=lambda x: x.get("date",""), reverse=True)
+
     # write back to index
     write_index_posts(unique_posts)
 
+    # Print summary
     print(f"Done. New posts added: {len(posts_added)}")
     if posts_added:
         for p in posts_added:
             print(" -", p["title"], "->", p["url"])
-
 
 if __name__ == "__main__":
     main()
