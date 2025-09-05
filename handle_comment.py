@@ -7,7 +7,7 @@ import json
 import datetime
 import re
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # ← CORS importálása
+from flask_cors import CORS  # CORS importálása
 
 # Mindig ide mentjük a kommenteket
 COMMENT_DIR = r"C:\ai_blog\comments"
@@ -75,7 +75,7 @@ def save_comment(slug, name, text):
 # Flask API
 # =========================
 app = Flask(__name__)
-CORS(app)  # ← CORS engedélyezése minden oldalról
+CORS(app)  # CORS engedélyezése minden oldalról
 
 @app.route("/api/comment", methods=["POST"])
 def api_comment():
@@ -90,26 +90,29 @@ def api_comment():
     ok, msg = save_comment(slug, name, text)
     return jsonify({"success": ok, "message": msg})
 
-# Példa futtatás parancssorból
+# =========================
+# Fő modul
+# =========================
 if __name__ == "__main__":
-    import argparse
+    import sys
+    if len(sys.argv) > 1:
+        # Parancssoros mód
+        import argparse
+        parser = argparse.ArgumentParser(description="Add a comment to a post.")
+        parser.add_argument("slug", help="Post slug (pl. jatek-neve)")
+        parser.add_argument("name", help="Kommentelő neve (max 12 karakter)")
+        parser.add_argument("text", help="Komment szöveg (max 200 karakter)")
+        args = parser.parse_args()
 
-    parser = argparse.ArgumentParser(description="Add a comment to a post.")
-    parser.add_argument("slug", help="Post slug (pl. jatek-neve)")
-    parser.add_argument("name", help="Kommentelő neve (max 12 karakter)")
-    parser.add_argument("text", help="Komment szöveg (max 200 karakter)")
-
-    args = parser.parse_args()
-
-    if not is_valid_comment(args.name, args.text):
-        print("❌ Comment rejected by moderation rules.")
-    else:
-        ok, msg = save_comment(args.slug, args.name, args.text)
-        if ok:
-            print("✅", msg)
+        if not is_valid_comment(args.name, args.text):
+            print("❌ Comment rejected by moderation rules.")
         else:
-            print("❌", msg)
-
-    # Flask szerver indítása
-    # API indítása pl. http://127.0.0.1:5000/api/comment
-    app.run(host="0.0.0.0", port=5000, debug=True)
+            ok, msg = save_comment(args.slug, args.name, args.text)
+            if ok:
+                print("✅", msg)
+            else:
+                print("❌", msg)
+    else:
+        # Flask API indítása
+        print("🔹 Flask API running on http://127.0.0.1:5000")
+        app.run(host="0.0.0.0", port=5000, debug=True)
