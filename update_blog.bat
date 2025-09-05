@@ -1,23 +1,13 @@
 @echo off
-
-@echo off
-chcp 65001
 cd /d C:\ai_blog
 
-
-REM Enable delayed expansion for variable math in loops
+REM enable delayed expansion for variable math in loops
 setlocal enabledelayedexpansion
 
 echo ===============================
 echo 🔹 Virtuális környezet aktiválása...
 echo ===============================
 call ai-env\Scripts\activate.bat
-
-echo ===============================
-echo 🔹 Flask és szükséges modulok telepítése...
-echo ===============================
-pip install --upgrade pip
-pip install flask flask-cors
 
 echo ===============================
 echo 🔹 Új posztok generálása 12 db (lépcsőzetesen)...
@@ -44,16 +34,6 @@ git commit -m "Automatikus frissítés új HTML posztokkal és képekkel"
 git push origin main
 
 echo ===============================
-echo 🔹 Flask komment-szerver indítása (handle_comment.py)...
-echo ===============================
-start cmd /k python handle_comment.py
-
-echo ===============================
-echo 🔹 Lokális HTTP szerver indítása (http://127.0.0.1:8000)...
-echo ===============================
-start cmd /k python -m http.server 8000
-
-echo ===============================
-echo ✅ Blog frissítve, komment-szerver és HTTP szerver elindítva!
+echo ✅ Blog frissítve és feltöltve!
 echo ===============================
 endlocal
