@@ -1,5 +1,9 @@
 @echo off
+
+@echo off
+chcp 65001
 cd /d C:\ai_blog
+
 
 REM Enable delayed expansion for variable math in loops
 setlocal enabledelayedexpansion
