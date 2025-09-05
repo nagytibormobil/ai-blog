@@ -34,6 +34,16 @@ git commit -m "Automatikus frissítés új HTML posztokkal és képekkel"
 git push origin main
 
 echo ===============================
-echo ✅ Blog frissítve és feltöltve!
+echo 🔹 Flask komment-szerver indítása (handle_comment.py)...
+echo ===============================
+start cmd /k python handle_comment.py
+
+echo ===============================
+echo 🔹 Lokális HTTP szerver indítása (http://127.0.0.1:8000)...
+echo ===============================
+start cmd /k python -m http.server 8000
+
+echo ===============================
+echo ✅ Blog frissítve, komment-szerver és HTTP szerver elindítva!
 echo ===============================
 endlocal
