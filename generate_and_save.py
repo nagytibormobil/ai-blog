@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # generate_and_save.py
-# Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés.
+# Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés, komment rendszer.
 # Elvárások: requests, bs4 telepítve (pip install requests beautifulsoup4)
 
 import os
@@ -15,11 +15,12 @@ import requests
 from bs4 import BeautifulSoup
 
 # ==============
-# SETTINGS (API kulcsok beállítva)
+# SETTINGS
 # ==============
 OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
 PICTURE_DIR = "Picture"
+COMMENTS_DIR = "comments"
 
 RAWG_API_KEY = "2fafa16ea4c147438f3b0cb031f8dbb7"
 YOUTUBE_API_KEY = "AIzaSyAXedHcSZ4zUaqSaD3MFahLz75IvSmxggM"
@@ -31,6 +32,7 @@ USER_AGENT = "AI-Gaming-Blog-Agent/1.0"
 
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
 Path(PICTURE_DIR).mkdir(exist_ok=True)
+Path(COMMENTS_DIR).mkdir(exist_ok=True)
 
 # ==============
 # HELPERS
@@ -132,7 +134,7 @@ def write_index_posts(all_posts):
     print("✅ index.html POSTS updated.")
 
 # ==============
-# NEW HELPERS FOR CONTENT
+# CONTENT HELPERS
 # ==============
 def build_long_review(game_name, publisher, year):
     parts = []
@@ -194,16 +196,60 @@ def generate_cheats_tips(game_name):
         "Interact with NPCs to unlock hidden missions.",
         "Prioritize main objectives to progress efficiently."
     ]
-    if not tips:
-        return "<p>No cheats or tips found for this game.</p>"
-    else:
-        items = "".join(f"<li>{tip}</li>" for tip in tips[:15])
-        return f"<ul>{items}</ul>"
+    items = "".join(f"<li>{tip}</li>" for tip in tips[:15])
+    return f"<ul>{items}</ul>"
 
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
     name = rating.get("name") if isinstance(rating, dict) else str(rating)
     return f"{name}*" if name else "Not specified*"
+
+# ==============
+# COMMENTS HELPERS
+# ==============
+def get_comments_html(slug):
+    comment_file = os.path.join(COMMENTS_DIR, f"{slug}_comments.json")
+    comments = []
+    if os.path.exists(comment_file):
+        try:
+            with open(comment_file, "r", encoding="utf-8") as f:
+                comments = json.load(f)
+        except:
+            comments = []
+    comment_html = "<div id='comments_section'>"
+    for c in comments:
+        comment_html += f"<p><strong>{c.get('name','')}</strong>: {c.get('text','')}</p>"
+    comment_html += "</div>"
+    # comment form
+    comment_html += f"""
+    <h3>Leave a Comment</h3>
+    <form id="comment_form">
+      <input type="text" id="comment_name" maxlength="10" placeholder="Name (max 10)" required style="width:100%;margin-bottom:6px;padding:6px;background:#121821;color:#eaf1f8;border:none;border-radius:4px"/>
+      <textarea id="comment_text" maxlength="200" placeholder="Comment (max 200)" required style="width:100%;padding:6px;background:#121821;color:#eaf1f8;border:none;border-radius:4px"></textarea>
+      <button type="submit" style="padding:6px 12px;background:#5cc8ff;color:#0b0f14;border:none;border-radius:4px;margin-top:4px;cursor:pointer">Submit</button>
+    </form>
+    <script>
+      const form = document.getElementById('comment_form');
+      form.addEventListener('submit', async (e)=>{{
+        e.preventDefault();
+        const name = document.getElementById('comment_name').value.trim().substring(0,10);
+        const text = document.getElementById('comment_text').value.trim().substring(0,200);
+        if(!name||!text) return;
+        const data = {{name,text}};
+        const resp = await fetch('{slug}_save_comment.php', {{
+          method:'POST',
+          headers:{{'Content-Type':'application/json'}},
+          body: JSON.stringify(data)
+        }});
+        if(resp.ok){{
+          const div = document.getElementById('comments_section');
+          div.innerHTML += `<p><strong>${{name}}</strong>: ${{text}}</p>`;
+          form.reset();
+        }}else{{alert('Error submitting comment');}}
+      }});
+    </script>
+    """
+    return comment_html
 
 # ==============
 # POST GENERATION
@@ -222,17 +268,10 @@ def generate_post_for_game(game):
     img_filename = f"{slug}.jpg"
     img_path = os.path.join(PICTURE_DIR, img_filename)
 
-    if os.path.exists(img_path):
-        print(f"⚠️  Image already exists for '{name}' -> {img_filename} (skipping)")
-        return None
-
     if img_url:
-        ok = download_image(img_url, img_path)
-        if not ok:
-            ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
-            download_image(ph_url, img_path)
+        download_image(img_url, img_path)
     else:
-        ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
+        ph_url = f"https://placehold.co/800x450?text={name.replace(' ','+')}"
         download_image(ph_url, img_path)
 
     youtube_embed = get_youtube_embed(name)
@@ -242,60 +281,67 @@ def generate_post_for_game(game):
     review_html = build_long_review(name, publisher or "the studio", year)
     cheats_html = generate_cheats_tips(name)
     age_rating = get_age_rating(game)
+    footer_block = post_footer_html()
+    comments_html = get_comments_html(slug)
 
     now = datetime.datetime.now()
     title = f"{name} Cheats, Tips & Full Review"
     cover_src = f"../{PICTURE_DIR}/{img_filename}"
-    footer_block = post_footer_html()
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>{title}</title>
-  <meta name="description" content="Cheats, tips and a long review for {name}."/>
-  <style>
-    :root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
-    html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}}
-    .wrap{{max-width:900px;margin:24px auto;padding:18px;background:var(--panel);border-radius:12px;border:1px solid var(--border)}}
-    img.cover{{width:100%;height:auto;border-radius:8px;display:block}}
-    h1{{margin:10px 0 6px;font-size:28px}}
-    h2{{margin-top:18px}}
-    p{{color:var(--text);line-height:1.6}}
-    .tiny{{color:var(--muted);font-size:13px}}
-    .ad{{background:linear-gradient(180deg,rgba(255,209,102,.06),transparent);padding:12px;border-radius:10px;border:1px dashed #ffd166;color:var(--text)}}
-    a{{color:var(--accent)}}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>{title}</title>
+<meta name="description" content="Cheats, tips and a long review for {name}."/>
+<style>
+:root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
+html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}}
+.wrap{{max-width:900px;margin:24px auto;padding:18px;background:var(--panel);border-radius:12px;border:1px solid var(--border)}}
+img.cover{{width:100%;height:auto;border-radius:8px;display:block}}
+h1{{margin:10px 0 6px;font-size:28px}}
+h2{{margin-top:18px}}
+p{{color:var(--text);line-height:1.6}}
+.tiny{{color:var(--muted);font-size:13px}}
+.ad{{background:linear-gradient(180deg,rgba(255,209,102,.06),transparent);padding:12px;border-radius:10px;border:1px dashed #ffd166;color:var(--text)}}
+a{{color:var(--accent)}}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
-    <h1>{title}</h1>
-    <img class="cover" src="{cover_src}" alt="{name} cover"/>
-    <h2>About the Game</h2>
-    <ul>
-      <li><strong>Release:</strong> {year}</li>
-      <li><strong>Recommended Age:</strong> {age_rating}</li>
-      <li><strong>Platforms:</strong> {', '.join([p['platform']['name'] for p in game.get('platforms', [])]) if game.get('platforms') else '—'}</li>
-    </ul>
-    <h2>Full Review</h2>
-    {review_html}
-    <h2>Gameplay Video</h2>
-    <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
-    <h2>Cheats & Tips</h2>
-    {cheats_html}
-
-    <h2 class="tiny">AI Rating</h2>
-    <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
-
-    {footer_block}
-  </div>
+<div class="wrap">
+<a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
+<h1>{title}</h1>
+<img class="cover" src="{cover_src}" alt="{name} cover"/>
+<h2>About the Game</h2>
+<ul>
+<li><strong>Release:</strong> {year}</li>
+<li><strong>Recommended Age:</strong> {age_rating}</li>
+<li><strong>Platforms:</strong> {', '.join([p['platform']['name'] for p in game.get('platforms', [])]) if game.get('platforms') else '—'}</li>
+</ul>
+<h2>Full Review</h2>
+{review_html}
+<h2>Gameplay Video</h2>
+<iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
+<h2>Cheats & Tips</h2>
+{cheats_html}
+<h2 class="tiny">AI Rating</h2>
+<p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
+{comments_html}
+{footer_block}
+</div>
 </body>
 </html>
 """
+
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
+
+    # init empty comment file
+    comment_file = os.path.join(COMMENTS_DIR, f"{slug}_comments.json")
+    if not os.path.exists(comment_file):
+        with open(comment_file, "w", encoding="utf-8") as f:
+            json.dump([], f)
 
     post_dict = {
         "title": name,
@@ -321,11 +367,9 @@ def gather_candidates(total_needed, num_popular):
     while len(popular_candidates) < num_popular and attempts < 8:
         try:
             res = rawg_get_popular(page=page)
-            if not res:
-                break
+            if not res: break
             for g in res:
-                if len(popular_candidates) >= num_popular:
-                    break
+                if len(popular_candidates) >= num_popular: break
                 popular_candidates.append(g)
             page += 1
         except Exception as e:
@@ -338,10 +382,9 @@ def gather_candidates(total_needed, num_popular):
     attempts = 0
     while len(collected) < (total_needed - len(popular_candidates)) and attempts < 12:
         try:
-            page_rand = random.randint(1, 20)
+            page_rand = random.randint(1,20)
             res = rawg_search_random(page=page_rand)
-            if res:
-                collected.extend(res)
+            if res: collected.extend(res)
         except Exception as e:
             print("RAWG fetch error:", e)
         attempts += 1
@@ -352,43 +395,43 @@ def gather_candidates(total_needed, num_popular):
     return random_candidates, popular_candidates
 
 def post_footer_html():
-    footer = """
-    <hr>
-    <section class="ad">
-      <h3>Earn Real Money While You Play 📱</h3>
-      <p>Simple passive income by sharing a bit of your internet. Runs in the background while you game.</p>
-      <p><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank"><strong>Try Honeygain now</strong></a></p>
-      <div class="tiny">Sponsored. Use at your own discretion.</div>
-    </section>
-    <div class="row" style="margin-top:12px">
-      <div class="ad" style="border-style:solid;border-color:#1f2a38">
-        <h3>IC Markets – Trade like a pro 🌍</h3>
-        <p><a href="https://icmarkets.com/?camp=3992" target="_blank">Open an account</a></p>
-      </div>
-      <div class="ad" style="border-style:solid;border-color:#1f2a38">
-        <h3>Dukascopy – Promo code: <code>E12831</code> 🏦</h3>
-        <p><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">Start here</a></p>
-      </div>
-    </div>
-    <section class="footer">
-      <div class="row">
-        <div>
-          <strong>Comment Policy</strong>
-          <ul class="list tiny">
-            <li>No spam, ads, or offensive content.</li>
-            <li>No adult/drugs/war/terror topics.</li>
-            <li>Max 10 comments/day per person.</li>
-            <li>Be respectful. We moderate strictly.</li>
-          </ul>
-        </div>
-        <div>
-          <strong>Terms</strong>
-          <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
-        </div>
-      </div>
-      <p class="tiny">© {year} AI Gaming Blog</p>
-    </section>
-    """.format(year=datetime.datetime.now().year)
+    footer = f"""
+<hr>
+<section class="ad">
+<h3>Earn Real Money While You Play 📱</h3>
+<p>Simple passive income by sharing a bit of your internet. Runs in the background while you game.</p>
+<p><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank"><strong>Try Honeygain now</strong></a></p>
+<div class="tiny">Sponsored. Use at your own discretion.</div>
+</section>
+<div class="row" style="margin-top:12px">
+<div class="ad" style="border-style:solid;border-color:#1f2a38">
+<h3>IC Markets – Trade like a pro 🌍</h3>
+<p><a href="https://icmarkets.com/?camp=3992" target="_blank">Open an account</a></p>
+</div>
+<div class="ad" style="border-style:solid;border-color:#1f2a38">
+<h3>Dukascopy – Promo code: <code>E12831</code> 🏦</h3>
+<p><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">Start here</a></p>
+</div>
+</div>
+<section class="footer">
+<div class="row">
+<div>
+<strong>Comment Policy</strong>
+<ul class="list tiny">
+<li>No spam, ads, or offensive content.</li>
+<li>No adult/drugs/war/terror topics.</li>
+<li>Max 10 comments/day per person.</li>
+<li>Be respectful. We moderate strictly.</li>
+</ul>
+</div>
+<div>
+<strong>Terms</strong>
+<p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
+</div>
+</div>
+<p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
+</section>
+"""
     return footer
 
 def main():
@@ -402,18 +445,15 @@ def main():
     existing_filenames = set(os.path.basename(p.get("url","")) for p in existing_posts if p.get("url"))
 
     random_candidates, popular_candidates = gather_candidates(total, NUM_POPULAR)
-    candidates = []
-    candidates.extend(popular_candidates)
-    candidates.extend(random_candidates)
+    candidates = popular_candidates + random_candidates
 
     posts_added = []
     for cand in candidates:
         name = cand.get("name","").strip()
-        if not name:
-            continue
+        if not name: continue
         slug = slugify(name)
         filename = f"{slug}.html"
-        if name.lower() in existing_titles or filename in existing_filenames or os.path.exists(os.path.join(PICTURE_DIR, f"{slug}.jpg")):
+        if name.lower() in existing_titles or filename in existing_filenames:
             print(f"Skipping '{name}' (already exists).")
             continue
         post = generate_post_for_game(cand)
@@ -428,8 +468,7 @@ def main():
     unique_posts = []
     for p in combined:
         t = p.get("title","").lower()
-        if t in seen:
-            continue
+        if t in seen: continue
         seen.add(t)
         unique_posts.append(p)
 
