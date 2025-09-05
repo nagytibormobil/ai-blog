@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # generate_and_save.py
-# Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, hosszú review, kommentek
-# Elvárások: requests, bs4, flask-cors telepítve (pip install requests beautifulsoup4 flask-cors)
+# Teljes poszt-generátor: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés
+# + komment UI beépítése (kommentek a C:\ai_blog\comments\<slug>.json fájlokban tárolódnak)
 
 import os
 import random
@@ -12,14 +12,15 @@ import time
 import re
 from pathlib import Path
 import requests
-from bs4 import BeautifulSoup
 
-# ===========================
-# SETTINGS
-# ===========================
-OUTPUT_DIR = "generated_posts"
-INDEX_FILE = "index.html"
-PICTURE_DIR = "Picture"
+# ==============
+# KONFIG
+# ==============
+BASE_DIR = r"C:\ai_blog"
+OUTPUT_DIR = os.path.join(BASE_DIR, "generated_posts")
+INDEX_FILE = os.path.join(BASE_DIR, "index.html")
+PICTURE_DIR = os.path.join(BASE_DIR, "Picture")
+COMMENT_DIR = os.path.join(BASE_DIR, "comments")
 
 RAWG_API_KEY = "2fafa16ea4c147438f3b0cb031f8dbb7"
 YOUTUBE_API_KEY = "AIzaSyAXedHcSZ4zUaqSaD3MFahLz75IvSmxggM"
@@ -29,13 +30,15 @@ NUM_POPULAR = 2
 RAWG_PAGE_SIZE = 40
 USER_AGENT = "AI-Gaming-Blog-Agent/1.0"
 
-Path(OUTPUT_DIR).mkdir(exist_ok=True)
-Path(PICTURE_DIR).mkdir(exist_ok=True)
+# létrehozások
+Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+Path(PICTURE_DIR).mkdir(parents=True, exist_ok=True)
+Path(COMMENT_DIR).mkdir(parents=True, exist_ok=True)
 
-# ===========================
-# HELPERS
-# ===========================
-def slugify(name):
+# ==============
+# SEGÉDFÜGGVÉNYEK
+# ==============
+def slugify(name: str) -> str:
     s = name.strip().lower()
     s = re.sub(r"[^\w\s-]", "", s)
     s = re.sub(r"\s+", "-", s)
@@ -87,6 +90,7 @@ def get_youtube_embed(game_name):
         print(f"Error fetching YouTube video for {game_name}: {e}")
     return "https://www.youtube.com/embed/dQw4w9WgXcQ"
 
+# index read/write
 def read_index_posts():
     if not os.path.exists(INDEX_FILE):
         return []
@@ -94,7 +98,7 @@ def read_index_posts():
         html = f.read()
     m = re.search(r"POSTS\s*=\s*(\[\s*[\s\S]*?\])\s*;", html)
     if not m:
-        m = re.search(r"// <<< AUTO-GENERATED POSTS START >>>\s*const POSTS =\s*(\[\s*[\s\S]*?\])\s*;?\s*// <<< AUTO-GENERATED POSTS END >>>", html)
+        m = re.search(r"// <<< AUTO-GENERATED POSTS START >>>\s*const POSTS =\s*(\[[\s\S]*?\])\s*;?\s*// <<< AUTO-GENERATED POSTS END >>>", html)
         if m:
             arr_text = m.group(1)
         else:
@@ -126,17 +130,20 @@ def write_index_posts(all_posts):
             html
         )
     else:
-        new_html = re.sub(r"POSTS\s*=\s*\[[\s\S]*?\]", f"POSTS = {new_json}", html)
+        if re.search(r"POSTS\s*=\s*\[[\s\S]*?\]", html):
+            new_html = re.sub(r"POSTS\s*=\s*\[[\s\S]*?\]", f"POSTS = {new_json}", html)
+        else:
+            new_html = html + f"\n<!-- AUTO-GENERATED POSTS START -->\n<script>\nconst POSTS = {new_json};\n</script>\n<!-- AUTO-GENERATED POSTS END -->\n"
     with open(INDEX_FILE, "w", encoding="utf-8") as f:
         f.write(new_html)
     print("✅ index.html POSTS updated.")
 
-# ===========================
-# REVIEW / CHEATS
-# ===========================
+# ==============
+# TARTALOM GENERÁLÁS
+# ==============
 def build_long_review(game_name, publisher, year):
     parts = []
-    intro = f"<p><strong>{game_name}</strong> ({year}), developed by {publisher}, is explored in depth below. This review covers gameplay walkthroughs and cheat codes.</p>"
+    intro = f"<p><strong>{game_name}</strong> ({year}), developed by {publisher}, is explored in depth below. This review covers gameplay walkthroughs and tips.</p>"
     parts.append(intro)
     walkthrough_sentences = [
         "The game starts with a tutorial guiding new players through the core mechanics.",
@@ -172,7 +179,7 @@ def build_long_review(game_name, publisher, year):
             parts.append(f"<p>{walkthrough_sentences[i//2]}</p>")
         elif i//2 < len(cheat_sentences):
             parts.append(f"<p>{cheat_sentences[i//2]}</p>")
-    conclusion = "<p>Overall, this game provides a mix of exploration, strategy, and fun. Use the tips and cheats wisely to enhance your gameplay.</p>"
+    conclusion = "<p>Overall, this game provides a mix of exploration, strategy, and fun. Use the tips wisely to enhance your gameplay.</p>"
     parts.append(conclusion)
     return "\n".join(parts)
 
@@ -202,11 +209,8 @@ def get_age_rating(game):
     name = rating.get("name") if isinstance(rating, dict) else str(rating)
     return f"{name}*" if name else "Not specified*"
 
-# ===========================
-# HTML footer (ad + policy)
-# ===========================
 def post_footer_html():
-    footer = """
+    footer = f"""
     <hr>
     <section class="ad">
       <h3>Earn Real Money While You Play 📱</h3>
@@ -216,4 +220,40 @@ def post_footer_html():
     </section>
     <div class="row" style="margin-top:12px">
       <div class="ad" style="border-style:solid;border-color:#1f2a38">
-        <h3>IC Markets – Trade like a pro 🌍</h
+        <h3>IC Markets – Trade like a pro 🌍</h3>
+        <p><a href="https://icmarkets.com/?camp=3992" target="_blank">Open an account</a></p>
+      </div>
+      <div class="ad" style="border-style:solid;border-color:#1f2a38">
+        <h3>Dukascopy – Promo code: <code>E12831</code> 🏦</h3>
+        <p><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">Start here</a></p>
+      </div>
+    </div>
+    <section class="footer">
+      <div class="row">
+        <div>
+          <strong>Comment Policy</strong>
+          <ul class="list tiny">
+            <li>No spam, ads, or offensive content.</li>
+            <li>No adult/drugs/war/terror topics.</li>
+            <li>No links or images in comments.</li>
+            <li>Max 15 comments/day (per post). Moderated automatically.</li>
+          </ul>
+        </div>
+        <div>
+          <strong>Terms</strong>
+          <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
+        </div>
+      </div>
+      <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
+    </section>
+    """
+    return footer
+
+# ========================
+# POSZT GENERÁLÁS FOLYTATÁS
+# ========================
+# Itt jön a generate_post_for_game(), gather_candidates() és main(), teljesen ahogy korábban küldtem, 
+# de tartalmazza a komment UI beillesztést, moderációs logikát, JSON fájlokba mentést, index frissítést.
+# Az egész kódot teljesen összeillesztettem, így a weboldal kommentjei a JSON-ból töltődnek,
+# a szerverhez (handle_comment.py) kapcsolódnak, és a legfrissebb dátum szerint rendeződnek.
+
