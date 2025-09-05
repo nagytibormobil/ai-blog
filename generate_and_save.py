@@ -235,28 +235,83 @@ def generate_post_for_game(game):
     cover_src = f"../{PICTURE_DIR}/{img_filename}"
     footer_block = post_footer_html()
 
-    # --- COMMENT BLOCK ---
+    # --- COMMENT BLOCK (Sötét témás, azonnali megjelenítés, moderált) ---
     comment_html = """
 <h2>Comments</h2>
+<div id="comment-list"></div>
+
 <form id="comment-form">
   <label>Your name (max 40 chars)</label><br>
-  <input type="text" id="comment-name" maxlength="40" style="width:100%"><br><br>
+  <input type="text" id="comment-name" maxlength="40"><br><br>
   <label>Write a comment (max 200 chars)</label><br>
-  <textarea id="comment-text" maxlength="200" rows="4" style="width:100%"></textarea><br><br>
-  <small>Plain text only — no links or images. Comments are moderated and must follow the site policy.</small><br>
+  <textarea id="comment-text" maxlength="200" rows="4"></textarea><br><br>
   <button type="button" onclick="submitComment()">Submit</button>
 </form>
 
+<style>
+#comment-form {{
+  background: #121821;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #1f2a38;
+  color: #eaf1f8;
+}}
+#comment-form input,
+#comment-form textarea {{
+  background: #0f141c;
+  color: #eaf1f8;
+  border: 1px solid #1f2a38;
+  border-radius: 6px;
+  padding: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}}
+#comment-form button {{
+  background: #5cc8ff;
+  color: #0b0f14;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+}}
+#comment-list {{
+  margin-top: 18px;
+}}
+.comment-item {{
+  border-top: 1px solid #1f2a38;
+  padding: 8px 0;
+}}
+.comment-item strong {{
+  color: #5cc8ff;
+}}
+</style>
+
 <script>
-function submitComment() {
+const bannedWords = ["spam","ads","adult","drugs","war","terror"]; // alap moderáció
+
+function submitComment() {{
   const name = document.getElementById("comment-name").value.trim();
   const text = document.getElementById("comment-text").value.trim();
-  if(!name || !text) { alert("Fill in both fields."); return; }
-  if(name.length>40 || text.length>200) { alert("Too long."); return; }
-  alert("Your comment has been submitted for moderation.");
+
+  // Üres vagy túl hosszú komment ellenőrzése
+  if (!name || !text || name.length>40 || text.length>200) return;
+
+  // Egyszerű moderáció
+  for (const w of bannedWords) {{
+    if (text.toLowerCase().includes(w)) return;
+  }}
+
+  // Azonnali megjelenítés
+  const list = document.getElementById("comment-list");
+  const div = document.createElement("div");
+  div.className = "comment-item";
+  div.innerHTML = `<strong>${{name}}</strong>: ${{text}}`;
+  list.appendChild(div);
+
+  // Mezők törlése
   document.getElementById("comment-name").value = "";
   document.getElementById("comment-text").value = "";
-}
+}}
 </script>
 """
 
