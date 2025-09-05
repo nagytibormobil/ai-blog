@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # generate_and_save.py
 # Teljes poszt-generátor: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés
-# + komment UI beépítése (kommentek a C:\ai_blog\comments\<slug>.json fájlokban tárolódnak)
+# + Flask API kompatibilis komment UI
 
 import os
 import random
@@ -96,7 +96,6 @@ def read_index_posts():
         return []
     with open(INDEX_FILE, "r", encoding="utf-8") as f:
         html = f.read()
-    # kétféle mintát próbálunk: korábbi JSON tömb, vagy explicit START/END blokk
     m = re.search(r"POSTS\s*=\s*(\[\s*[\s\S]*?\])\s*;", html)
     if not m:
         m = re.search(r"// <<< AUTO-GENERATED POSTS START >>>\s*const POSTS =\s*(\[\s*[\s\S]*?\])\s*;?\s*// <<< AUTO-GENERATED POSTS END >>>", html)
@@ -134,7 +133,6 @@ def write_index_posts(all_posts):
         if re.search(r"POSTS\s*=\s*\[[\s\S]*?\]", html):
             new_html = re.sub(r"POSTS\s*=\s*\[[\s\S]*?\]", f"POSTS = {new_json}", html)
         else:
-            # Nincs ahol frissíteni -> egyszerűen hozzáfűzünk egy megjegyzést
             new_html = html + f"\n<!-- AUTO-GENERATED POSTS START -->\n<script>\nconst POSTS = {new_json};\n</script>\n<!-- AUTO-GENERATED POSTS END -->\n"
     with open(INDEX_FILE, "w", encoding="utf-8") as f:
         f.write(new_html)
@@ -284,7 +282,6 @@ def generate_post_for_game(game):
     youtube_embed = get_youtube_embed(name)
 
     year = game.get("released") or ""
-    # RAWG response may contain developers or publisher; best-effort
     publisher = ""
     if isinstance(game.get("developers"), list) and game.get("developers"):
         publisher = game.get("developers")[0].get("name", "")
@@ -301,7 +298,7 @@ def generate_post_for_game(game):
     title = f"{name} Cheats, Tips & Full Review"
     cover_src = f"../Picture/{img_filename}"
 
-    # ha nincs még komment fájl, hozzuk létre üres tömbbel (így mindig van hova betölteni)
+    # ha nincs még komment fájl, hozzuk létre üres tömbbel (Flask API kompatibilis)
     comments_file = os.path.join(COMMENT_DIR, f"{slug}.json")
     if not os.path.exists(comments_file):
         with open(comments_file, "w", encoding="utf-8") as f:
@@ -309,9 +306,9 @@ def generate_post_for_game(game):
 
     footer_block = post_footer_html()
 
-    # koment UI HTML + JS (az AI Rating alá kerül)
+    # komment UI (Flask API)
     comments_html = f"""
-    <h2>Leave a comment (will be moderated)</h2>
+    <h2>Leave a comment (moderated)</h2>
     <form id="commentForm">
       <input type="text" id="commentName" maxlength="12" placeholder="Your name (max 12 chars)" required style="width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;box-sizing:border-box;">
       <br><br>
@@ -319,127 +316,97 @@ def generate_post_for_game(game):
       <br><br>
       <button id="commentSubmit" type="submit" style="padding:8px 14px;border-radius:8px;border:0;background:#5cc8ff;color:#032">Submit</button>
     </form>
-    <p class="tiny">Plain text only — no links or images. Comments are moderated and must follow the site policy.</p>
+    <p class="tiny">Plain text only — no links or HTML. Comments are moderated.</p>
     <div id="commentsList" style="margin-top:12px"></div>
 
     <script>
-      (function(){{
-        const slug = "{slug}";
-        const commentsPaths = [
-          // próbáljuk a relatív és az abszolút gyökér útvonalat is
-          '../comments/' + slug + '.json',
-          '/comments/' + slug + '.json'
-        ];
+    (function(){{
+      const slug = "{slug}";
 
-        async function fetchComments() {{
-          for (const p of commentsPaths) {{
-            try {{
-              const res = await fetch(p + '?_=' + Date.now());
-              if (!res.ok) continue;
-              const data = await res.json();
-              renderComments(data);
-              return;
-            }} catch(e) {{
-              // next
-            }}
-          }}
-          // nincs komment még
-          renderComments([]);
+      async function fetchComments(){{
+        try {{
+          const res = await fetch('/api/comments/' + slug);
+          const data = await res.json();
+          renderComments(data);
+        }} catch(e) {{
+          console.log('Failed to fetch comments', e);
         }}
+      }}
 
-        function renderComments(arr) {{
-          const list = document.getElementById('commentsList');
-          list.innerHTML = '';
-          if (!Array.isArray(arr) || arr.length===0) {{
-            list.innerHTML = '<p class="tiny">No comments yet. Be the first to comment!</p>';
-            return;
-          }}
-          arr.forEach(c => {{
-            const d = document.createElement('div');
-            d.style.padding = '8px';
-            d.style.borderRadius = '8px';
-            d.style.border = '1px solid rgba(0,0,0,0.06)';
-            d.style.marginBottom = '8px';
-            const name = document.createElement('div');
-            name.innerHTML = '<strong>' + escapeHtml(c.name) + '</strong> <span class="tiny" style="color:#666;font-size:12px;">' + escapeHtml(c.date) + '</span>';
-            const text = document.createElement('div');
-            text.style.marginTop = '6px';
-            text.innerText = c.text;
-            d.appendChild(name);
-            d.appendChild(text);
-            list.appendChild(d);
-          }});
+      function renderComments(arr){{
+        const list = document.getElementById('commentsList');
+        list.innerHTML = '';
+        if(!arr || arr.length===0){{
+          list.innerHTML='<p class="tiny">No comments yet. Be the first!</p>';
+          return;
         }}
-
-        function escapeHtml(s) {{
-          if (!s) return '';
-          return s.replace(/[&<>"']/g, function(m) {{ return {{'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}}[m]; }});
-        }}
-
-        // client-side egyszerű ellenőrzés (a végső moderáció a szerveren van)
-        function clientValidate(name, text) {{
-          if (!name || !text) return 'Name and comment required.';
-          if (name.length>12) return 'Name too long (max 12).';
-          if (text.length>200) return 'Comment too long (max 200).';
-          const forbidden = /(http[s]?:\\/\\/|www\\.|\\.com|\\.net|\\.org|<|>)/i;
-          if (forbidden.test(name) || forbidden.test(text)) return 'No links or HTML allowed.';
-          return null;
-        }}
-
-        async function postComment(payload) {{
-          // próbáljuk először a relatív /api/comment felé, majd fallback a helyi szerverre
-          const tryUrls = ['/api/comment', 'http://127.0.0.1:5000/api/comment'];
-          for (const url of tryUrls) {{
-            try {{
-              const res = await fetch(url, {{
-                method: 'POST',
-                headers: {{'Content-Type':'application/json'}},
-                body: JSON.stringify(payload)
-              }});
-              // ha válasz JSON és success mező true/false, kezeljük
-              if (res && res.headers.get('content-type') && res.headers.get('content-type').includes('application/json')) {{
-                const data = await res.json();
-                return data;
-              }} else {{
-                // nem JSON válasz -> sikertelen próbálkozás (pl. 404)
-                continue;
-              }}
-            }} catch(e) {{
-              // next url
-            }}
-          }}
-          return {{ success:false, message: 'Could not reach comment API (server may be offline).' }};
-        }}
-
-        document.getElementById('commentForm').addEventListener('submit', async function(e){{
-          e.preventDefault();
-          const name = document.getElementById('commentName').value.trim();
-          const text = document.getElementById('commentText').value.trim();
-          const err = clientValidate(name, text);
-          if (err){{
-            alert(err);
-            return;
-          }}
-          document.getElementById('commentSubmit').disabled = true;
-          const resp = await postComment({{ slug, name, text }});
-          document.getElementById('commentSubmit').disabled = false;
-          if (resp && resp.success) {{
-            document.getElementById('commentName').value = '';
-            document.getElementById('commentText').value = '';
-            // frissítjük a lokális JSON-betöltést (ha a fájl elérhető)
-            await fetchComments();
-          }} else {{
-            alert('Comment rejected: ' + (resp && resp.message ? resp.message : 'Unknown error'));
-          }}
+        arr.forEach(c=>{{
+          const d = document.createElement('div');
+          d.style.padding='8px';
+          d.style.borderRadius='8px';
+          d.style.border='1px solid rgba(0,0,0,0.06)';
+          d.style.marginBottom='8px';
+          const name = document.createElement('div');
+          name.innerHTML='<strong>'+escapeHtml(c.name)+'</strong> <span class="tiny" style="color:#666;font-size:12px;">'+escapeHtml(c.date)+'</span>';
+          const text = document.createElement('div');
+          text.style.marginTop='6px';
+          text.innerText=c.text;
+          d.appendChild(name);
+          d.appendChild(text);
+          list.appendChild(d);
         }});
+      }}
 
-        // inicializálás
-        fetchComments();
-      }})();
+      function escapeHtml(s){{
+        if(!s) return '';
+        return s.replace(/[&<>"']/g, m=>{{return {{'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}}[m];}});
+      }}
+
+      function clientValidate(name,text){{
+        if(!name||!text) return 'Name and comment required.';
+        if(name.length>12) return 'Name too long.';
+        if(text.length>200) return 'Comment too long.';
+        const forbidden=/(http[s]?:\\/\\/|www\\.|\\.com|\\.net|\\.org|<|>)/i;
+        if(forbidden.test(name) || forbidden.test(text)) return 'No links or HTML allowed.';
+        return null;
+      }}
+
+      async function postComment(payload){{
+        try {{
+          const res=await fetch('/api/comment',{{
+            method:'POST',
+            headers:{{'Content-Type':'application/json'}},
+            body:JSON.stringify(payload)
+          }});
+          return await res.json();
+        }} catch(e){{
+          return {{success:false,message:'Cannot reach server.'}};
+        }}
+      }}
+
+      document.getElementById('commentForm').addEventListener('submit',async function(e){{
+        e.preventDefault();
+        const name=document.getElementById('commentName').value.trim();
+        const text=document.getElementById('commentText').value.trim();
+        const err=clientValidate(name,text);
+        if(err){{alert(err);return;}}
+        document.getElementById('commentSubmit').disabled=true;
+        const resp=await postComment({{slug,name,text}});
+        document.getElementById('commentSubmit').disabled=false;
+        if(resp.success){{
+          document.getElementById('commentName').value='';
+          document.getElementById('commentText').value='';
+          fetchComments();
+        }} else {{
+          alert('Comment rejected: '+(resp.message||'Unknown error'));
+        }}
+      }});
+
+      fetchComments();
+    }})();
     </script>
     """
 
-    # teljes HTML építése (egyszerű, de teljes)
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -489,7 +456,6 @@ def generate_post_for_game(game):
 </body>
 </html>
 """
-    # fájl írása
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
 
