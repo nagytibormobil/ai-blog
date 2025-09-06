@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# app.py
-# Teljes poszt-generátor + Flask komment API
+# generate_and_save.py
+# Teljes poszt-generátor: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés
+# + komment UI beépítése (kommentek a C:\ai_blog\comments\<slug>.json fájlokban tárolódnak)
 
 import os
 import random
+import argparse
 import datetime
 import json
 import time
 import re
 from pathlib import Path
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import requests
 
 # ==============
@@ -30,6 +30,7 @@ NUM_POPULAR = 2
 RAWG_PAGE_SIZE = 40
 USER_AGENT = "AI-Gaming-Blog-Agent/1.0"
 
+# létrehozások
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 Path(PICTURE_DIR).mkdir(parents=True, exist_ok=True)
 Path(COMMENT_DIR).mkdir(parents=True, exist_ok=True)
@@ -89,11 +90,13 @@ def get_youtube_embed(game_name):
         print(f"Error fetching YouTube video for {game_name}: {e}")
     return "https://www.youtube.com/embed/dQw4w9WgXcQ"
 
+# index read/write (keresi az AUTO-GENERATED POSTS blokkot)
 def read_index_posts():
     if not os.path.exists(INDEX_FILE):
         return []
     with open(INDEX_FILE, "r", encoding="utf-8") as f:
         html = f.read()
+    # kétféle mintát próbálunk: korábbi JSON tömb, vagy explicit START/END blokk
     m = re.search(r"POSTS\s*=\s*(\[\s*[\s\S]*?\])\s*;", html)
     if not m:
         m = re.search(r"// <<< AUTO-GENERATED POSTS START >>>\s*const POSTS =\s*(\[\s*[\s\S]*?\])\s*;?\s*// <<< AUTO-GENERATED POSTS END >>>", html)
@@ -131,14 +134,15 @@ def write_index_posts(all_posts):
         if re.search(r"POSTS\s*=\s*\[[\s\S]*?\]", html):
             new_html = re.sub(r"POSTS\s*=\s*\[[\s\S]*?\]", f"POSTS = {new_json}", html)
         else:
+            # Nincs ahol frissíteni -> egyszerűen hozzáfűzünk egy megjegyzést
             new_html = html + f"\n<!-- AUTO-GENERATED POSTS START -->\n<script>\nconst POSTS = {new_json};\n</script>\n<!-- AUTO-GENERATED POSTS END -->\n"
     with open(INDEX_FILE, "w", encoding="utf-8") as f:
         f.write(new_html)
     print("✅ index.html POSTS updated.")
 
-# ======================
-# Tartalom generálás
-# ======================
+# ==============
+# TARTALOM GENERÁLÁS SEGÉDFÜGGVÉNYEK
+# ==============
 def build_long_review(game_name, publisher, year):
     parts = []
     intro = f"<p><strong>{game_name}</strong> ({year}), developed by {publisher}, is explored in depth below. This review covers gameplay walkthroughs and tips.</p>"
@@ -247,9 +251,9 @@ def post_footer_html():
     """.format(year=datetime.datetime.now().year)
     return footer
 
-# ======================
-# Poszt generálás
-# ======================
+# ==============
+# POSZT GENERÁLÁS
+# ==============
 def generate_post_for_game(game):
     name = game.get("name") or "Unknown Game"
     slug = slugify(name)
@@ -260,7 +264,7 @@ def generate_post_for_game(game):
         print(f"⚠️  Post already exists for '{name}' -> {filename} (skipping)")
         return None
 
-    # Kép
+    # kép kezelése
     img_url = game.get("background_image") or game.get("background_image_additional") or ""
     img_filename = f"{slug}.jpg"
     img_path = os.path.join(PICTURE_DIR, img_filename)
@@ -280,6 +284,7 @@ def generate_post_for_game(game):
     youtube_embed = get_youtube_embed(name)
 
     year = game.get("released") or ""
+    # RAWG response may contain developers or publisher; best-effort
     publisher = ""
     if isinstance(game.get("developers"), list) and game.get("developers"):
         publisher = game.get("developers")[0].get("name", "")
@@ -296,7 +301,7 @@ def generate_post_for_game(game):
     title = f"{name} Cheats, Tips & Full Review"
     cover_src = f"../Picture/{img_filename}"
 
-    # Komment fájl
+    # ha nincs még komment fájl, hozzuk létre üres tömbbel (így mindig van hova betölteni)
     comments_file = os.path.join(COMMENT_DIR, f"{slug}.json")
     if not os.path.exists(comments_file):
         with open(comments_file, "w", encoding="utf-8") as f:
@@ -304,7 +309,7 @@ def generate_post_for_game(game):
 
     footer_block = post_footer_html()
 
-    # Komment UI + JS
+    # koment UI HTML + JS (az AI Rating alá kerül)
     comments_html = f"""
     <h2>Leave a comment (will be moderated)</h2>
     <form id="commentForm">
@@ -318,213 +323,278 @@ def generate_post_for_game(game):
     <div id="commentsList" style="margin-top:12px"></div>
 
     <script>
-    (function(){{
-      const slug = "{slug}";
-      const tryUrls = ['http://127.0.0.1:5000/api/comment'];
+      (function(){{
+        const slug = "{slug}";
+        const commentsPaths = [
+          // próbáljuk a relatív és az abszolút gyökér útvonalat is
+          '../comments/' + slug + '.json',
+          '/comments/' + slug + '.json'
+        ];
 
-      async function fetchComments() {{
-        try {{
-          const res = await fetch('http://127.0.0.1:5000/api/comments/' + slug + '?_=' + Date.now());
-          if (!res.ok) throw 'Error';
-          const data = await res.json();
-          renderComments(data);
-        }} catch(e) {{
+        async function fetchComments() {{
+          for (const p of commentsPaths) {{
+            try {{
+              const res = await fetch(p + '?_=' + Date.now());
+              if (!res.ok) continue;
+              const data = await res.json();
+              renderComments(data);
+              return;
+            }} catch(e) {{
+              // next
+            }}
+          }}
+          // nincs komment még
           renderComments([]);
         }}
-      }}
 
-      function renderComments(arr) {{
-        const list = document.getElementById('commentsList');
-        list.innerHTML = '';
-        if (!Array.isArray(arr) || arr.length===0) {{
-          list.innerHTML = '<p class="tiny">No comments yet. Be the first to comment!</p>';
-          return;
-        }}
-        arr.forEach(c => {{
-          const d = document.createElement('div');
-          d.style.padding = '8px';
-          d.style.borderRadius = '8px';
-          d.style.border = '1px solid rgba(0,0,0,0.06)';
-          d.style.marginBottom = '8px';
-          const name = document.createElement('div');
-          name.innerHTML = '<strong>' + escapeHtml(c.name) + '</strong> <span class="tiny" style="color:#666;font-size:12px;">' + escapeHtml(c.date) + '</span>';
-          const text = document.createElement('div');
-          text.style.marginTop = '6px';
-          text.innerText = c.text;
-          d.appendChild(name);
-          d.appendChild(text);
-          list.appendChild(d);
-        }});
-      }}
-
-      function escapeHtml(s) {{
-        if (!s) return '';
-        return s.replace(/[&<>"']/g, function(m) {{ return {{'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}}[m]; }});
-      }}
-
-      function clientValidate(name, text) {{
-        if (!name || !text) return 'Name and comment required.';
-        if (name.length>12) return 'Name too long (max 12).';
-        if (text.length>200) return 'Comment too long (max 200).';
-        const forbidden = /(http[s]?:\\/\\/|www\\.|\\.com|\\.net|\\.org|<|>)/i;
-        if (forbidden.test(name) || forbidden.test(text)) return 'No links or HTML allowed.';
-        return null;
-      }}
-
-      async function postComment(payload) {{
-        try {{
-          const res = await fetch(tryUrls[0], {{
-            method:'POST',
-            headers:{{'Content-Type':'application/json'}},
-            body:JSON.stringify(payload)
+        function renderComments(arr) {{
+          const list = document.getElementById('commentsList');
+          list.innerHTML = '';
+          if (!Array.isArray(arr) || arr.length===0) {{
+            list.innerHTML = '<p class="tiny">No comments yet. Be the first to comment!</p>';
+            return;
+          }}
+          arr.forEach(c => {{
+            const d = document.createElement('div');
+            d.style.padding = '8px';
+            d.style.borderRadius = '8px';
+            d.style.border = '1px solid rgba(0,0,0,0.06)';
+            d.style.marginBottom = '8px';
+            const name = document.createElement('div');
+            name.innerHTML = '<strong>' + escapeHtml(c.name) + '</strong> <span class="tiny" style="color:#666;font-size:12px;">' + escapeHtml(c.date) + '</span>';
+            const text = document.createElement('div');
+            text.style.marginTop = '6px';
+            text.innerText = c.text;
+            d.appendChild(name);
+            d.appendChild(text);
+            list.appendChild(d);
           }});
-          if (!res.ok) throw 'Failed';
-          const rdata = await res.json();
-          if (!rdata.ok) throw rdata.msg || 'Rejected';
-          await fetchComments();
-        }} catch(e) {{
-          alert('Comment rejected: ' + (e||'Cannot reach server.'));
         }}
-      }}
 
-      document.getElementById('commentForm').addEventListener('submit', async function(ev){{
-        ev.preventDefault();
-        const name = document.getElementById('commentName').value.trim();
-        const text = document.getElementById('commentText').value.trim();
-        const err = clientValidate(name,text);
-        if(err){{alert('Comment rejected: '+err);return;}}
-        await postComment({{slug,name,text}});
-        document.getElementById('commentForm').reset();
-      }});
+        function escapeHtml(s) {{
+          if (!s) return '';
+          return s.replace(/[&<>"']/g, function(m) {{ return {{'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}}[m]; }});
+        }}
 
-      fetchComments();
-    }})();
+        // client-side egyszerű ellenőrzés (a végső moderáció a szerveren van)
+        function clientValidate(name, text) {{
+          if (!name || !text) return 'Name and comment required.';
+          if (name.length>12) return 'Name too long (max 12).';
+          if (text.length>200) return 'Comment too long (max 200).';
+          const forbidden = /(http[s]?:\\/\\/|www\\.|\\.com|\\.net|\\.org|<|>)/i;
+          if (forbidden.test(name) || forbidden.test(text)) return 'No links or HTML allowed.';
+          return null;
+        }}
+
+        async function postComment(payload) {{
+          // próbáljuk először a relatív /api/comment felé, majd fallback a helyi szerverre
+          const tryUrls = ['/api/comment', 'http://127.0.0.1:5000/api/comment'];
+          for (const url of tryUrls) {{
+            try {{
+              const res = await fetch(url, {{
+                method: 'POST',
+                headers: {{'Content-Type':'application/json'}},
+                body: JSON.stringify(payload)
+              }});
+              // ha válasz JSON és success mező true/false, kezeljük
+              if (res && res.headers.get('content-type') && res.headers.get('content-type').includes('application/json')) {{
+                const data = await res.json();
+                return data;
+              }} else {{
+                // nem JSON válasz -> sikertelen próbálkozás (pl. 404)
+                continue;
+              }}
+            }} catch(e) {{
+              // next url
+            }}
+          }}
+          return {{ success:false, message: 'Could not reach comment API (server may be offline).' }};
+        }}
+
+        document.getElementById('commentForm').addEventListener('submit', async function(e){{
+          e.preventDefault();
+          const name = document.getElementById('commentName').value.trim();
+          const text = document.getElementById('commentText').value.trim();
+          const err = clientValidate(name, text);
+          if (err){{
+            alert(err);
+            return;
+          }}
+          document.getElementById('commentSubmit').disabled = true;
+          const resp = await postComment({{ slug, name, text }});
+          document.getElementById('commentSubmit').disabled = false;
+          if (resp && resp.success) {{
+            document.getElementById('commentName').value = '';
+            document.getElementById('commentText').value = '';
+            // frissítjük a lokális JSON-betöltést (ha a fájl elérhető)
+            await fetchComments();
+          }} else {{
+            alert('Comment rejected: ' + (resp && resp.message ? resp.message : 'Unknown error'));
+          }}
+        }});
+
+        // inicializálás
+        fetchComments();
+      }})();
     </script>
     """
 
-    html = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <title>{title}</title>
-      <link rel="stylesheet" href="../style.css">
-    </head>
-    <body>
-      <h1>{title}</h1>
-      <img src="{cover_src}" alt="{name}" style="max-width:100%;border-radius:12px;">
-      <p><strong>Age rating:</strong> {age_rating}</p>
-      <iframe width="560" height="315" src="{youtube_embed}" frameborder="0" allowfullscreen style="margin-top:12px;"></iframe>
-      {review_html}
-      <h2>Cheat & Tip List</h2>
-      {cheats_html}
-      {comments_html}
-      {footer_block}
-    </body>
-    </html>
-    """
+    # teljes HTML építése (egyszerű, de teljes)
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>{title}</title>
+  <meta name="description" content="Cheats, tips and a long review for {name}."/>
+  <style>
+    :root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
+    html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}}
+    .wrap{{max-width:900px;margin:24px auto;padding:18px;background:var(--panel);border-radius:12px;border:1px solid var(--border)}}
+    img.cover{{width:100%;height:auto;border-radius:8px;display:block}}
+    h1{{margin:10px 0 6px;font-size:28px}}
+    h2{{margin-top:18px}}
+    p{{color:var(--text);line-height:1.6}}
+    .tiny{{color:var(--muted);font-size:13px}}
+    .ad{{background:linear-gradient(180deg,rgba(255,209,102,.06),transparent);padding:12px;border-radius:10px;border:1px dashed #ffd166;color:var(--text)}}
+    a{{color:var(--accent)}}
+    input, textarea {{background: #0f141a; color: var(--text); border:1px solid rgba(255,255,255,0.04)}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
+    <h1>{title}</h1>
+    <img class="cover" src="{cover_src}" alt="{name} cover"/>
+    <h2>About the Game</h2>
+    <ul>
+      <li><strong>Release:</strong> {year}</li>
+      <li><strong>Recommended Age:</strong> {age_rating}</li>
+      <li><strong>Platforms:</strong> {', '.join([p['platform']['name'] for p in game.get('platforms', [])]) if game.get('platforms') else '—'}</li>
+    </ul>
+    <h2>Full Review</h2>
+    {review_html}
+    <h2>Gameplay Video</h2>
+    <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
+    <h2>Cheats & Tips</h2>
+    {cheats_html}
 
+    <h2 class="tiny">AI Rating</h2>
+    <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
+
+    {comments_html}
+
+    {footer_block}
+  </div>
+</body>
+</html>
+"""
+    # fájl írása
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
-    print(f"✅ Generated post: {filename}")
-    return {
-        "title": title,
-        "slug": slug,
-        "filename": filename,
-        "cover": f"Picture/{img_filename}",
-        "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    post_dict = {
+        "title": name,
+        "url": f"{os.path.relpath(out_path, BASE_DIR).replace(os.sep,'/')}",
+        "platform": [p['platform']['name'] for p in game.get('platforms', [])] if game.get('platforms') else [],
+        "date": now.strftime("%Y-%m-%d"),
+        "rating": round(random.uniform(2.5,5.0),1),
+        "cover": f"{os.path.relpath(os.path.join(PICTURE_DIR, img_filename), BASE_DIR).replace(os.sep,'/')}",
+        "views": 0,
+        "comments": 0
     }
+    print(f"✅ Generated post: {out_path}")
+    return post_dict
 
-# ======================
-# Flask komment API
-# ======================
-app = Flask(__name__)
-CORS(app)
+# ==============
+# FŐ FOLYAMAT
+# ==============
+def gather_candidates(total_needed, num_popular):
+    random_candidates = []
+    popular_candidates = []
+    attempts = 0
+    page = 1
+    while len(popular_candidates) < num_popular and attempts < 8:
+        try:
+            res = rawg_get_popular(page=page)
+            if not res:
+                break
+            for g in res:
+                if len(popular_candidates) >= num_popular:
+                    break
+                popular_candidates.append(g)
+            page += 1
+        except Exception as e:
+            print("RAWG popular fetch error:", e)
+            break
+        attempts += 1
 
-def sanitize_comment(text):
-    forbidden = ["spam", "ad", "http", "www", "<", ">", "sex", "drug", "war", "terror"]
-    text_lower = text.lower()
-    for w in forbidden:
-        if w in text_lower:
-            return False
-    return True
+    collected = []
+    attempts = 0
+    while len(collected) < (total_needed - len(popular_candidates)) and attempts < 12:
+        try:
+            page_rand = random.randint(1, 20)
+            res = rawg_search_random(page=page_rand)
+            if res:
+                collected.extend(res)
+        except Exception as e:
+            print("RAWG fetch error:", e)
+        attempts += 1
 
-@app.route("/api/comment", methods=["POST"])
-def handle_comment():
-    data = request.get_json()
-    slug = data.get("slug")
-    name = data.get("name", "").strip()
-    text = data.get("text", "").strip()
-    if not slug or not name or not text:
-        return jsonify({"ok": False, "msg": "Missing data"}), 400
-    if len(name) > 12 or len(text) > 200:
-        return jsonify({"ok": False, "msg": "Too long"}), 400
-    if not sanitize_comment(name) or not sanitize_comment(text):
-        return jsonify({"ok": False, "msg": "Forbidden content"}), 400
+    random.shuffle(collected)
+    needed = total_needed - len(popular_candidates)
+    random_candidates = collected[:needed]
+    return random_candidates, popular_candidates
 
-    comments_file = os.path.join(COMMENT_DIR, f"{slug}.json")
-    comments = []
-    if os.path.exists(comments_file):
-        with open(comments_file, "r", encoding="utf-8") as f:
-            comments = json.load(f)
-    if len(comments) >= 15:
-        return jsonify({"ok": False, "msg": "Max comments reached"}), 400
-
-    comment_obj = {
-        "name": name,
-        "text": text,
-        "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }
-    comments.append(comment_obj)
-    with open(comments_file, "w", encoding="utf-8") as f:
-        json.dump(comments, f, ensure_ascii=False, indent=2)
-    return jsonify({"ok": True})
-
-@app.route("/api/comments/<slug>", methods=["GET"])
-def get_comments(slug):
-    comments_file = os.path.join(COMMENT_DIR, f"{slug}.json")
-    if os.path.exists(comments_file):
-        with open(comments_file, "r", encoding="utf-8") as f:
-            comments = json.load(f)
-    else:
-        comments = []
-    return jsonify(comments)
-
-# ======================
-# Main
-# ======================
 def main():
-    # Popular first
-    posts = []
-    try:
-        popular_games = rawg_get_popular(page=1, page_size=NUM_POPULAR)
-    except Exception as e:
-        print("⚠️ Could not fetch popular games:", e)
-        popular_games = []
-    for g in popular_games:
-        p = generate_post_for_game(g)
-        if p:
-            posts.append(p)
-    # Random games
-    total_random = NUM_TOTAL - len(posts)
-    try:
-        random_games = rawg_search_random(page=1, page_size=total_random*2)
-    except Exception as e:
-        print("⚠️ Could not fetch random games:", e)
-        random_games = []
-    selected_games = random.sample(random_games, min(total_random, len(random_games)))
-    for g in selected_games:
-        p = generate_post_for_game(g)
-        if p:
-            posts.append(p)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--num_posts", type=int, default=NUM_TOTAL)
+    args = parser.parse_args()
+    total = args.num_posts
 
-    # Update index
-    all_posts = read_index_posts()
-    all_posts = posts + all_posts
-    all_posts.sort(key=lambda x: x["date"], reverse=True)
-    write_index_posts(all_posts)
-    print("✅ All posts generated and index updated.")
+    existing_posts = read_index_posts()
+    existing_titles = set(p.get("title","").lower() for p in existing_posts)
+    existing_filenames = set(os.path.basename(p.get("url","")) for p in existing_posts if p.get("url"))
+
+    random_candidates, popular_candidates = gather_candidates(total, NUM_POPULAR)
+    candidates = []
+    candidates.extend(popular_candidates)
+    candidates.extend(random_candidates)
+
+    posts_added = []
+    for cand in candidates:
+        name = cand.get("name","").strip()
+        if not name:
+            continue
+        slug = slugify(name)
+        filename = f"{slug}.html"
+        if name.lower() in existing_titles or filename in existing_filenames or (os.path.exists(os.path.join(PICTURE_DIR, f"{slug}.jpg")) and os.path.exists(os.path.join(OUTPUT_DIR, filename))):
+            print(f"Skipping '{name}' (already exists).")
+            continue
+        post = generate_post_for_game(cand)
+        if post:
+            posts_added.append(post)
+            existing_titles.add(post["title"].lower())
+            existing_filenames.add(os.path.basename(post["url"]))
+        time.sleep(0.7)
+
+    combined = posts_added + existing_posts
+    seen = set()
+    unique_posts = []
+    for p in combined:
+        t = p.get("title","").lower()
+        if t in seen:
+            continue
+        seen.add(t)
+        unique_posts.append(p)
+
+    unique_posts.sort(key=lambda x: x.get("date",""), reverse=True)
+    write_index_posts(unique_posts)
+
+    print(f"Done. New posts added: {len(posts_added)}")
+    if posts_added:
+        for p in posts_added:
+            print(" -", p["title"], "->", p["url"])
 
 if __name__ == "__main__":
     main()
-    app.run(debug=True, port=5000)
