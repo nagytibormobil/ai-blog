@@ -1,0 +1,302 @@
+[
+  {
+    "title": "GTA V",
+    "url": "generated_posts/20250829-151941-GTA_V.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.6,
+    "cover": "",
+    "views": 0,
+    "comments": 0,
+    "slug": "gta-v"
+  },
+  {
+    "title": "Geometry Dash RazorLeaf",
+    "slug": "geometry-dash-razorleaf",
+    "url": "generated_posts/20250829-155830-geometry-dash-razorleaf.html",
+    "platform": [
+      "PC",
+      "Android"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.7,
+    "cover": "Picture/geometry-dash-razorleaf.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Call of Duty: Modern Warfare II",
+    "slug": "call-of-duty-modern-warfare-ii",
+    "url": "generated_posts/20250829-155837-call-of-duty-modern-warfare-ii.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.9,
+    "cover": "Picture/call-of-duty-modern-warfare-ii.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "The Witcher 3 Wild Hunt - Complete Edition",
+    "slug": "the-witcher-3-wild-hunt-complete-edition",
+    "url": "generated_posts/20250829-155844-the-witcher-3-wild-hunt-complete-edition.html",
+    "platform": [
+      "PC",
+      "PlayStation",
+      "Xbox",
+      "Nintendo"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.1,
+    "cover": "Picture/the-witcher-3-wild-hunt-complete-edition.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Astral Masters",
+    "slug": "astral-masters",
+    "url": "generated_posts/20250829-155851-astral-masters.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-08-29",
+    "rating": 3.8,
+    "cover": "Picture/astral-masters.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Bloodborne: The Old Hunters",
+    "slug": "bloodborne-the-old-hunters",
+    "url": "generated_posts/20250829-155858-bloodborne-the-old-hunters.html",
+    "platform": [
+      "PlayStation"
+    ],
+    "date": "2025-08-29",
+    "rating": 3.1,
+    "cover": "Picture/bloodborne-the-old-hunters.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Starlancer",
+    "slug": "starlancer",
+    "url": "generated_posts/20250829-155905-starlancer.html",
+    "platform": [
+      "PC",
+      "SEGA"
+    ],
+    "date": "2025-08-29",
+    "rating": 3.8,
+    "cover": "Picture/starlancer.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "The Last Of Us Remastered",
+    "slug": "the-last-of-us-remastered",
+    "url": "generated_posts/20250829-155912-the-last-of-us-remastered.html",
+    "platform": [
+      "PlayStation"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.4,
+    "cover": "Picture/the-last-of-us-remastered.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "FIFA 23",
+    "slug": "fifa-23",
+    "url": "generated_posts/20250829-155918-fifa-23.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.5,
+    "cover": "Picture/fifa-23.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Godzilla Save the Earth",
+    "slug": "godzilla-save-the-earth",
+    "url": "generated_posts/20250829-155925-godzilla-save-the-earth.html",
+    "platform": [
+      "PlayStation",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.5,
+    "cover": "Picture/godzilla-save-the-earth.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Hellversus",
+    "slug": "hellversus",
+    "url": "generated_posts/20250829-155932-hellversus.html",
+    "platform": [
+      "Web"
+    ],
+    "date": "2025-08-29",
+    "rating": 2.9,
+    "cover": "Picture/hellversus.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Micro Mages",
+    "slug": "micro-mages",
+    "url": "generated_posts/20250829-155939-micro-mages.html",
+    "platform": [
+      "PC",
+      "Nintendo"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.4,
+    "cover": "Picture/micro-mages.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Red Ball 4 (Ad Supported)",
+    "slug": "red-ball-4-ad-supported",
+    "url": "generated_posts/20250829-155946-red-ball-4-ad-supported.html",
+    "platform": [
+      "iOS"
+    ],
+    "date": "2025-08-29",
+    "rating": 3.6,
+    "cover": "Picture/red-ball-4-ad-supported.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Minecraft",
+    "slug": "minecraft",
+    "url": "generated_posts/20250829-161240-minecraft.html",
+    "platform": [
+      "PC",
+      "Mobile",
+      "Xbox",
+      "PS"
+    ],
+    "date": "2025-08-29",
+    "rating": 3.1,
+    "cover": "Picture/minecraft.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "League of Legends",
+    "slug": "league-of-legends",
+    "url": "generated_posts/20250829-161242-league-of-legends.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-08-29",
+    "rating": 3.6,
+    "cover": "Picture/league-of-legends.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "The Witcher 3: Wild Hunt",
+    "slug": "the-witcher-3-wild-hunt",
+    "url": "generated_posts/20250829-161250-the-witcher-3-wild-hunt.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox",
+      "Switch"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.7,
+    "cover": "Picture/the-witcher-3-wild-hunt.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Elden Ring",
+    "slug": "elden-ring",
+    "url": "generated_posts/20250829-161540-elden-ring.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.7,
+    "cover": "Picture/elden-ring.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Fortnite",
+    "slug": "fortnite",
+    "url": "generated_posts/20250829-162321-fortnite.html",
+    "platform": [
+      "PC",
+      "PS",
+      "Xbox",
+      "Mobile"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.5,
+    "cover": "Picture/fortnite.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "The Elder Scrolls VI",
+    "slug": "the-elder-scrolls-vi",
+    "url": "generated_posts/20250829-162323-the-elder-scrolls-vi.html",
+    "platform": [
+      "PC",
+      "Xbox"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.3,
+    "cover": "Picture/the-elder-scrolls-vi.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Cabernet",
+    "slug": "cabernet",
+    "url": "generated_posts/20250829-162330-cabernet.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.0,
+    "cover": "Picture/cabernet.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "No Case Should Remain Unsolved",
+    "slug": "no-case-should-remain-unsolved",
+    "url": "generated_posts/20250829-162338-no-case-should-remain-unsolved.html",
+    "platform": [
+      "PC",
+      "Apple Macintosh",
+      "Nintendo"
+    ],
+    "date": "2025-08-29",
+    "rating": 4.1,
+    "cover": "Picture/no-case-should-remain-unsolved.jpg",
+    "views": 0,
+    "comments": 0
+  }
+]
