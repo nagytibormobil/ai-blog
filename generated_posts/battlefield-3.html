@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Battlefield 3 Cheats, Tips & Full Review</title>
+  <meta name="description" content="Cheats, tips and a long review for Battlefield 3."/>
+  <style>
+    :root{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+    .wrap{max-width:900px;margin:24px auto;padding:18px;background:var(--panel);border-radius:12px;border:1px solid var(--border)}
+    img.cover{width:100%;height:auto;border-radius:8px;display:block}
+    h1{margin:10px 0 6px;font-size:28px}
+    h2{margin-top:18px}
+    p{color:var(--text);line-height:1.6}
+    .tiny{color:var(--muted);font-size:13px}
+    .ad{background:linear-gradient(180deg,rgba(255,209,102,.06),transparent);padding:12px;border-radius:10px;border:1px dashed #ffd166;color:var(--text)}
+    a{color:var(--accent)}
+    input, textarea {background: #0f141a; color: var(--text); border:1px solid rgba(255,255,255,0.04)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
+    <h1>Battlefield 3 Cheats, Tips & Full Review</h1>
+    <img class="cover" src="../Picture/battlefield-3.jpg" alt="Battlefield 3 cover"/>
+    <h2>About the Game</h2>
+    <ul>
+      <li><strong>Release:</strong> 2011-10-25</li>
+      <li><strong>Recommended Age:</strong> Mature*</li>
+      <li><strong>Platforms:</strong> PlayStation 3, Xbox One, PC, Xbox 360</li>
+    </ul>
+    <h2>Full Review</h2>
+    <p><strong>Battlefield 3</strong> (2011-10-25), developed by the studio, is explored in depth below. This review covers gameplay walkthroughs and tips.</p>
+<p>The game starts with a tutorial guiding new players through the core mechanics.</p>
+<p>Using the console command `godmode` enables invincibility.</p>
+<p>Early levels introduce basic enemies and gradually increase the difficulty.</p>
+<p>Entering `unlock_all_weapons` grants access to all weapons instantly.</p>
+<p>Players will encounter several side quests that enrich the main storyline.</p>
+<p>The `add_gold 1000` cheat adds gold to your inventory.</p>
+<p>Inventory management and crafting play a key role in progression.</p>
+<p>Using `noclip` allows walking through walls.</p>
+<p>Boss fights require strategic use of character skills and abilities.</p>
+<p>Cheat codes may vary between platform versions.</p>
+<p>Certain areas hide collectibles and secrets that reward exploration.</p>
+<p>Some cheats are hidden and discovered through exploration.</p>
+<p>Multiplayer or co-op challenges provide additional replay value.</p>
+<p>Always save progress before using cheats to avoid issues.</p>
+<p>Advanced techniques and combos can be learned for mastery.</p>
+<p>Overall, this game provides a mix of exploration, strategy, and fun. Use the tips wisely to enhance your gameplay.</p>
+    <h2>Gameplay Video</h2>
+    <iframe width="100%" height="400" src="https://www.youtube.com/embed/x9mz3obgR4w" frameborder="0" allowfullscreen></iframe>
+    <h2>Cheats & Tips</h2>
+    <ul><li>Use special abilities strategically to overcome tough enemies.</li><li>Collect resources early to prepare for late-game challenges.</li><li>Explore hidden areas to find rare items.</li><li>Experiment with different weapons and skills combinations.</li><li>Save frequently to avoid losing progress.</li><li>Learn enemy patterns to improve combat efficiency.</li><li>Complete side quests for bonus rewards.</li><li>Use fast travel to save time between zones.</li><li>Upgrade equipment as soon as possible for better performance.</li><li>Watch for environmental clues to solve puzzles.</li><li>Use stealth when facing stronger foes.</li><li>Combine items for special effects.</li><li>Take advantage of in-game tutorials for mastery.</li><li>Interact with NPCs to unlock hidden missions.</li><li>Prioritize main objectives to progress efficiently.</li></ul>
+
+    <h2 class="tiny">AI Rating</h2>
+    <p class="tiny">⭐ 4.2/5</p>
+
+    
+    <h2>Leave a comment (will be moderated)</h2>
+    <form id="commentForm">
+      <input type="text" id="commentName" maxlength="12" placeholder="Your name (max 12 chars)" required style="width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;box-sizing:border-box;">
+      <br><br>
+      <textarea id="commentText" maxlength="200" placeholder="Write your comment (max 200 chars)" required style="width:100%;height:100px;padding:8px;border-radius:6px;border:1px solid #ccc;box-sizing:border-box;"></textarea>
+      <br><br>
+      <button id="commentSubmit" type="submit" style="padding:8px 14px;border-radius:8px;border:0;background:#5cc8ff;color:#032">Submit</button>
+    </form>
+    <p class="tiny">Plain text only — no links or images. Comments are moderated and must follow the site policy.</p>
+    <div id="commentsList" style="margin-top:12px"></div>
+
+    <script>
+      (function(){
+        const slug = "battlefield-3";
+        const commentsPaths = [
+          // próbáljuk a relatív és az abszolút gyökér útvonalat is
+          '../comments/' + slug + '.json',
+          '/comments/' + slug + '.json'
+        ];
+
+        async function fetchComments() {
+          for (const p of commentsPaths) {
+            try {
+              const res = await fetch(p + '?_=' + Date.now());
+              if (!res.ok) continue;
+              const data = await res.json();
+              renderComments(data);
+              return;
+            } catch(e) {
+              // next
+            }
+          }
+          // nincs komment még
+          renderComments([]);
+        }
+
+        function renderComments(arr) {
+          const list = document.getElementById('commentsList');
+          list.innerHTML = '';
+          if (!Array.isArray(arr) || arr.length===0) {
+            list.innerHTML = '<p class="tiny">No comments yet. Be the first to comment!</p>';
+            return;
+          }
+          arr.forEach(c => {
+            const d = document.createElement('div');
+            d.style.padding = '8px';
+            d.style.borderRadius = '8px';
+            d.style.border = '1px solid rgba(0,0,0,0.06)';
+            d.style.marginBottom = '8px';
+            const name = document.createElement('div');
+            name.innerHTML = '<strong>' + escapeHtml(c.name) + '</strong> <span class="tiny" style="color:#666;font-size:12px;">' + escapeHtml(c.date) + '</span>';
+            const text = document.createElement('div');
+            text.style.marginTop = '6px';
+            text.innerText = c.text;
+            d.appendChild(name);
+            d.appendChild(text);
+            list.appendChild(d);
+          });
+        }
+
+        function escapeHtml(s) {
+          if (!s) return '';
+          return s.replace(/[&<>"']/g, function(m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; });
+        }
+
+        // client-side egyszerű ellenőrzés (a végső moderáció a szerveren van)
+        function clientValidate(name, text) {
+          if (!name || !text) return 'Name and comment required.';
+          if (name.length>12) return 'Name too long (max 12).';
+          if (text.length>200) return 'Comment too long (max 200).';
+          const forbidden = /(http[s]?:\/\/|www\.|\.com|\.net|\.org|<|>)/i;
+          if (forbidden.test(name) || forbidden.test(text)) return 'No links or HTML allowed.';
+          return null;
+        }
+
+        async function postComment(payload) {
+          // próbáljuk először a relatív /api/comment felé, majd fallback a helyi szerverre
+          const tryUrls = ['/api/comment', 'http://127.0.0.1:5000/api/comment'];
+          for (const url of tryUrls) {
+            try {
+              const res = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(payload)
+              });
+              // ha válasz JSON és success mező true/false, kezeljük
+              if (res && res.headers.get('content-type') && res.headers.get('content-type').includes('application/json')) {
+                const data = await res.json();
+                return data;
+              } else {
+                // nem JSON válasz -> sikertelen próbálkozás (pl. 404)
+                continue;
+              }
+            } catch(e) {
+              // next url
+            }
+          }
+          return { success:false, message: 'Could not reach comment API (server may be offline).' };
+        }
+
+        document.getElementById('commentForm').addEventListener('submit', async function(e){
+          e.preventDefault();
+          const name = document.getElementById('commentName').value.trim();
+          const text = document.getElementById('commentText').value.trim();
+          const err = clientValidate(name, text);
+          if (err){
+            alert(err);
+            return;
+          }
+          document.getElementById('commentSubmit').disabled = true;
+          const resp = await postComment({ slug, name, text });
+          document.getElementById('commentSubmit').disabled = false;
+          if (resp && resp.success) {
+            document.getElementById('commentName').value = '';
+            document.getElementById('commentText').value = '';
+            // frissítjük a lokális JSON-betöltést (ha a fájl elérhető)
+            await fetchComments();
+          } else {
+            alert('Comment rejected: ' + (resp && resp.message ? resp.message : 'Unknown error'));
+          }
+        });
+
+        // inicializálás
+        fetchComments();
+      })();
+    </script>
+    
+
+    
+    <hr>
+    <section class="ad">
+      <h3>Earn Real Money While You Play 📱</h3>
+      <p>Simple passive income by sharing a bit of your internet. Runs in the background while you game.</p>
+      <p><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank"><strong>Try Honeygain now</strong></a></p>
+      <div class="tiny">Sponsored. Use at your own discretion.</div>
+    </section>
+    <div class="row" style="margin-top:12px">
+      <div class="ad" style="border-style:solid;border-color:#1f2a38">
+        <h3>IC Markets – Trade like a pro 🌍</h3>
+        <p><a href="https://icmarkets.com/?camp=3992" target="_blank">Open an account</a></p>
+      </div>
+      <div class="ad" style="border-style:solid;border-color:#1f2a38">
+        <h3>Dukascopy – Promo code: <code>E12831</code> 🏦</h3>
+        <p><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">Start here</a></p>
+      </div>
+    </div>
+    <section class="footer">
+      <div class="row">
+        <div>
+          <strong>Comment Policy</strong>
+          <ul class="list tiny">
+            <li>No spam, ads, or offensive content.</li>
+            <li>No adult/drugs/war/terror topics.</li>
+            <li>No links or images in comments.</li>
+            <li>Max 15 comments/day (per post). Moderated automatically.</li>
+          </ul>
+        </div>
+        <div>
+          <strong>Terms</strong>
+          <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
+        </div>
+      </div>
+      <p class="tiny">© 2025 AI Gaming Blog</p>
+    </section>
+    
+  </div>
+</body>
+</html>
