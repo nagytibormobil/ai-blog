@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # generate_and_save.py
-# Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés.
-# SEO, "More to Explore" a poszt oldalon, Terms of Use link a footerben
+# Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés
+# + SEO meta tag-ek, Terms of Use link javítás, More to Explore post oldalon
+# Elvárások: requests, bs4 telepítve (pip install requests beautifulsoup4)
+
 import os
 import random
 import argparse
@@ -11,8 +13,11 @@ import time
 import re
 from pathlib import Path
 import requests
+from bs4 import BeautifulSoup
 
-# ============== SETTINGS
+# ==============
+# SETTINGS
+# ==============
 OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
 PICTURE_DIR = "Picture"
@@ -28,7 +33,9 @@ USER_AGENT = "AI-Gaming-Blog-Agent/1.0"
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
 Path(PICTURE_DIR).mkdir(exist_ok=True)
 
-# ============== HELPERS
+# ==============
+# HELPERS
+# ==============
 def slugify(name):
     s = name.strip().lower()
     s = re.sub(r"[^\w\s-]", "", s)
@@ -81,7 +88,6 @@ def get_youtube_embed(game_name):
         print(f"Error fetching YouTube video for {game_name}: {e}")
     return "https://www.youtube.com/embed/dQw4w9WgXcQ"
 
-# ============== INDEX HELPERS
 def read_index_posts():
     if not os.path.exists(INDEX_FILE):
         return []
@@ -126,7 +132,9 @@ def write_index_posts(all_posts):
         f.write(new_html)
     print("✅ index.html POSTS updated.")
 
-# ============== POST CONTENT HELPERS
+# ==============
+# NEW HELPERS FOR CONTENT
+# ==============
 def build_long_review(game_name, publisher, year):
     parts = []
     intro = f"<p><strong>{game_name}</strong> ({year}), developed by {publisher}, is explored in depth below. This review covers gameplay walkthroughs and cheat codes.</p>"
@@ -187,48 +195,21 @@ def generate_cheats_tips(game_name):
         "Interact with NPCs to unlock hidden missions.",
         "Prioritize main objectives to progress efficiently."
     ]
-    items = "".join(f"<li>{tip}</li>" for tip in tips[:15])
-    return f"<ul>{items}</ul>"
+    if not tips:
+        return "<p>No cheats or tips found for this game.</p>"
+    else:
+        items = "".join(f"<li>{tip}</li>" for tip in tips[:15])
+        return f"<ul>{items}</ul>"
 
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
     name = rating.get("name") if isinstance(rating, dict) else str(rating)
     return f"{name}*" if name else "Not specified*"
 
-# ============== MORE TO EXPLORE (POST PAGE ONLY)
-def get_more_to_explore(all_posts, current_title):
-    other_posts = [p for p in all_posts if p.get("title","") != current_title]
-    if len(other_posts) <= 3:
-        selected = other_posts
-    else:
-        selected = random.sample(other_posts, 3)
-    items_html = "".join(f'<li><a href="../{p["url"]}" style="color:var(--accent)">{p["title"]}</a></li>' for p in selected)
-    return f"""
-    <hr>
-    <section>
-      <h2>More to Explore</h2>
-      <ul>{items_html}</ul>
-    </section>
-    """
-
-# ============== FOOTER
-def post_footer_html():
-    footer = f"""
-    <hr>
-    <section class="footer">
-      <div class="row">
-        <div>
-          <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
-        </div>
-      </div>
-      <p class="tiny"><a href="terms.html" style="color:var(--accent)">Read our detailed Terms of Use</a></p>
-      <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
-    </section>
-    """
-    return footer
-
-# ============== POST GENERATION
-def generate_post_for_game(game):
+# ==============
+# MAIN POST GENERATION
+# ==============
+def generate_post_for_game(game, all_posts=[]):
     name = game.get("name") or "Unknown Game"
     slug = slugify(name)
     filename = f"{slug}.html"
@@ -242,15 +223,11 @@ def generate_post_for_game(game):
     img_filename = f"{slug}.jpg"
     img_path = os.path.join(PICTURE_DIR, img_filename)
 
-    if not os.path.exists(img_path):
-        if img_url:
-            ok = download_image(img_url, img_path)
-            if not ok:
-                ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
-                download_image(ph_url, img_path)
-        else:
-            ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
-            download_image(ph_url, img_path)
+    if img_url:
+        download_image(img_url, img_path)
+    else:
+        ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
+        download_image(ph_url, img_path)
 
     youtube_embed = get_youtube_embed(name)
     year = game.get("released") or ""
@@ -259,25 +236,32 @@ def generate_post_for_game(game):
     cheats_html = generate_cheats_tips(name)
     age_rating = get_age_rating(game)
 
+    # More to Explore (random 3 posts, képpel)
+    more_posts = [p for p in all_posts if p.get("title","").lower()!=name.lower()]
+    random.shuffle(more_posts)
+    more_html = ""
+    if more_posts:
+        more_html += "<h2>More to Explore</h2><div class='more-explore' style='display:flex;gap:10px;flex-wrap:wrap'>"
+        for mp in more_posts[:3]:
+            cover = mp.get("cover","../Picture/placeholder.jpg")
+            url = mp.get("url","#")
+            title_mp = mp.get("title","")
+            more_html += f"<div style='width:30%'><a href='../{url}'><img src='../{cover}' alt='{title_mp}' style='width:100%;border-radius:6px'><p>{title_mp}</p></a></div>"
+        more_html += "</div>"
+
+    # Lábléc
+    footer_block = f"""
+    <hr>
+    <section class="footer">
+      <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
+      <p class="tiny"><a href="terms.html" style="color:#5cc8ff">Read our detailed Terms of Use</a></p>
+      <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
+    </section>
+    """
+
     now = datetime.datetime.now()
     title = f"{name} Cheats, Tips & Full Review"
     cover_src = f"../{PICTURE_DIR}/{img_filename}"
-
-    # AI Rating
-    ai_rating_html = f"""
-    <h2 class="tiny">AI Rating</h2>
-    <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
-    """
-
-    # More to Explore
-    more_explore_html = ""
-    try:
-        all_posts_index = read_index_posts()
-        more_explore_html = get_more_to_explore(all_posts_index, name)
-    except:
-        more_explore_html = ""
-
-    footer_block = post_footer_html()
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -285,7 +269,17 @@ def generate_post_for_game(game):
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>{title}</title>
-  <meta name="description" content="Cheats, tips and a long review for {name}."/>
+  <meta name="description" content="Cheats, tips and a long review for {name}. Explore gameplay, walkthroughs, and cheat codes."/>
+  <!-- Open Graph / Social -->
+  <meta property="og:title" content="{title}"/>
+  <meta property="og:description" content="Cheats, tips and a long review for {name}. Explore gameplay, walkthroughs, and cheat codes."/>
+  <meta property="og:image" content="../{PICTURE_DIR}/{img_filename}"/>
+  <meta property="og:type" content="article"/>
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="{title}"/>
+  <meta name="twitter:description" content="Cheats, tips and a long review for {name}. Explore gameplay, walkthroughs, and cheat codes."/>
+  <meta name="twitter:image" content="../{PICTURE_DIR}/{img_filename}"/>
   <style>
     :root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
     html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}}
@@ -296,6 +290,8 @@ def generate_post_for_game(game):
     p{{color:var(--text);line-height:1.6}}
     .tiny{{color:var(--muted);font-size:13px}}
     a{{color:var(--accent)}}
+    .more-explore img{{display:block}}
+    .more-explore p{{text-align:center;font-size:14px;margin:4px 0}}
   </style>
 </head>
 <body>
@@ -315,8 +311,9 @@ def generate_post_for_game(game):
     <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
     <h2>Cheats & Tips</h2>
     {cheats_html}
-    {ai_rating_html}
-    {more_explore_html}
+    <h2 class="tiny">AI Rating</h2>
+    <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
+    {more_html}
     {footer_block}
   </div>
 </body>
@@ -338,7 +335,9 @@ def generate_post_for_game(game):
     print(f"✅ Generated post: {out_path}")
     return post_dict
 
-# ============== CANDIDATES
+# ==============
+# MAIN FLOW
+# ==============
 def gather_candidates(total_needed, num_popular):
     random_candidates = []
     popular_candidates = []
@@ -377,7 +376,6 @@ def gather_candidates(total_needed, num_popular):
     random_candidates = collected[:needed]
     return random_candidates, popular_candidates
 
-# ============== MAIN
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_posts", type=int, default=NUM_TOTAL)
@@ -403,7 +401,7 @@ def main():
         if name.lower() in existing_titles or filename in existing_filenames or os.path.exists(os.path.join(PICTURE_DIR, f"{slug}.jpg")):
             print(f"Skipping '{name}' (already exists).")
             continue
-        post = generate_post_for_game(cand)
+        post = generate_post_for_game(cand, all_posts=existing_posts+posts_added)
         if post:
             posts_added.append(post)
             existing_titles.add(post["title"].lower())
