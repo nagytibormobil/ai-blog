@@ -206,9 +206,28 @@ def get_age_rating(game):
     return f"{name}*" if name else "Not specified*"
 
 # ==============
+# MORE TO EXPLORE HELPER
+# ==============
+def generate_more_to_explore(posts, n=3):
+    selected = random.sample(posts, min(n, len(posts)))
+    html = '<section class="more-to-explore">\n'
+    html += '<h2>More to Explore</h2>\n<div class="explore-grid">\n'
+    for post in selected:
+        html += f'''
+        <div class="explore-item">
+            <a href="../{post['url']}">
+                <img src="../{post['cover']}" alt="{post['title']}">
+                <div class="explore-item-title">{post['title']}</div>
+            </a>
+        </div>
+        '''
+    html += '</div>\n</section>\n'
+    return html
+
+# ==============
 # POST GENERATION
 # ==============
-def generate_post_for_game(game):
+def generate_post_for_game(game, all_posts):
     name = game.get("name") or "Unknown Game"
     slug = slugify(name)
     filename = f"{slug}.html"
@@ -222,18 +241,15 @@ def generate_post_for_game(game):
     img_filename = f"{slug}.jpg"
     img_path = os.path.join(PICTURE_DIR, img_filename)
 
-    if os.path.exists(img_path):
-        print(f"⚠️  Image already exists for '{name}' -> {img_filename} (skipping)")
-        return None
-
-    if img_url:
-        ok = download_image(img_url, img_path)
-        if not ok:
+    if not os.path.exists(img_path):
+        if img_url:
+            ok = download_image(img_url, img_path)
+            if not ok:
+                ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
+                download_image(ph_url, img_path)
+        else:
             ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
             download_image(ph_url, img_path)
-    else:
-        ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
-        download_image(ph_url, img_path)
 
     youtube_embed = get_youtube_embed(name)
 
@@ -266,6 +282,11 @@ def generate_post_for_game(game):
     .tiny{{color:var(--muted);font-size:13px}}
     .ad{{background:linear-gradient(180deg,rgba(255,209,102,.06),transparent);padding:12px;border-radius:10px;border:1px dashed #ffd166;color:var(--text)}}
     a{{color:var(--accent)}}
+    .more-to-explore{{margin-top:32px}}
+    .explore-grid{{display:flex;gap:12px;flex-wrap:wrap}}
+    .explore-item{{flex:1 1 calc(33.333% - 8px);border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--card)}}
+    .explore-item img{{width:100%;display:block}}
+    .explore-item-title{{padding:6px;color:var(--text);font-size:14px;text-align:center}}
   </style>
 </head>
 <body>
@@ -286,52 +307,18 @@ def generate_post_for_game(game):
     <h2>Cheats & Tips</h2>
     {cheats_html}
 
-# Feltételezve, hogy van egy listád a posztokról
-posts = [
-    {"title": "Post 1", "url": "post1.html", "img": "images/post1.jpg"},
-    {"title": "Post 2", "url": "post2.html", "img": "images/post2.jpg"},
-    {"title": "Post 3", "url": "post3.html", "img": "images/post3.jpg"},
-    {"title": "Post 4", "url": "post4.html", "img": "images/post4.jpg"},
-    {"title": "Post 5", "url": "post5.html", "img": "images/post5.jpg"},
-]
-
-import random
-
-def generate_more_to_explore(posts, n=3):
-    selected = random.sample(posts, n)
-    html = '<section class="more-to-explore">\n'
-    html += '<h2>More to Explore</h2>\n<div class="explore-grid">\n'
-    for post in selected:
-        html += f'''
-        <div class="explore-item">
-            <a href="{post['url']}">
-                <img src="{post['img']}" alt="{post['title']}">
-                <div class="explore-item-title">{post['title']}</div>
-            </a>
-        </div>
-        '''
-    html += '</div>\n</section>\n'
-    return html
-
-# Példa használat a generate_and_save.py-ben:
-# Feltételezve, hogy itt generálod a post HTML-t
-for post in posts:
-    post_html = f"<h1>{post['title']}</h1>\n<p>AI rating: ...</p>\n"
-    # ide illesztjük be a More to Explore szekciót
-    post_html += generate_more_to_explore([p for p in posts if p != post])
-    with open(f"output/{post['url']}", "w", encoding="utf-8") as f:
-        f.write(post_html)
-
-
-
     <h2 class="tiny">AI Rating</h2>
     <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
+
+    <!-- More to Explore -->
+    {generate_more_to_explore([p for p in all_posts if p['title'] != name])}
 
     {footer_block}
   </div>
 </body>
 </html>
 """
+
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
 
@@ -407,57 +394,23 @@ def post_footer_html():
     """.format(year=datetime.datetime.now().year)
     return footer
 
-
-
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--num_posts", type=int, default=NUM_TOTAL)
-    args = parser.parse_args()
-    total = args.num_posts
+    # Betöltjük a már meglévő posztokat az indexből
+    all_posts = read_index_posts()
 
-    existing_posts = read_index_posts()
-    existing_titles = set(p.get("title","").lower() for p in existing_posts)
-    existing_filenames = set(os.path.basename(p.get("url","")) for p in existing_posts if p.get("url"))
+    # Összegyűjtjük a generáláshoz szükséges játékokat
+    random_candidates, popular_candidates = gather_candidates(NUM_TOTAL, NUM_POPULAR)
+    selected_games = popular_candidates + random_candidates
 
-    random_candidates, popular_candidates = gather_candidates(total, NUM_POPULAR)
-    candidates = []
-    candidates.extend(popular_candidates)
-    candidates.extend(random_candidates)
-
-    posts_added = []
-    for cand in candidates:
-        name = cand.get("name","").strip()
-        if not name:
-            continue
-        slug = slugify(name)
-        filename = f"{slug}.html"
-        if name.lower() in existing_titles or filename in existing_filenames or os.path.exists(os.path.join(PICTURE_DIR, f"{slug}.jpg")):
-            print(f"Skipping '{name}' (already exists).")
-            continue
-        post = generate_post_for_game(cand)
+    # Generáljuk a posztokat minden játékhoz
+    for game in selected_games:
+        post = generate_post_for_game(game, all_posts)
         if post:
-            posts_added.append(post)
-            existing_titles.add(post["title"].lower())
-            existing_filenames.add(os.path.basename(post["url"]))
-        time.sleep(0.7)
+            all_posts.append(post)
 
-    combined = posts_added + existing_posts
-    seen = set()
-    unique_posts = []
-    for p in combined:
-        t = p.get("title","").lower()
-        if t in seen:
-            continue
-        seen.add(t)
-        unique_posts.append(p)
-
-    unique_posts.sort(key=lambda x: x.get("date",""), reverse=True)
-    write_index_posts(unique_posts)
-
-    print(f"Done. New posts added: {len(posts_added)}")
-    if posts_added:
-        for p in posts_added:
-            print(" -", p["title"], "->", p["url"])
+    # Frissítjük az index.html fájlt az új posztokkal
+    write_index_posts(all_posts)
 
 if __name__ == "__main__":
     main()
+
