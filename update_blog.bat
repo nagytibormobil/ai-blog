@@ -46,3 +46,4 @@ echo ===============================
 echo 🔹 Kész! A GitHub Pages frissítése 1-5 perc alatt várható...
 echo ===============================
 endlocal
+pause

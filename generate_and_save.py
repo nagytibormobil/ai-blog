@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # generate_and_save.py
-# Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés
-# + SEO meta tag-ek, Terms of Use link javítás, More to Explore post oldalon
+# Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés.
 # Elvárások: requests, bs4 telepítve (pip install requests beautifulsoup4)
 
 import os
@@ -16,7 +15,7 @@ import requests
 from bs4 import BeautifulSoup
 
 # ==============
-# SETTINGS
+# SETTINGS (API kulcsok beállítva)
 # ==============
 OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
@@ -207,9 +206,9 @@ def get_age_rating(game):
     return f"{name}*" if name else "Not specified*"
 
 # ==============
-# MAIN POST GENERATION
+# POST GENERATION
 # ==============
-def generate_post_for_game(game, all_posts=[]):
+def generate_post_for_game(game):
     name = game.get("name") or "Unknown Game"
     slug = slugify(name)
     filename = f"{slug}.html"
@@ -223,45 +222,31 @@ def generate_post_for_game(game, all_posts=[]):
     img_filename = f"{slug}.jpg"
     img_path = os.path.join(PICTURE_DIR, img_filename)
 
+    if os.path.exists(img_path):
+        print(f"⚠️  Image already exists for '{name}' -> {img_filename} (skipping)")
+        return None
+
     if img_url:
-        download_image(img_url, img_path)
+        ok = download_image(img_url, img_path)
+        if not ok:
+            ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
+            download_image(ph_url, img_path)
     else:
         ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
         download_image(ph_url, img_path)
 
     youtube_embed = get_youtube_embed(name)
+
     year = game.get("released") or ""
     publisher = game.get("publisher") or game.get("developers", [{}])[0].get("name", "") if isinstance(game.get("developers"), list) else ""
     review_html = build_long_review(name, publisher or "the studio", year)
     cheats_html = generate_cheats_tips(name)
     age_rating = get_age_rating(game)
 
-    # More to Explore (random 3 posts, képpel)
-    more_posts = [p for p in all_posts if p.get("title","").lower()!=name.lower()]
-    random.shuffle(more_posts)
-    more_html = ""
-    if more_posts:
-        more_html += "<h2>More to Explore</h2><div class='more-explore' style='display:flex;gap:10px;flex-wrap:wrap'>"
-        for mp in more_posts[:3]:
-            cover = mp.get("cover","../Picture/placeholder.jpg")
-            url = mp.get("url","#")
-            title_mp = mp.get("title","")
-            more_html += f"<div style='width:30%'><a href='../{url}'><img src='../{cover}' alt='{title_mp}' style='width:100%;border-radius:6px'><p>{title_mp}</p></a></div>"
-        more_html += "</div>"
-
-    # Lábléc
-    footer_block = f"""
-    <hr>
-    <section class="footer">
-      <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
-      <p class="tiny"><a href="terms.html" style="color:#5cc8ff">Read our detailed Terms of Use</a></p>
-      <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
-    </section>
-    """
-
     now = datetime.datetime.now()
     title = f"{name} Cheats, Tips & Full Review"
     cover_src = f"../{PICTURE_DIR}/{img_filename}"
+    footer_block = post_footer_html()
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -269,17 +254,7 @@ def generate_post_for_game(game, all_posts=[]):
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>{title}</title>
-  <meta name="description" content="Cheats, tips and a long review for {name}. Explore gameplay, walkthroughs, and cheat codes."/>
-  <!-- Open Graph / Social -->
-  <meta property="og:title" content="{title}"/>
-  <meta property="og:description" content="Cheats, tips and a long review for {name}. Explore gameplay, walkthroughs, and cheat codes."/>
-  <meta property="og:image" content="../{PICTURE_DIR}/{img_filename}"/>
-  <meta property="og:type" content="article"/>
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="{title}"/>
-  <meta name="twitter:description" content="Cheats, tips and a long review for {name}. Explore gameplay, walkthroughs, and cheat codes."/>
-  <meta name="twitter:image" content="../{PICTURE_DIR}/{img_filename}"/>
+  <meta name="description" content="Cheats, tips and a long review for {name}."/>
   <style>
     :root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
     html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}}
@@ -289,9 +264,8 @@ def generate_post_for_game(game, all_posts=[]):
     h2{{margin-top:18px}}
     p{{color:var(--text);line-height:1.6}}
     .tiny{{color:var(--muted);font-size:13px}}
+    .ad{{background:linear-gradient(180deg,rgba(255,209,102,.06),transparent);padding:12px;border-radius:10px;border:1px dashed #ffd166;color:var(--text)}}
     a{{color:var(--accent)}}
-    .more-explore img{{display:block}}
-    .more-explore p{{text-align:center;font-size:14px;margin:4px 0}}
   </style>
 </head>
 <body>
@@ -311,9 +285,10 @@ def generate_post_for_game(game, all_posts=[]):
     <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
     <h2>Cheats & Tips</h2>
     {cheats_html}
+
     <h2 class="tiny">AI Rating</h2>
     <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
-    {more_html}
+
     {footer_block}
   </div>
 </body>
@@ -376,6 +351,46 @@ def gather_candidates(total_needed, num_popular):
     random_candidates = collected[:needed]
     return random_candidates, popular_candidates
 
+def post_footer_html():
+    footer = """
+    <hr>
+    <section class="ad">
+      <h3>Earn Real Money While You Play 📱</h3>
+      <p>Simple passive income by sharing a bit of your internet. Runs in the background while you game.</p>
+      <p><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank"><strong>Try Honeygain now</strong></a></p>
+      <div class="tiny">Sponsored. Use at your own discretion.</div>
+    </section>
+    <div class="row" style="margin-top:12px">
+      <div class="ad" style="border-style:solid;border-color:#1f2a38">
+        <h3>IC Markets – Trade like a pro 🌍</h3>
+        <p><a href="https://icmarkets.com/?camp=3992" target="_blank">Open an account</a></p>
+      </div>
+      <div class="ad" style="border-style:solid;border-color:#1f2a38">
+        <h3>Dukascopy – Promo code: <code>E12831</code> 🏦</h3>
+        <p><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">Start here</a></p>
+      </div>
+    </div>
+    <section class="footer">
+      <div class="row">
+        <div>
+          <strong>Comment Policy</strong>
+          <ul class="list tiny">
+            <li>No spam, ads, or offensive content.</li>
+            <li>No adult/drugs/war/terror topics.</li>
+            <li>Max 10 comments/day per person.</li>
+            <li>Be respectful. We moderate strictly.</li>
+          </ul>
+        </div>
+        <div>
+          <strong>Terms</strong>
+          <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
+        </div>
+      </div>
+      <p class="tiny">© {year} AI Gaming Blog</p>
+    </section>
+    """.format(year=datetime.datetime.now().year)
+    return footer
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_posts", type=int, default=NUM_TOTAL)
@@ -401,7 +416,7 @@ def main():
         if name.lower() in existing_titles or filename in existing_filenames or os.path.exists(os.path.join(PICTURE_DIR, f"{slug}.jpg")):
             print(f"Skipping '{name}' (already exists).")
             continue
-        post = generate_post_for_game(cand, all_posts=existing_posts+posts_added)
+        post = generate_post_for_game(cand)
         if post:
             posts_added.append(post)
             existing_titles.add(post["title"].lower())
