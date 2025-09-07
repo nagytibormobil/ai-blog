@@ -286,6 +286,44 @@ def generate_post_for_game(game):
     <h2>Cheats & Tips</h2>
     {cheats_html}
 
+# Feltételezve, hogy van egy listád a posztokról
+posts = [
+    {"title": "Post 1", "url": "post1.html", "img": "images/post1.jpg"},
+    {"title": "Post 2", "url": "post2.html", "img": "images/post2.jpg"},
+    {"title": "Post 3", "url": "post3.html", "img": "images/post3.jpg"},
+    {"title": "Post 4", "url": "post4.html", "img": "images/post4.jpg"},
+    {"title": "Post 5", "url": "post5.html", "img": "images/post5.jpg"},
+]
+
+import random
+
+def generate_more_to_explore(posts, n=3):
+    selected = random.sample(posts, n)
+    html = '<section class="more-to-explore">\n'
+    html += '<h2>More to Explore</h2>\n<div class="explore-grid">\n'
+    for post in selected:
+        html += f'''
+        <div class="explore-item">
+            <a href="{post['url']}">
+                <img src="{post['img']}" alt="{post['title']}">
+                <div class="explore-item-title">{post['title']}</div>
+            </a>
+        </div>
+        '''
+    html += '</div>\n</section>\n'
+    return html
+
+# Példa használat a generate_and_save.py-ben:
+# Feltételezve, hogy itt generálod a post HTML-t
+for post in posts:
+    post_html = f"<h1>{post['title']}</h1>\n<p>AI rating: ...</p>\n"
+    # ide illesztjük be a More to Explore szekciót
+    post_html += generate_more_to_explore([p for p in posts if p != post])
+    with open(f"output/{post['url']}", "w", encoding="utf-8") as f:
+        f.write(post_html)
+
+
+
     <h2 class="tiny">AI Rating</h2>
     <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
 
