@@ -374,7 +374,7 @@ def post_footer_html():
       <div class="row">
         <div>
           <p class="tiny">
-            <a href="file:///C:/ai_blog/terms.html" target="_blank">
+            <a href="terms.html" target="_blank">
               You can read all terms and conditions by clicking here.
             </a>
           </p>
@@ -384,6 +384,7 @@ def post_footer_html():
     </section>
     """.format(year=datetime.datetime.now().year)
     return footer
+
 
 
 def main():
