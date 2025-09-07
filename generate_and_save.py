@@ -408,9 +408,14 @@ def main():
         if post:
             all_posts.append(post)
 
+    # Rendezés dátum szerint (legújabb előre)
+    all_posts.sort(key=lambda x: x.get("date", ""), reverse=True)
+
     # Frissítjük az index.html fájlt az új posztokkal
     write_index_posts(all_posts)
 
+
 if __name__ == "__main__":
     main()
+
 
