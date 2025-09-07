@@ -2,23 +2,23 @@
 chcp 65001
 cd /d C:\ai_blog
 
-REM Enable delayed expansion for variable math in loops
-setlocal enabledelayedexpansion
-
+REM Virtuális környezet aktiválása
 echo ===============================
 echo 🔹 Virtuális környezet aktiválása...
 echo ===============================
 call ai-env\Scripts\activate.bat
 
+REM Posztok generálása lépcsőzetesen
 echo ===============================
-echo 🔹 Új posztok generálása 12 db (lépcsőzetesen)...
+echo 🔹 Új posztok generálása 4 db (lépcsőzetesen)...
 echo ===============================
 
-set TOTAL=12
-for /L %%i in (1,4,%TOTAL%) do (
+set TOTAL=4
+set STEP=2
+for /L %%i in (1,%STEP%,%TOTAL%) do (
     set /a remaining=%TOTAL%-%%i+1
-    if !remaining! GTR 3 (
-        set /a to_generate=4
+    if !remaining! GTR %STEP% (
+        set /a to_generate=%STEP%
     ) else (
         set /a to_generate=!remaining!
     )
@@ -26,6 +26,7 @@ for /L %%i in (1,4,%TOTAL%) do (
     python generate_and_save.py --num_posts !to_generate!
 )
 
+REM Git commit és push
 echo ===============================
 echo 🔹 Git commit és push automatikusan SSH kulccsal...
 echo ===============================
@@ -45,5 +46,3 @@ if exist .git (
 echo ===============================
 echo 🔹 Kész! A GitHub Pages frissítése 1-5 perc alatt várható...
 echo ===============================
-endlocal
-
