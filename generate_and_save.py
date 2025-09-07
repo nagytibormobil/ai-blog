@@ -248,12 +248,14 @@ def generate_post_for_game(game, all_posts=[]):
             title_mp = mp.get("title","")
             more_html += f"<div style='width:30%'><a href='../{url}'><img src='../{cover}' alt='{title_mp}' style='width:100%;border-radius:6px'><p>{title_mp}</p></a></div>"
         more_html += "</div>"
+        
+        
 
     # Lábléc
     footer_block = f"""
     <hr>
     <section class="footer">
-    <a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
+      <p class="tiny"><a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
       <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
       <p class="tiny"><a href="../terms.html" style="color:#5cc8ff">Read our detailed Terms of Use</a></p>
       <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
