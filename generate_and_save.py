@@ -195,8 +195,11 @@ def generate_cheats_tips(game_name):
         "Interact with NPCs to unlock hidden missions.",
         "Prioritize main objectives to progress efficiently."
     ]
-    items = "".join(f"<li>{tip}</li>" for tip in tips[:15])
-    return f"<ul>{items}</ul>"
+    if not tips:
+        return "<p>No cheats or tips found for this game.</p>"
+    else:
+        items = "".join(f"<li>{tip}</li>" for tip in tips[:15])
+        return f"<ul>{items}</ul>"
 
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
@@ -246,11 +249,11 @@ def generate_post_for_game(game, all_posts=[]):
             more_html += f"<div style='width:30%'><a href='../{url}'><img src='../{cover}' alt='{title_mp}' style='width:100%;border-radius:6px'><p>{title_mp}</p></a></div>"
         more_html += "</div>"
 
-    # Lábléc + affiliate
+    # Lábléc
     footer_block = f"""
     <hr>
     <section class="footer">
-      <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. <a href="https://affiliate.example.com" target="_blank" style="color:#5cc8ff">Affiliate links</a> may generate commissions.</p>
+      <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
       <p class="tiny"><a href="terms.html" style="color:#5cc8ff">Read our detailed Terms of Use</a></p>
       <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
     </section>
@@ -263,58 +266,59 @@ def generate_post_for_game(game, all_posts=[]):
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>{title}</title>
-<meta name="description" content="Cheats, tips and a long review for {name}. Explore gameplay, walkthroughs, and cheat codes."/>
-<meta property="og:title" content="{title}"/>
-<meta property="og:description" content="Cheats, tips and a long review for {name}. Explore gameplay, walkthroughs, and cheat codes."/>
-<meta property="og:image" content="../{PICTURE_DIR}/{img_filename}"/>
-<meta property="og:type" content="article"/>
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="{title}"/>
-<meta name="twitter:description" content="Cheats, tips and a long review for {name}. Explore gameplay, walkthroughs, and cheat codes."/>
-<meta name="twitter:image" content="../{PICTURE_DIR}/{img_filename}"/>
-<style>
-:root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
-html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}}
-.wrap{{max-width:900px;margin:24px auto;padding:18px;background:var(--panel);border-radius:12px;border:1px solid var(--border)}}
-img.cover{{width:100%;height:auto;border-radius:8px;display:block}}
-h1{{margin:10px 0 6px;font-size:28px}}
-h2{{margin-top:18px}}
-p{{color:var(--text);line-height:1.6}}
-.tiny{{color:var(--muted);font-size:13px}}
-a{{color:var(--accent)}}
-.more-explore img{{display:block}}
-.more-explore p{{text-align:center;font-size:14px;margin:4px 0}}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>{title}</title>
+  <meta name="description" content="Cheats, tips and a long review for {name}. Explore gameplay, walkthroughs, and cheat codes."/>
+  <!-- Open Graph / Social -->
+  <meta property="og:title" content="{title}"/>
+  <meta property="og:description" content="Cheats, tips and a long review for {name}. Explore gameplay, walkthroughs, and cheat codes."/>
+  <meta property="og:image" content="../{PICTURE_DIR}/{img_filename}"/>
+  <meta property="og:type" content="article"/>
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="{title}"/>
+  <meta name="twitter:description" content="Cheats, tips and a long review for {name}. Explore gameplay, walkthroughs, and cheat codes."/>
+  <meta name="twitter:image" content="../{PICTURE_DIR}/{img_filename}"/>
+  <style>
+    :root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
+    html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}}
+    .wrap{{max-width:900px;margin:24px auto;padding:18px;background:var(--panel);border-radius:12px;border:1px solid var(--border)}}
+    img.cover{{width:100%;height:auto;border-radius:8px;display:block}}
+    h1{{margin:10px 0 6px;font-size:28px}}
+    h2{{margin-top:18px}}
+    p{{color:var(--text);line-height:1.6}}
+    .tiny{{color:var(--muted);font-size:13px}}
+    a{{color:var(--accent)}}
+    .more-explore img{{display:block}}
+    .more-explore p{{text-align:center;font-size:14px;margin:4px 0}}
+  </style>
 </head>
 <body>
-<div class="wrap">
-<a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
-<h1>{title}</h1>
-<img class="cover" src="{cover_src}" alt="{name} cover"/>
-<h2>About the Game</h2>
-<ul>
-<li><strong>Release:</strong> {year}</li>
-<li><strong>Recommended Age:</strong> {age_rating}</li>
-<li><strong>Platforms:</strong> {', '.join([p['platform']['name'] for p in game.get('platforms', [])]) if game.get('platforms') else '—'}</li>
-</ul>
-<h2>Full Review</h2>
-{review_html}
-<h2>Gameplay Video</h2>
-<iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
-<h2>Cheats & Tips</h2>
-{cheats_html}
-<h2 class="tiny">AI Rating</h2>
-<p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
-{more_html}
-{footer_block}
-</div>
+  <div class="wrap">
+    <a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
+    <h1>{title}</h1>
+    <img class="cover" src="{cover_src}" alt="{name} cover"/>
+    <h2>About the Game</h2>
+    <ul>
+      <li><strong>Release:</strong> {year}</li>
+      <li><strong>Recommended Age:</strong> {age_rating}</li>
+      <li><strong>Platforms:</strong> {', '.join([p['platform']['name'] for p in game.get('platforms', [])]) if game.get('platforms') else '—'}</li>
+    </ul>
+    <h2>Full Review</h2>
+    {review_html}
+    <h2>Gameplay Video</h2>
+    <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
+    <h2>Cheats & Tips</h2>
+    {cheats_html}
+    <h2 class="tiny">AI Rating</h2>
+    <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
+    {more_html}
+    {footer_block}
+  </div>
 </body>
 </html>
 """
-
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
 
@@ -376,4 +380,51 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_posts", type=int, default=NUM_TOTAL)
     args = parser.parse_args()
-    total
+    total = args.num_posts
+
+    existing_posts = read_index_posts()
+    existing_titles = set(p.get("title","").lower() for p in existing_posts)
+    existing_filenames = set(os.path.basename(p.get("url","")) for p in existing_posts if p.get("url"))
+
+    random_candidates, popular_candidates = gather_candidates(total, NUM_POPULAR)
+    candidates = []
+    candidates.extend(popular_candidates)
+    candidates.extend(random_candidates)
+
+    posts_added = []
+    for cand in candidates:
+        name = cand.get("name","").strip()
+        if not name:
+            continue
+        slug = slugify(name)
+        filename = f"{slug}.html"
+        if name.lower() in existing_titles or filename in existing_filenames or os.path.exists(os.path.join(PICTURE_DIR, f"{slug}.jpg")):
+            print(f"Skipping '{name}' (already exists).")
+            continue
+        post = generate_post_for_game(cand, all_posts=existing_posts+posts_added)
+        if post:
+            posts_added.append(post)
+            existing_titles.add(post["title"].lower())
+            existing_filenames.add(os.path.basename(post["url"]))
+        time.sleep(0.7)
+
+    combined = posts_added + existing_posts
+    seen = set()
+    unique_posts = []
+    for p in combined:
+        t = p.get("title","").lower()
+        if t in seen:
+            continue
+        seen.add(t)
+        unique_posts.append(p)
+
+    unique_posts.sort(key=lambda x: x.get("date",""), reverse=True)
+    write_index_posts(unique_posts)
+
+    print(f"Done. New posts added: {len(posts_added)}")
+    if posts_added:
+        for p in posts_added:
+            print(" -", p["title"], "->", p["url"])
+
+if __name__ == "__main__":
+    main()
