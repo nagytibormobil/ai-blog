@@ -373,23 +373,18 @@ def post_footer_html():
     <section class="footer">
       <div class="row">
         <div>
-          <strong>Comment Policy</strong>
-          <ul class="list tiny">
-            <li>No spam, ads, or offensive content.</li>
-            <li>No adult/drugs/war/terror topics.</li>
-            <li>Max 10 comments/day per person.</li>
-            <li>Be respectful. We moderate strictly.</li>
-          </ul>
-        </div>
-        <div>
-          <strong>Terms</strong>
-          <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
+          <p class="tiny">
+            <a href="file:///C:/ai_blog/terms.html" target="_blank">
+              You can read all terms and conditions by clicking here.
+            </a>
+          </p>
         </div>
       </div>
       <p class="tiny">© {year} AI Gaming Blog</p>
     </section>
     """.format(year=datetime.datetime.now().year)
     return footer
+
 
 def main():
     parser = argparse.ArgumentParser()
