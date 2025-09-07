@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # generate_and_save.py
 # Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés.
-# Elvárások: requests, bs4 telepítve (pip install requests beautifulsoup4)
-
+# SEO, "More to Explore" a poszt oldalon, Terms of Use link a footerben
 import os
 import random
 import argparse
@@ -12,11 +11,8 @@ import time
 import re
 from pathlib import Path
 import requests
-from bs4 import BeautifulSoup
 
-# ==============
-# SETTINGS (API kulcsok beállítva)
-# ==============
+# ============== SETTINGS
 OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
 PICTURE_DIR = "Picture"
@@ -32,9 +28,7 @@ USER_AGENT = "AI-Gaming-Blog-Agent/1.0"
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
 Path(PICTURE_DIR).mkdir(exist_ok=True)
 
-# ==============
-# HELPERS
-# ==============
+# ============== HELPERS
 def slugify(name):
     s = name.strip().lower()
     s = re.sub(r"[^\w\s-]", "", s)
@@ -87,6 +81,7 @@ def get_youtube_embed(game_name):
         print(f"Error fetching YouTube video for {game_name}: {e}")
     return "https://www.youtube.com/embed/dQw4w9WgXcQ"
 
+# ============== INDEX HELPERS
 def read_index_posts():
     if not os.path.exists(INDEX_FILE):
         return []
@@ -131,9 +126,7 @@ def write_index_posts(all_posts):
         f.write(new_html)
     print("✅ index.html POSTS updated.")
 
-# ==============
-# NEW HELPERS FOR CONTENT
-# ==============
+# ============== POST CONTENT HELPERS
 def build_long_review(game_name, publisher, year):
     parts = []
     intro = f"<p><strong>{game_name}</strong> ({year}), developed by {publisher}, is explored in depth below. This review covers gameplay walkthroughs and cheat codes.</p>"
@@ -194,20 +187,47 @@ def generate_cheats_tips(game_name):
         "Interact with NPCs to unlock hidden missions.",
         "Prioritize main objectives to progress efficiently."
     ]
-    if not tips:
-        return "<p>No cheats or tips found for this game.</p>"
-    else:
-        items = "".join(f"<li>{tip}</li>" for tip in tips[:15])
-        return f"<ul>{items}</ul>"
+    items = "".join(f"<li>{tip}</li>" for tip in tips[:15])
+    return f"<ul>{items}</ul>"
 
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
     name = rating.get("name") if isinstance(rating, dict) else str(rating)
     return f"{name}*" if name else "Not specified*"
 
-# ==============
-# POST GENERATION
-# ==============
+# ============== MORE TO EXPLORE (POST PAGE ONLY)
+def get_more_to_explore(all_posts, current_title):
+    other_posts = [p for p in all_posts if p.get("title","") != current_title]
+    if len(other_posts) <= 3:
+        selected = other_posts
+    else:
+        selected = random.sample(other_posts, 3)
+    items_html = "".join(f'<li><a href="../{p["url"]}" style="color:var(--accent)">{p["title"]}</a></li>' for p in selected)
+    return f"""
+    <hr>
+    <section>
+      <h2>More to Explore</h2>
+      <ul>{items_html}</ul>
+    </section>
+    """
+
+# ============== FOOTER
+def post_footer_html():
+    footer = f"""
+    <hr>
+    <section class="footer">
+      <div class="row">
+        <div>
+          <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
+        </div>
+      </div>
+      <p class="tiny"><a href="terms.html" style="color:var(--accent)">Read our detailed Terms of Use</a></p>
+      <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
+    </section>
+    """
+    return footer
+
+# ============== POST GENERATION
 def generate_post_for_game(game):
     name = game.get("name") or "Unknown Game"
     slug = slugify(name)
@@ -222,21 +242,17 @@ def generate_post_for_game(game):
     img_filename = f"{slug}.jpg"
     img_path = os.path.join(PICTURE_DIR, img_filename)
 
-    if os.path.exists(img_path):
-        print(f"⚠️  Image already exists for '{name}' -> {img_filename} (skipping)")
-        return None
-
-    if img_url:
-        ok = download_image(img_url, img_path)
-        if not ok:
+    if not os.path.exists(img_path):
+        if img_url:
+            ok = download_image(img_url, img_path)
+            if not ok:
+                ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
+                download_image(ph_url, img_path)
+        else:
             ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
             download_image(ph_url, img_path)
-    else:
-        ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
-        download_image(ph_url, img_path)
 
     youtube_embed = get_youtube_embed(name)
-
     year = game.get("released") or ""
     publisher = game.get("publisher") or game.get("developers", [{}])[0].get("name", "") if isinstance(game.get("developers"), list) else ""
     review_html = build_long_review(name, publisher or "the studio", year)
@@ -246,7 +262,22 @@ def generate_post_for_game(game):
     now = datetime.datetime.now()
     title = f"{name} Cheats, Tips & Full Review"
     cover_src = f"../{PICTURE_DIR}/{img_filename}"
-    footer_block = new_footer_html()
+
+    # AI Rating
+    ai_rating_html = f"""
+    <h2 class="tiny">AI Rating</h2>
+    <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
+    """
+
+    # More to Explore
+    more_explore_html = ""
+    try:
+        all_posts_index = read_index_posts()
+        more_explore_html = get_more_to_explore(all_posts_index, name)
+    except:
+        more_explore_html = ""
+
+    footer_block = post_footer_html()
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -264,7 +295,6 @@ def generate_post_for_game(game):
     h2{{margin-top:18px}}
     p{{color:var(--text);line-height:1.6}}
     .tiny{{color:var(--muted);font-size:13px}}
-    .ad{{background:linear-gradient(180deg,rgba(255,209,102,.06),transparent);padding:12px;border-radius:10px;border:1px dashed #ffd166;color:var(--text)}}
     a{{color:var(--accent)}}
   </style>
 </head>
@@ -285,10 +315,8 @@ def generate_post_for_game(game):
     <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
     <h2>Cheats & Tips</h2>
     {cheats_html}
-
-    <h2 class="tiny">AI Rating</h2>
-    <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
-
+    {ai_rating_html}
+    {more_explore_html}
     {footer_block}
   </div>
 </body>
@@ -310,9 +338,7 @@ def generate_post_for_game(game):
     print(f"✅ Generated post: {out_path}")
     return post_dict
 
-# ==============
-# MAIN FLOW
-# ==============
+# ============== CANDIDATES
 def gather_candidates(total_needed, num_popular):
     random_candidates = []
     popular_candidates = []
@@ -351,23 +377,7 @@ def gather_candidates(total_needed, num_popular):
     random_candidates = collected[:needed]
     return random_candidates, popular_candidates
 
-def new_footer_html():
-    return f"""
-    <section class="footer">
-      <div class="row">
-        <div>
-          <strong>Terms of Use</strong>
-          <p class="tiny"><a href="terms.html" target="_blank">Read our detailed Terms of Use</a></p>
-        </div>
-        <div>
-          <strong>Disclaimer</strong>
-          <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
-        </div>
-      </div>
-      <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
-    </section>
-    """
-
+# ============== MAIN
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_posts", type=int, default=NUM_TOTAL)
