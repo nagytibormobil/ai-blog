@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
@@ -51,7 +52,7 @@
     .list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
     .list a{color:#eaf1f8}
     .badge{font-size:12px;padding:2px 6px;border-radius:8px;background:rgba(92,200,255,.12);border:1px solid var(--border);color:var(--accent)}
-</style>
+  </style>
 </head>
 <body>
 <header class="hero">
@@ -131,93 +132,1737 @@
 <p class="tiny">© <span id="year"></span> AI Gaming Blog</p>
 </section>
 </main>
-<script>
-const POSTS = [
+<script>    // <<< AUTO-GENERATED POSTS START >>>
+    const POSTS = [
   {
-    "title": "Assassin’s Creed IV: Black Flag",
-    "url": "generated_posts/assassins-creed-iv-black-flag.html",
+    "title": "Endless Space - Collection",
+    "url": "generated_posts/endless-space-collection.html",
     "platform": [
-      "Xbox 360",
-      "Xbox One",
       "PC",
-      "Nintendo Switch",
-      "Wii U",
-      "PlayStation 3",
-      "PlayStation 4"
+      "macOS"
     ],
     "date": "2025-09-07",
-    "rating": 2.7,
-    "cover": "Picture/assassins-creed-iv-black-flag.jpg",
+    "rating": 4.8,
+    "cover": "Picture/endless-space-collection.jpg",
     "views": 0,
     "comments": 0
   },
   {
-    "title": "NieR:Automata",
-    "url": "generated_posts/nierautomata.html",
+    "title": "Far Cry 2",
+    "url": "generated_posts/far-cry-2.html",
     "platform": [
+      "Xbox 360",
+      "PC",
+      "PlayStation 3",
+      "Xbox One"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.3,
+    "cover": "Picture/far-cry-2.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Borderlands Game of the Year Enhanced",
+    "url": "generated_posts/borderlands-game-of-the-year-enhanced.html",
+    "platform": [
+      "PC",
+      "Nintendo Switch",
+      "PlayStation 4",
+      "Xbox One"
+    ],
+    "date": "2025-09-07",
+    "rating": 4.2,
+    "cover": "Picture/borderlands-game-of-the-year-enhanced.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Deus Ex: Game of the Year Edition",
+    "url": "generated_posts/deus-ex-game-of-the-year-edition.html",
+    "platform": [
+      "macOS",
+      "PlayStation 2",
+      "PlayStation 3",
+      "PC"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.0,
+    "cover": "Picture/deus-ex-game-of-the-year-edition.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Battlefield: Bad Company 2",
+    "url": "generated_posts/battlefield-bad-company-2.html",
+    "platform": [
+      "Xbox 360",
+      "PlayStation 3",
+      "PC",
+      "Xbox One"
+    ],
+    "date": "2025-09-07",
+    "rating": 4.9,
+    "cover": "Picture/battlefield-bad-company-2.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Life is Strange: Before The Storm",
+    "url": "generated_posts/life-is-strange-before-the-storm.html",
+    "platform": [
+      "PlayStation 4",
+      "Xbox One",
+      "iOS",
+      "macOS",
+      "Linux",
+      "Android",
+      "PC"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.4,
+    "cover": "Picture/life-is-strange-before-the-storm.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Minecraft",
+    "url": "generated_posts/minecraft.html",
+    "platform": [
+      "Android",
+      "PS Vita",
+      "PlayStation 4",
+      "PlayStation 3",
+      "Xbox 360",
+      "Nintendo 3DS",
+      "Nintendo Switch",
+      "macOS",
+      "PC",
+      "iOS",
+      "Wii U",
+      "Xbox One",
+      "Linux"
+    ],
+    "date": "2025-09-07",
+    "rating": 4.2,
+    "cover": "Picture/minecraft.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Grand Theft Auto: Vice City",
+    "url": "generated_posts/grand-theft-auto-vice-city.html",
+    "platform": [
+      "Android",
+      "macOS",
+      "PC",
+      "iOS",
+      "PlayStation 4",
+      "PS Vita",
+      "PlayStation 2",
+      "Xbox"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.5,
+    "cover": "Picture/grand-theft-auto-vice-city.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Deus Ex: Mankind Divided",
+    "url": "generated_posts/deus-ex-mankind-divided.html",
+    "platform": [
+      "Linux",
+      "PC",
+      "Xbox One",
+      "macOS",
+      "PlayStation 4"
+    ],
+    "date": "2025-09-07",
+    "rating": 4.0,
+    "cover": "Picture/deus-ex-mankind-divided.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Max Payne",
+    "url": "generated_posts/max-payne.html",
+    "platform": [
+      "PC",
+      "PlayStation 3",
+      "Xbox",
+      "Classic Macintosh",
+      "PlayStation 2",
+      "Xbox 360",
+      "PlayStation 4"
+    ],
+    "date": "2025-09-07",
+    "rating": 4.2,
+    "cover": "Picture/max-payne.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Dark Souls: Prepare To Die Edition",
+    "url": "generated_posts/dark-souls-prepare-to-die-edition.html",
+    "platform": [
+      "Xbox 360",
+      "PlayStation 3",
+      "PC"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.3,
+    "cover": "Picture/dark-souls-prepare-to-die-edition.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Torchlight II",
+    "url": "generated_posts/torchlight-ii.html",
+    "platform": [
+      "PC",
+      "PlayStation 4",
+      "Nintendo Switch",
+      "Xbox One",
+      "macOS",
+      "Linux"
+    ],
+    "date": "2025-09-07",
+    "rating": 4.3,
+    "cover": "Picture/torchlight-ii.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "The Walking Dead: Season 2",
+    "url": "generated_posts/the-walking-dead-season-2.html",
+    "platform": [
+      "macOS",
+      "PC",
+      "iOS",
+      "Android",
+      "PS Vita",
+      "PlayStation 3",
+      "Xbox 360",
+      "Nintendo Switch",
+      "PlayStation 4",
+      "Xbox One"
+    ],
+    "date": "2025-09-07",
+    "rating": 2.7,
+    "cover": "Picture/the-walking-dead-season-2.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Tomb Raider (2013)",
+    "url": "generated_posts/tomb-raider-2013.html",
+    "platform": [
+      "PlayStation 3",
+      "Xbox 360",
+      "macOS",
+      "PC",
+      "Xbox One",
+      "PlayStation 4"
+    ],
+    "date": "2025-09-07",
+    "rating": 2.9,
+    "cover": "Picture/tomb-raider-2013.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Portal 2",
+    "url": "generated_posts/portal-2.html",
+    "platform": [
+      "PlayStation 3",
+      "PC",
+      "Xbox 360",
+      "Linux",
+      "macOS",
+      "Xbox One"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.5,
+    "cover": "Picture/portal-2.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Assassin's Creed II",
+    "url": "generated_posts/assassins-creed-ii.html",
+    "platform": [
+      "Xbox 360",
+      "PlayStation 3",
+      "Xbox One",
+      "PC",
+      "macOS",
+      "PlayStation 4"
+    ],
+    "date": "2025-09-07",
+    "rating": 2.8,
+    "cover": "Picture/assassins-creed-ii.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Disco Elysium",
+    "url": "generated_posts/disco-elysium.html",
+    "platform": [
+      "PC",
+      "macOS",
+      "Xbox One",
+      "Nintendo Switch",
+      "PlayStation 4",
+      "Xbox Series S/X",
+      "PlayStation 5"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.7,
+    "cover": "Picture/disco-elysium.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Borderlands 2",
+    "url": "generated_posts/borderlands-2.html",
+    "platform": [
+      "PlayStation 3",
+      "macOS",
+      "PC",
+      "Android",
+      "Linux",
+      "PS Vita",
+      "Xbox 360"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.2,
+    "cover": "Picture/borderlands-2.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Batman: Arkham Knight",
+    "url": "generated_posts/batman-arkham-knight.html",
+    "platform": [
+      "PC",
+      "Nintendo Switch",
+      "Xbox One",
+      "PlayStation 4"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.1,
+    "cover": "Picture/batman-arkham-knight.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Lord of the Rings: War in the North",
+    "url": "generated_posts/lord-of-the-rings-war-in-the-north.html",
+    "platform": [
+      "PC",
+      "PlayStation 3",
+      "Xbox 360"
+    ],
+    "date": "2025-09-07",
+    "rating": 4.0,
+    "cover": "Picture/lord-of-the-rings-war-in-the-north.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Rayman Origins",
+    "url": "generated_posts/rayman-origins.html",
+    "platform": [
+      "Nintendo 3DS",
+      "Wii",
+      "PC",
+      "macOS",
+      "PlayStation 3",
+      "PS Vita",
+      "Xbox One",
+      "iOS",
+      "Xbox 360"
+    ],
+    "date": "2025-09-07",
+    "rating": 4.5,
+    "cover": "Picture/rayman-origins.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Gothic 3",
+    "url": "generated_posts/gothic-3.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.9,
+    "cover": "Picture/gothic-3.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Race The Sun",
+    "url": "generated_posts/race-the-sun.html",
+    "platform": [
+      "Xbox One",
+      "Wii U",
+      "PlayStation 3",
+      "PlayStation 4",
+      "PS Vita",
+      "PC",
+      "Web",
+      "macOS",
+      "Linux",
+      "iOS"
+    ],
+    "date": "2025-09-07",
+    "rating": 4.7,
+    "cover": "Picture/race-the-sun.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Star Wars: Republic Commando",
+    "url": "generated_posts/star-wars-republic-commando.html",
+    "platform": [
+      "Xbox 360",
+      "Xbox One",
+      "Xbox",
+      "Nintendo Switch",
+      "PlayStation 4",
+      "PlayStation 5",
+      "PC"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.6,
+    "cover": "Picture/star-wars-republic-commando.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "LEGO Star Wars - The Complete Saga",
+    "url": "generated_posts/lego-star-wars-the-complete-saga.html",
+    "platform": [
+      "Android",
+      "Xbox 360",
+      "Nintendo DS",
+      "PC",
+      "iOS",
+      "Wii",
+      "macOS",
+      "PlayStation 3",
+      "Xbox One"
+    ],
+    "date": "2025-09-07",
+    "rating": 2.5,
+    "cover": "Picture/lego-star-wars-the-complete-saga.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "The Dark Pictures Anthology: Man of Medan",
+    "url": "generated_posts/the-dark-pictures-anthology-man-of-medan.html",
+    "platform": [
+      "PC",
+      "Nintendo Switch",
+      "PlayStation 4",
+      "Xbox One"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.8,
+    "cover": "Picture/the-dark-pictures-anthology-man-of-medan.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "PAC-MAN CHAMPIONSHIP EDITION 2",
+    "url": "generated_posts/pac-man-championship-edition-2.html",
+    "platform": [
+      "Xbox One",
+      "Nintendo Switch",
+      "PlayStation 4",
+      "PC"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.3,
+    "cover": "Picture/pac-man-championship-edition-2.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Slime Rancher",
+    "url": "generated_posts/slime-rancher.html",
+    "platform": [
+      "PlayStation 4",
+      "Linux",
+      "macOS",
+      "PC",
+      "Nintendo Switch",
+      "Xbox One"
+    ],
+    "date": "2025-09-07",
+    "rating": 4.8,
+    "cover": "Picture/slime-rancher.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "RUINER",
+    "url": "generated_posts/ruiner.html",
+    "platform": [
+      "Nintendo Switch",
+      "Linux",
+      "macOS",
+      "PC",
+      "Xbox One",
+      "PlayStation 4"
+    ],
+    "date": "2025-09-07",
+    "rating": 2.6,
+    "cover": "Picture/ruiner.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "We Were Here",
+    "url": "generated_posts/we-were-here.html",
+    "platform": [
+      "PlayStation 4",
+      "Linux",
+      "macOS",
+      "PC",
+      "Xbox One"
+    ],
+    "date": "2025-09-07",
+    "rating": 4.2,
+    "cover": "Picture/we-were-here.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Limbo",
+    "url": "generated_posts/limbo.html",
+    "platform": [
+      "PC",
+      "Android",
+      "PS Vita",
+      "PlayStation 4",
+      "PlayStation 3",
+      "Xbox 360",
+      "Linux",
+      "macOS",
+      "iOS",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.0,
+    "cover": "Picture/limbo.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Portal",
+    "url": "generated_posts/portal.html",
+    "platform": [
+      "macOS",
+      "PC",
+      "Android",
+      "PlayStation 3",
+      "Xbox 360",
+      "Linux",
+      "Nintendo Switch"
+    ],
+    "date": "2025-09-07",
+    "rating": 2.6,
+    "cover": "Picture/portal.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "SteamWorld Dig",
+    "url": "generated_posts/steamworld-dig.html",
+    "platform": [
+      "Nintendo Switch",
+      "Nintendo 3DS",
+      "Xbox One",
+      "PC",
+      "macOS",
+      "Linux",
+      "Wii U",
+      "PlayStation 4",
+      "PS Vita"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.7,
+    "cover": "Picture/steamworld-dig.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Mass Effect: Andromeda",
+    "url": "generated_posts/mass-effect-andromeda.html",
+    "platform": [
+      "Xbox One",
+      "PC",
+      "PlayStation 4"
+    ],
+    "date": "2025-09-07",
+    "rating": 3.2,
+    "cover": "Picture/mass-effect-andromeda.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Deiland",
+    "url": "generated_posts/deiland.html",
+    "platform": [
+      "macOS",
+      "PC",
+      "iOS",
+      "PlayStation 4",
+      "Android"
+    ],
+    "date": "2025-09-05",
+    "rating": 2.6,
+    "cover": "Picture/deiland.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Saints Row: The Third",
+    "url": "generated_posts/saints-row-the-third.html",
+    "platform": [
+      "Linux",
+      "PC",
+      "Xbox One",
+      "Xbox 360",
+      "PlayStation 3"
+    ],
+    "date": "2025-09-05",
+    "rating": 3.9,
+    "cover": "Picture/saints-row-the-third.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Don't Starve Together",
+    "url": "generated_posts/dont-starve-together.html",
+    "platform": [
+      "Linux",
+      "Xbox One",
+      "PlayStation 4",
+      "macOS",
+      "PC"
+    ],
+    "date": "2025-09-05",
+    "rating": 2.6,
+    "cover": "Picture/dont-starve-together.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Goat of Duty",
+    "url": "generated_posts/goat-of-duty.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-09-05",
+    "rating": 3.1,
+    "cover": "Picture/goat-of-duty.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Valkyria Chronicles",
+    "url": "generated_posts/valkyria-chronicles.html",
+    "platform": [
+      "PlayStation 3",
+      "Nintendo Switch",
+      "PC"
+    ],
+    "date": "2025-09-05",
+    "rating": 2.8,
+    "cover": "Picture/valkyria-chronicles.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Spelunky",
+    "url": "generated_posts/spelunky.html",
+    "platform": [
+      "PlayStation 3",
+      "Xbox 360",
+      "PC",
+      "PlayStation 4",
+      "PS Vita"
+    ],
+    "date": "2025-09-05",
+    "rating": 3.7,
+    "cover": "Picture/spelunky.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Outer Wilds",
+    "url": "generated_posts/outer-wilds.html",
+    "platform": [
+      "PlayStation 4",
+      "Nintendo Switch",
+      "Xbox One",
+      "PC"
+    ],
+    "date": "2025-09-05",
+    "rating": 3.4,
+    "cover": "Picture/outer-wilds.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "TERA",
+    "url": "generated_posts/tera.html",
+    "platform": [
+      "Xbox One",
+      "PC",
+      "PlayStation 4"
+    ],
+    "date": "2025-09-05",
+    "rating": 3.1,
+    "cover": "Picture/tera.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Dishonored: Death of the Outsider",
+    "url": "generated_posts/dishonored-death-of-the-outsider.html",
+    "platform": [
+      "PlayStation 4",
+      "Xbox One",
+      "PC"
+    ],
+    "date": "2025-09-05",
+    "rating": 3.8,
+    "cover": "Picture/dishonored-death-of-the-outsider.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Dino D-Day",
+    "url": "generated_posts/dino-d-day.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-09-05",
+    "rating": 4.3,
+    "cover": "Picture/dino-d-day.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Sherlock Holmes: The Devil's Daughter",
+    "url": "generated_posts/sherlock-holmes-the-devils-daughter.html",
+    "platform": [
+      "Nintendo Switch",
+      "PC",
+      "PlayStation 4",
+      "Xbox One"
+    ],
+    "date": "2025-09-05",
+    "rating": 4.4,
+    "cover": "Picture/sherlock-holmes-the-devils-daughter.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Darksiders III",
+    "url": "generated_posts/darksiders-iii.html",
+    "platform": [
+      "PlayStation 4",
+      "PC",
+      "Nintendo Switch",
+      "Xbox One"
+    ],
+    "date": "2025-09-05",
+    "rating": 3.3,
+    "cover": "Picture/darksiders-iii.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Call of Duty: Modern Warfare (2019)",
+    "url": "generated_posts/call-of-duty-modern-warfare-2019.html",
+    "platform": [
+      "PC",
+      "Xbox One",
+      "PlayStation 4"
+    ],
+    "date": "2025-09-05",
+    "rating": 4.1,
+    "cover": "Picture/call-of-duty-modern-warfare-2019.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Northgard",
+    "url": "generated_posts/northgard.html",
+    "platform": [
+      "Nintendo Switch",
+      "macOS",
+      "Linux",
+      "Xbox One",
+      "PlayStation 4",
+      "PC",
+      "iOS"
+    ],
+    "date": "2025-09-05",
+    "rating": 3.6,
+    "cover": "Picture/northgard.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Hitman: Contracts",
+    "url": "generated_posts/hitman-contracts.html",
+    "platform": [
+      "macOS",
+      "Xbox",
+      "PlayStation 3",
+      "PlayStation 2",
+      "Xbox 360",
+      "PC"
+    ],
+    "date": "2025-09-05",
+    "rating": 2.9,
+    "cover": "Picture/hitman-contracts.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Warface: Ice Breaker",
+    "url": "generated_posts/warface-ice-breaker.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-09-05",
+    "rating": 3.0,
+    "cover": "Picture/warface-ice-breaker.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Dying Light 2 Stay Human",
+    "url": "generated_posts/dying-light-2-stay-human.html",
+    "platform": [
+      "PC",
+      "Xbox One",
+      "Xbox Series S/X",
+      "PlayStation 4",
+      "Nintendo Switch",
+      "PlayStation 5"
+    ],
+    "date": "2025-09-05",
+    "rating": 2.8,
+    "cover": "Picture/dying-light-2-stay-human.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Quake",
+    "url": "generated_posts/quake.html",
+    "platform": [
+      "Xbox One",
+      "macOS",
+      "Linux",
+      "Classic Macintosh",
+      "Xbox",
+      "Nintendo Switch",
+      "PlayStation 4",
+      "Nintendo 64",
+      "SEGA Saturn",
+      "Commodore / Amiga",
+      "PC",
+      "Xbox Series S/X",
+      "PlayStation 5"
+    ],
+    "date": "2025-09-04",
+    "rating": 3.7,
+    "cover": "Picture/quake.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "DOOM Eternal",
+    "url": "generated_posts/doom-eternal.html",
+    "platform": [
+      "PC",
+      "PlayStation 4",
+      "Xbox One",
+      "Nintendo Switch",
+      "PlayStation 5"
+    ],
+    "date": "2025-09-04",
+    "rating": 3.7,
+    "cover": "Picture/doom-eternal.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Max Payne 3",
+    "url": "generated_posts/max-payne-3.html",
+    "platform": [
+      "PlayStation 3",
+      "PC",
+      "Xbox 360",
+      "macOS"
+    ],
+    "date": "2025-09-04",
+    "rating": 3.9,
+    "cover": "Picture/max-payne-3.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "F.E.A.R.",
+    "url": "generated_posts/fear.html",
+    "platform": [
+      "PC",
+      "PlayStation 3",
+      "Xbox 360"
+    ],
+    "date": "2025-09-04",
+    "rating": 2.8,
+    "cover": "Picture/fear.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Stray",
+    "url": "generated_posts/stray.html",
+    "platform": [
+      "macOS",
+      "Xbox One",
+      "Nintendo Switch",
+      "PC",
+      "Xbox Series S/X",
+      "PlayStation 5",
+      "PlayStation 4"
+    ],
+    "date": "2025-09-04",
+    "rating": 4.5,
+    "cover": "Picture/stray.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Tomb Raider II",
+    "url": "generated_posts/tomb-raider-ii.html",
+    "platform": [
+      "Classic Macintosh",
+      "macOS",
+      "PC",
+      "iOS",
+      "PlayStation",
+      "Android"
+    ],
+    "date": "2025-09-04",
+    "rating": 4.6,
+    "cover": "Picture/tomb-raider-ii.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Guns of Icarus Alliance",
+    "url": "generated_posts/guns-of-icarus-alliance.html",
+    "platform": [
+      "PC",
+      "macOS",
+      "Linux"
+    ],
+    "date": "2025-09-04",
+    "rating": 2.5,
+    "cover": "Picture/guns-of-icarus-alliance.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "The Elder Scrolls II: Daggerfall",
+    "url": "generated_posts/the-elder-scrolls-ii-daggerfall.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-09-04",
+    "rating": 3.4,
+    "cover": "Picture/the-elder-scrolls-ii-daggerfall.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Fable III",
+    "url": "generated_posts/fable-iii.html",
+    "platform": [
+      "PC",
+      "Xbox 360",
+      "Xbox One"
+    ],
+    "date": "2025-09-03",
+    "rating": 5.0,
+    "cover": "Picture/fable-iii.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Need for Speed Rivals",
+    "url": "generated_posts/need-for-speed-rivals.html",
+    "platform": [
+      "PlayStation 4",
+      "PlayStation 3",
+      "Xbox 360",
+      "PC",
+      "Xbox One"
+    ],
+    "date": "2025-09-03",
+    "rating": 3.3,
+    "cover": "Picture/need-for-speed-rivals.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Garry's Mod",
+    "url": "generated_posts/garrys-mod.html",
+    "platform": [
+      "Linux",
+      "macOS",
+      "PC"
+    ],
+    "date": "2025-09-03",
+    "rating": 3.5,
+    "cover": "Picture/garrys-mod.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Half-Life 2: Episode One",
+    "url": "generated_posts/half-life-2-episode-one.html",
+    "platform": [
+      "Linux",
+      "PC",
+      "Xbox 360",
+      "Android",
+      "macOS"
+    ],
+    "date": "2025-09-03",
+    "rating": 3.6,
+    "cover": "Picture/half-life-2-episode-one.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Resident Evil 2 (1998)",
+    "url": "generated_posts/resident-evil-2-1998.html",
+    "platform": [
+      "Dreamcast",
+      "GameCube",
+      "Nintendo 64",
+      "PC",
+      "PlayStation"
+    ],
+    "date": "2025-09-03",
+    "rating": 5.0,
+    "cover": "Picture/resident-evil-2-1998.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Bloodstained: Ritual of the Night",
+    "url": "generated_posts/bloodstained-ritual-of-the-night.html",
+    "platform": [
+      "Xbox One",
+      "Android",
+      "iOS",
+      "PC",
+      "Nintendo Switch",
+      "PlayStation 4"
+    ],
+    "date": "2025-09-03",
+    "rating": 3.1,
+    "cover": "Picture/bloodstained-ritual-of-the-night.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Orcs Must Die!",
+    "url": "generated_posts/orcs-must-die.html",
+    "platform": [
+      "Xbox 360",
+      "PC"
+    ],
+    "date": "2025-09-03",
+    "rating": 3.8,
+    "cover": "Picture/orcs-must-die.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Evolve Stage 2",
+    "url": "generated_posts/evolve-stage-2.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-09-03",
+    "rating": 3.1,
+    "cover": "Picture/evolve-stage-2.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Metro: Last Light",
+    "url": "generated_posts/metro-last-light.html",
+    "platform": [
+      "PC",
+      "PlayStation 3",
+      "Xbox 360"
+    ],
+    "date": "2025-09-03",
+    "rating": 4.8,
+    "cover": "Picture/metro-last-light.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Prince of Persia: The Sands of Time",
+    "url": "generated_posts/prince-of-persia-the-sands-of-time.html",
+    "platform": [
+      "PlayStation 2",
+      "PlayStation 3",
+      "Xbox",
+      "GameCube",
+      "PC"
+    ],
+    "date": "2025-09-02",
+    "rating": 3.5,
+    "cover": "Picture/prince-of-persia-the-sands-of-time.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Aegis Defenders",
+    "url": "generated_posts/aegis-defenders.html",
+    "platform": [
+      "PlayStation 4",
+      "Nintendo Switch",
+      "macOS",
+      "PC"
+    ],
+    "date": "2025-09-02",
+    "rating": 2.8,
+    "cover": "Picture/aegis-defenders.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Kingdom Come: Deliverance",
+    "url": "generated_posts/kingdom-come-deliverance.html",
+    "platform": [
+      "PlayStation 4",
+      "Xbox One",
+      "PC"
+    ],
+    "date": "2025-09-02",
+    "rating": 5.0,
+    "cover": "Picture/kingdom-come-deliverance.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Deus Ex: Human Revolution",
+    "url": "generated_posts/deus-ex-human-revolution.html",
+    "platform": [
+      "PlayStation 3",
+      "Xbox One",
+      "PC",
+      "macOS",
+      "Xbox 360"
+    ],
+    "date": "2025-09-02",
+    "rating": 4.0,
+    "cover": "Picture/deus-ex-human-revolution.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "The Legend of Zelda: Breath of the Wild",
+    "url": "generated_posts/the-legend-of-zelda-breath-of-the-wild.html",
+    "platform": [
+      "Nintendo Switch",
+      "Wii U"
+    ],
+    "date": "2025-09-02",
+    "rating": 3.7,
+    "cover": "Picture/the-legend-of-zelda-breath-of-the-wild.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "The Binding of Isaac",
+    "url": "generated_posts/the-binding-of-isaac.html",
+    "platform": [
+      "macOS",
+      "PC"
+    ],
+    "date": "2025-09-01",
+    "rating": 3.0,
+    "cover": "Picture/the-binding-of-isaac.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Rayman Legends",
+    "url": "generated_posts/rayman-legends.html",
+    "platform": [
+      "Xbox One",
+      "Xbox 360",
+      "PlayStation 3",
+      "PC",
+      "Nintendo Switch",
+      "Wii U",
+      "PlayStation 4",
+      "PS Vita"
+    ],
+    "date": "2025-09-01",
+    "rating": 4.5,
+    "cover": "Picture/rayman-legends.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Bloodborne",
+    "url": "generated_posts/bloodborne.html",
+    "platform": [
+      "PlayStation 4"
+    ],
+    "date": "2025-09-01",
+    "rating": 3.9,
+    "cover": "Picture/bloodborne.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Just Cause 2",
+    "url": "generated_posts/just-cause-2.html",
+    "platform": [
+      "Xbox 360",
+      "PlayStation 3",
+      "Xbox One",
+      "PC"
+    ],
+    "date": "2025-09-01",
+    "rating": 3.7,
+    "cover": "Picture/just-cause-2.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "The Outer Worlds",
+    "url": "generated_posts/the-outer-worlds.html",
+    "platform": [
+      "PlayStation 4",
+      "PC",
+      "Nintendo Switch",
+      "Xbox One"
+    ],
+    "date": "2025-09-01",
+    "rating": 3.5,
+    "cover": "Picture/the-outer-worlds.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Euro Truck Simulator 2",
+    "url": "generated_posts/euro-truck-simulator-2.html",
+    "platform": [
+      "Linux",
+      "macOS",
+      "PC"
+    ],
+    "date": "2025-09-01",
+    "rating": 4.8,
+    "cover": "Picture/euro-truck-simulator-2.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Age of Empires II HD",
+    "url": "generated_posts/age-of-empires-ii-hd.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-09-01",
+    "rating": 2.5,
+    "cover": "Picture/age-of-empires-ii-hd.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "SpeedRunners",
+    "url": "generated_posts/speedrunners.html",
+    "platform": [
+      "PlayStation 4",
+      "PC",
+      "macOS",
+      "Linux",
+      "Nintendo Switch",
+      "Xbox One"
+    ],
+    "date": "2025-09-01",
+    "rating": 3.0,
+    "cover": "Picture/speedrunners.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Remnant: From the Ashes",
+    "url": "generated_posts/remnant-from-the-ashes.html",
+    "platform": [
+      "PC",
+      "Nintendo Switch",
+      "Xbox One",
+      "PlayStation 4"
+    ],
+    "date": "2025-09-01",
+    "rating": 3.7,
+    "cover": "Picture/remnant-from-the-ashes.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Dungeon of the Endless",
+    "url": "generated_posts/dungeon-of-the-endless.html",
+    "platform": [
+      "Nintendo Switch",
+      "Xbox One",
+      "iOS",
+      "PC",
+      "macOS",
+      "PlayStation 4"
+    ],
+    "date": "2025-09-01",
+    "rating": 4.3,
+    "cover": "Picture/dungeon-of-the-endless.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Trine 2: Complete Story",
+    "url": "generated_posts/trine-2-complete-story.html",
+    "platform": [
+      "PlayStation 4",
+      "Nintendo Switch",
+      "PC",
+      "Linux",
+      "macOS"
+    ],
+    "date": "2025-09-01",
+    "rating": 4.3,
+    "cover": "Picture/trine-2-complete-story.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Grand Theft Auto III",
+    "url": "generated_posts/grand-theft-auto-iii.html",
+    "platform": [
+      "macOS",
+      "PC",
+      "iOS",
+      "Android",
+      "PlayStation 4",
+      "PlayStation 2",
+      "Xbox"
+    ],
+    "date": "2025-09-01",
+    "rating": 2.6,
+    "cover": "Picture/grand-theft-auto-iii.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Resident Evil 2",
+    "url": "generated_posts/resident-evil-2.html",
+    "platform": [
+      "Nintendo Switch",
+      "PlayStation 5",
+      "PlayStation 4",
+      "PC",
+      "macOS",
+      "Xbox One"
+    ],
+    "date": "2025-08-31",
+    "rating": 4.0,
+    "cover": "Picture/resident-evil-2.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Neverwinter",
+    "url": "generated_posts/neverwinter.html",
+    "platform": [
+      "PlayStation 4",
+      "Xbox One",
+      "PC"
+    ],
+    "date": "2025-08-31",
+    "rating": 3.5,
+    "cover": "Picture/neverwinter.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Deus Ex 2: Invisible War",
+    "url": "generated_posts/deus-ex-2-invisible-war.html",
+    "platform": [
+      "PC",
+      "Xbox"
+    ],
+    "date": "2025-08-31",
+    "rating": 4.8,
+    "cover": "Picture/deus-ex-2-invisible-war.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Shadowrun: Dragonfall - Director's Cut",
+    "url": "generated_posts/shadowrun-dragonfall-directors-cut.html",
+    "platform": [
+      "Nintendo Switch",
+      "iOS",
+      "PC",
+      "macOS",
+      "Linux",
+      "Android"
+    ],
+    "date": "2025-08-31",
+    "rating": 3.2,
+    "cover": "Picture/shadowrun-dragonfall-directors-cut.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Prince of Persia (2008)",
+    "url": "generated_posts/prince-of-persia-2008.html",
+    "platform": [
+      "PC",
+      "macOS",
+      "PlayStation 3",
+      "Xbox 360"
+    ],
+    "date": "2025-08-31",
+    "rating": 4.6,
+    "cover": "Picture/prince-of-persia-2008.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Mass Effect: Legendary Edition",
+    "url": "generated_posts/mass-effect-legendary-edition.html",
+    "platform": [
+      "PlayStation 5",
+      "Xbox Series S/X",
+      "PlayStation 4",
+      "PC",
+      "Xbox One"
+    ],
+    "date": "2025-08-31",
+    "rating": 2.7,
+    "cover": "Picture/mass-effect-legendary-edition.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Half-Life 2: Episode Two",
+    "url": "generated_posts/half-life-2-episode-two.html",
+    "platform": [
+      "Android",
+      "Linux",
+      "macOS",
+      "PC",
+      "Xbox 360"
+    ],
+    "date": "2025-08-31",
+    "rating": 3.8,
+    "cover": "Picture/half-life-2-episode-two.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Fallout: New Vegas",
+    "url": "generated_posts/fallout-new-vegas.html",
+    "platform": [
+      "Xbox 360",
+      "PC",
+      "Xbox One",
+      "PlayStation 4",
+      "PlayStation 3"
+    ],
+    "date": "2025-08-31",
+    "rating": 4.6,
+    "cover": "Picture/fallout-new-vegas.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Homefront",
+    "url": "generated_posts/homefront.html",
+    "platform": [
+      "PlayStation 3",
+      "PC",
+      "Xbox 360"
+    ],
+    "date": "2025-08-31",
+    "rating": 4.7,
+    "cover": "Picture/homefront.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Syberia 2",
+    "url": "generated_posts/syberia-2.html",
+    "platform": [
+      "iOS",
+      "Xbox",
+      "Android",
+      "PlayStation 3",
+      "PlayStation 2",
+      "Xbox 360",
+      "Nintendo Switch",
+      "macOS",
+      "PC"
+    ],
+    "date": "2025-08-31",
+    "rating": 3.3,
+    "cover": "Picture/syberia-2.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Beyond: Two Souls",
+    "url": "generated_posts/beyond-two-souls.html",
+    "platform": [
+      "PC",
+      "PlayStation 3",
+      "PlayStation 4"
+    ],
+    "date": "2025-08-31",
+    "rating": 4.3,
+    "cover": "Picture/beyond-two-souls.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Dragon Age: Origins",
+    "url": "generated_posts/dragon-age-origins.html",
+    "platform": [
+      "Xbox 360",
+      "Xbox One",
+      "macOS",
+      "PlayStation 3",
+      "PC"
+    ],
+    "date": "2025-08-31",
+    "rating": 4.7,
+    "cover": "Picture/dragon-age-origins.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Batman: Arkham City - Game of the Year Edition",
+    "url": "generated_posts/batman-arkham-city-game-of-the-year-edition.html",
+    "platform": [
+      "PlayStation 4",
+      "Xbox 360",
+      "Xbox One",
+      "PlayStation 3",
+      "macOS",
+      "PC"
+    ],
+    "date": "2025-08-31",
+    "rating": 3.9,
+    "cover": "Picture/batman-arkham-city-game-of-the-year-edition.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "BioShock 2 Remastered",
+    "url": "generated_posts/bioshock-2-remastered.html",
+    "platform": [
+      "PlayStation 4",
+      "macOS",
+      "PC",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "date": "2025-08-31",
+    "rating": 3.4,
+    "cover": "Picture/bioshock-2-remastered.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Age of Wonders III",
+    "url": "generated_posts/age-of-wonders-iii.html",
+    "platform": [
+      "PC",
+      "macOS",
+      "Linux"
+    ],
+    "date": "2025-08-31",
+    "rating": 3.0,
+    "cover": "Picture/age-of-wonders-iii.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Assassin's Creed Syndicate",
+    "url": "generated_posts/assassins-creed-syndicate.html",
+    "platform": [
+      "PC",
+      "Xbox One",
+      "PlayStation 4"
+    ],
+    "date": "2025-08-31",
+    "rating": 3.0,
+    "cover": "Picture/assassins-creed-syndicate.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Sins of a Solar Empire: Rebellion",
+    "url": "generated_posts/sins-of-a-solar-empire-rebellion.html",
+    "platform": [
+      "PC"
+    ],
+    "date": "2025-08-31",
+    "rating": 3.4,
+    "cover": "Picture/sins-of-a-solar-empire-rebellion.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Deathloop",
+    "url": "generated_posts/deathloop.html",
+    "platform": [
+      "PlayStation 5",
+      "PC",
+      "Xbox Series S/X"
+    ],
+    "date": "2025-08-31",
+    "rating": 3.3,
+    "cover": "Picture/deathloop.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "Grand Theft Auto V",
+    "url": "generated_posts/grand-theft-auto-v.html",
+    "platform": [
+      "PC",
+      "PlayStation 5",
+      "Xbox Series S/X",
+      "PlayStation 4",
+      "PlayStation 3",
+      "Xbox 360",
+      "Xbox One"
+    ],
+    "date": "2025-08-31",
+    "rating": 3.4,
+    "cover": "Picture/grand-theft-auto-v.jpg",
+    "views": 0,
+    "comments": 0
+  },
+  {
+    "title": "The Witcher 3: Wild Hunt",
+    "url": "generated_posts/the-witcher-3-wild-hunt.html",
+    "platform": [
+      "Xbox Series S/X",
+      "PlayStation 5",
+      "macOS",
       "PlayStation 4",
       "Nintendo Switch",
       "PC",
       "Xbox One"
     ],
-    "date": "2025-09-07",
-    "rating": 3.7,
-    "cover": "Picture/nierautomata.jpg",
+    "date": "2025-08-31",
+    "rating": 4.1,
+    "cover": "Picture/the-witcher-3-wild-hunt.jpg",
     "views": 0,
     "comments": 0
   }
 ];
+    // <<< AUTO-GENERATED POSTS END >>>
 
-function renderGrid(gridId, posts) {
-    const container = document.getElementById(gridId);
-    container.innerHTML = '';
-    posts.forEach(p=>{
-        const div=document.createElement('div');
-        div.className='card';
-        div.innerHTML=`
-            <a class="thumb" href="${p.url}" target="_blank"><img src="${p.thumb}" alt="${p.title}"></a>
-            <div class="content">
-                <div class="title"><a href="${p.url}" target="_blank">${p.title}</a></div>
-                <div class="meta">
-                    <span class="pill">${p.platform}</span>
-                    <span class="muted">${p.date}</span>
-                    <span class="stars">${p.rating}⭐</span>
-                </div>
+    const byDateDesc = (a,b)=> new Date(b.date) - new Date(a.date);
+    const clamp = (n,min,max)=> Math.max(min, Math.min(max,n));
+    function starHTML(r){
+      const full = Math.floor(r);
+      const half = (r - full)>=0.5 ? 1 : 0;
+      const empty = 5 - full - half;
+      return "⭐".repeat(full) + (half?"½":"") + "☆".repeat(empty);
+    }
+    function placeholder(title){
+      const init = (title||"Game").split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||"G").join("");
+      const svg = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'>
+        <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#0f141c'/><stop offset='100%' stop-color='#121821'/></linearGradient></defs>
+        <rect fill='url(#g)' width='100%' height='100%'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' fill='#5cc8ff' font-size='120' font-family='Arial, Helvetica, sans-serif'>${init}</text>
+      </svg>`);
+      return `data:image/svg+xml,${svg}`;
+    }
+    function card(p){
+      const img = p.cover && p.cover.length ? p.cover : placeholder(p.title);
+      const platforms = (p.platform||[]).join(" • ");
+      return `
+        <article class="card">
+          <a class="thumb" href="${p.url}"><img alt="${p.title}" loading="lazy" src="${img}"></a>
+          <div class="content">
+            <h3 class="title"><a href="${p.url}">${p.title}</a></h3>
+            <div class="meta">
+              <span class="badge">${platforms||"Game"}</span>
+              <span class="muted">${new Date(p.date).toLocaleDateString()}</span>
+              <span class="stars" title="${p.rating}/5">${starHTML(clamp(p.rating||0,0,5))}</span>
             </div>
-        `;
-        container.appendChild(div);
+          </div>
+        </article>
+      `;
+    }
+
+    const latest = [...POSTS].sort(byDateDesc).slice(0, 9);
+    document.getElementById('latestGrid').innerHTML = latest.map(card).join("");
+    const popular = [...POSTS].sort((a,b)=> (b.views+(b.comments*3)) - (a.views+(a.comments*3))).slice(0,3);
+    document.getElementById('popularGrid').innerHTML = popular.map(card).join("");
+    function pick3(arr){
+      const used = new Set(); const out=[];
+      while(out.length<3 && used.size<arr.length){
+        const i = Math.floor(Math.random()*arr.length);
+        if(!used.has(i)){ used.add(i); out.push(arr[i]); }
+      }
+      return out;
+    }
+    document.getElementById('exploreGrid').innerHTML = pick3(POSTS).map(card).join("");
+
+    const pick = document.getElementById('pick');
+    [...POSTS].sort((a,b)=> a.title.localeCompare(b.title)).forEach(p=>{
+      const o=document.createElement('option'); o.value=p.url; o.textContent=p.title; pick.appendChild(o);
     });
-}
+    document.getElementById('go').onclick = ()=> { const u=pick.value; if(u) location.href=u; }
+    document.getElementById('find').onclick = ()=> {
+      const q = document.getElementById('q').value.trim().toLowerCase();
+      if(!q) return;
+      const hit = POSTS.find(p=> p.title.toLowerCase().includes(q));
+      if(hit) location.href = hit.url;
+      else alert("No match.");
+    };
 
-// Latest: first 9 posts
-renderGrid('latestGrid', POSTS.slice(0,9));
-// Popular: top 3 by rating (or views if available)
-const popular = [...POSTS].sort((a,b)=>b.rating-a.rating).slice(0,3);
-renderGrid('popularGrid', popular);
-// Explore: rest
-renderGrid('exploreGrid', POSTS.slice(9));
-
-// Populate A–Z select
-const pick = document.getElementById('pick');
-const letters = Array.from(new Set(POSTS.map(p=>p.title[0].toUpperCase()))).sort();
-letters.forEach(l=>{
-    const opt = document.createElement('option'); opt.value=l; opt.textContent=l;
-    pick.appendChild(opt);
-});
-document.getElementById('go').onclick=()=>{
-    const val=pick.value;
-    const post=POSTS.find(p=>p.title[0].toUpperCase()===val);
-    if(post) window.open(post.url,'_blank');
-};
-document.getElementById('find').onclick=()=>{
-    const q=document.getElementById('q').value.toLowerCase();
-    const found=POSTS.filter(p=>p.title.toLowerCase().includes(q));
-    if(found.length>0) renderGrid('exploreGrid', found);
-    else alert('No posts found');
-};
-
-// Set current year
-document.getElementById('year').textContent=new Date().getFullYear();
-</script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
