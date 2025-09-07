@@ -254,11 +254,12 @@ def generate_post_for_game(game, all_posts=[]):
     <hr>
     <section class="footer">
       <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
-      <p class="tiny"><a href="terms.html" style="color:#5cc8ff">Read our detailed Terms of Use</a></p>
+      <p class="tiny"><a href="../terms.html" style="color:#5cc8ff">Read our detailed Terms of Use</a></p>
       <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
     </section>
     """
-
+ <a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
+ 
     now = datetime.datetime.now()
     title = f"{name} Cheats, Tips & Full Review"
     cover_src = f"../{PICTURE_DIR}/{img_filename}"
