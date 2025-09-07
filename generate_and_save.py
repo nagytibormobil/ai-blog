@@ -326,7 +326,7 @@ def generate_post_for_game(game, all_posts):
         "title": name,
         "url": f"{OUTPUT_DIR}/{filename}",
         "platform": [p['platform']['name'] for p in game.get('platforms', [])] if game.get('platforms') else [],
-        "date": now.strftime("%Y-%m-%d"),
+        "date": now.strftime("%Y-%m-%d %H:%M:%S"),
         "rating": round(random.uniform(2.5,5.0),1),
         "cover": f"{PICTURE_DIR}/{img_filename}",
         "views": 0,
