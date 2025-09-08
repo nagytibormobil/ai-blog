@@ -1,2 +1,55 @@
+# --- Python által generált fájlok ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# --- Virtuális környezetek ---
+.env/
+.venv/
+venv/
+ENV/
+
+# --- Jupyter notebook checkpointok ---
+.ipynb_checkpoints/
+
+# --- IDE/Editor fájlok ---
+.vscode/
+.idea/
+*.iml
+
+# --- OS specifikus fájlok ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# --- Saját titkos fájlok (API kulcsok, környezeti változók) ---
 *.env
-*.txt
+*.key
+*.pem
+*.crt
+*secret*
+open ai kulcs.txt
+open ai kulcs másolata.txt
+type.env
+
+# --- Logok, cache, ideiglenes fájlok ---
+*.log
+*.pot
+*.pyc
+*.tmp
+*.bak
+*.swp
+*.cache/
+__pypackages__/
+
+# --- Blog projektek / build output ---
+_site/         # Jekyll build output
+public/        # Hugo build output
+output/        # általános build mappa
+dist/          # frontend build mappa
+node_modules/  # ha van frontend JS
+*.html         # ha generált HTML fájlokat nem akarod verziózni
+*.md~          # ideiglenes markdown mentések
