@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # generate_and_save.py
-# Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés.
+# Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, review beszúrás, index frissítés.
 # Elvárások: requests, bs4 telepítve (pip install requests beautifulsoup4)
 
 import os
@@ -11,6 +11,11 @@ import re
 from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
+
+# ======================
+# REVIEW IMPORT
+# ======================
+from review_and_tips_85_AI15 import generate_full_review  # innen kapjuk a teljes review HTML-t
 
 # ======================
 # SETTINGS
@@ -73,7 +78,13 @@ def get_youtube_embed(game_name):
     if not YOUTUBE_API_KEY:
         return None
     url = "https://www.googleapis.com/youtube/v3/search"
-    params = {"part": "snippet", "q": f"{game_name} gameplay", "type": "video", "maxResults": 1, "key": YOUTUBE_API_KEY}
+    params = {
+        "part": "snippet",
+        "q": f"{game_name} gameplay",
+        "type": "video",
+        "maxResults": 1,
+        "key": YOUTUBE_API_KEY
+    }
     try:
         r = requests.get(url, params=params, timeout=8)
         r.raise_for_status()
@@ -92,7 +103,10 @@ def read_index_posts():
         html = f.read()
     m = re.search(r"POSTS\s*=\s*(\[\s*[\s\S]*?\])\s*;", html)
     if not m:
-        m = re.search(r"// <<< AUTO-GENERATED POSTS START >>>\s*const POSTS =\s*(\[\s*[\s\S]*?\])\s*;?\s*// <<< AUTO-GENERATED POSTS END >>>", html)
+        m = re.search(
+            r"// <<< AUTO-GENERATED POSTS START >>>\s*const POSTS =\s*(\[\s*[\s\S]*?\])\s*;?\s*// <<< AUTO-GENERATED POSTS END >>>",
+            html
+        )
         if m:
             arr_text = m.group(1)
         else:
@@ -130,43 +144,8 @@ def write_index_posts(all_posts):
     print("✅ index.html POSTS updated.")
 
 # ======================
-# NEW REVIEW & CHEATS (RAWG BASED, NARRATIVE)
+# AGE RATING
 # ======================
-def build_long_review(game):
-    """Generál egy emberi stílusú, narratív review-t a RAWG description_raw alapján."""
-    description = game.get("description_raw") or ""
-    if not description:
-        description = f"{game.get('name', 'This game')} is an engaging title with exciting gameplay mechanics."
-    publisher = game.get("publisher") or (game.get("developers", [{}])[0].get("name", "Unknown Studio") if isinstance(game.get("developers"), list) else "Unknown Studio")
-    year = game.get("released") or "Unknown Year"
-    
-    paragraphs = [
-        f"<p><strong>{game.get('name')}</strong> ({year}), developed by {publisher}, offers the following experience:</p>",
-        f"<p>{description}</p>",
-        "<p>Players will enjoy a mix of strategy, action, and exploration, with mechanics that reward skill and creativity.</p>",
-        "<p>Challenge yourself with the game’s levels, side missions, and unlockables to maximize replay value.</p>",
-        "<p>The game’s graphics and audio create an immersive atmosphere appropriate for its genre.</p>"
-    ]
-    return "\n".join(paragraphs)
-
-def generate_cheats_tips(game):
-    """Narrative style cheats & tips using RAWG tags and basic gameplay features."""
-    tips = []
-    # RAWG tags
-    if "tags" in game and game["tags"]:
-        tags = [t["name"] for t in game["tags"][:10]]
-        tips.append(f"Focus on key aspects of the game: {', '.join(tags)}.")
-    
-    tips.append("Explore hidden areas to discover special items or rewards.")
-    tips.append("Experiment with different weapons, tools, and strategies for optimal results.")
-    tips.append("Take advantage of tutorial sections and hints provided in the game.")
-    
-    html = "<ul>"
-    for tip in tips:
-        html += f"<li>{tip}</li>"
-    html += "</ul>"
-    return html
-
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
     name = rating.get("name") if isinstance(rating, dict) else str(rating)
@@ -190,6 +169,27 @@ def generate_more_to_explore(posts, n=3):
         '''
     html += '</div>\n</section>\n'
     return html
+
+# ======================
+# POST FOOTER
+# ======================
+def post_footer_html():
+    footer = """
+    ...
+    <section class="footer">
+      <div class="row">
+        <div>
+          <p class="tiny">
+            <a href="../terms.html" target="_blank">
+              You can read all terms and conditions by clicking here.
+            </a>
+          </p>
+        </div>
+      </div>
+      <p class="tiny">© {year} AI Gaming Blog</p>
+    </section>
+    """.format(year=datetime.datetime.now().year)
+    return footer
 
 # ======================
 # POST GENERATION
@@ -220,12 +220,12 @@ def generate_post_for_game(game, all_posts):
 
     youtube_embed = get_youtube_embed(name)
 
-    review_html = build_long_review(game)
-    cheats_html = generate_cheats_tips(game)
+    # 📝 A review-t a review_and_tips_85_AI15.py biztosítja
+    review_html = generate_full_review(name)
     age_rating = get_age_rating(game)
 
     now = datetime.datetime.now()
-    title = f"{name} Cheats, Tips & Full Review"
+    title = f"{name} Full Review"
     cover_src = f"../{PICTURE_DIR}/{img_filename}"
     footer_block = post_footer_html()
 
@@ -235,7 +235,7 @@ def generate_post_for_game(game, all_posts):
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>{title}</title>
-  <meta name="description" content="Cheats, tips and a long review for {name}."/>
+  <meta name="description" content="Full review for {name}."/>
   <style>
     :root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
     html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}}
@@ -243,9 +243,9 @@ def generate_post_for_game(game, all_posts):
     img.cover{{width:100%;height:auto;border-radius:8px;display:block}}
     h1{{margin:10px 0 6px;font-size:28px}}
     h2{{margin-top:18px}}
+    h3{{margin-top:16px}}
     p{{color:var(--text);line-height:1.6}}
     .tiny{{color:var(--muted);font-size:13px}}
-    .ad{{background:linear-gradient(180deg,rgba(255,209,102,.06),transparent);padding:12px;border-radius:10px;border:1px dashed #ffd166;color:var(--text)}}
     a{{color:var(--accent)}}
     .more-to-explore{{margin-top:32px}}
     .explore-grid{{display:flex;gap:12px;flex-wrap:wrap}}
@@ -259,21 +259,11 @@ def generate_post_for_game(game, all_posts):
     <a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
     <h1>{title}</h1>
     <img class="cover" src="{cover_src}" alt="{name} cover"/>
-    <h2>About the Game</h2>
-    <ul>
-      <li><strong>Release:</strong> {game.get('released') or 'Unknown'}</li>
-      <li><strong>Recommended Age:</strong> {age_rating}</li>
-      <li><strong>Platforms:</strong> {', '.join([p['platform']['name'] for p in game.get('platforms', [])]) if game.get('platforms') else '—'}</li>
-    </ul>
-    <h2>Full Review</h2>
     {review_html}
     <h2>Gameplay Video</h2>
     <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
-    <h2>Cheats & Tips</h2>
-    {cheats_html}
     <h2 class="tiny">AI Rating</h2>
     <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
-
     {generate_more_to_explore([p for p in all_posts if p['title'] != name])}
     {footer_block}
   </div>
@@ -321,7 +311,6 @@ def gather_candidates(total_needed, num_popular):
         attempts += 1
 
     collected = []
-    page = 1
     attempts = 0
     while len(collected) < (total_needed - len(popular_candidates)) and attempts < 12:
         try:
@@ -337,23 +326,6 @@ def gather_candidates(total_needed, num_popular):
     needed = total_needed - len(popular_candidates)
     random_candidates = collected[:needed]
     return random_candidates, popular_candidates
-
-def post_footer_html():
-    footer = f"""
-    <section class="footer">
-      <div class="row">
-        <div>
-          <p class="tiny">
-            <a href="../terms.html" target="_blank">
-              You can read all terms and conditions by clicking here.
-            </a>
-          </p>
-        </div>
-      </div>
-      <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
-    </section>
-    """
-    return footer
 
 def main():
     all_posts = read_index_posts()
