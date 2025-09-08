@@ -5,10 +5,8 @@
 
 import os
 import random
-import argparse
 import datetime
 import json
-import time
 import re
 from pathlib import Path
 import requests
@@ -24,15 +22,19 @@ PICTURE_DIR = "Picture"
 
 RAWG_API_KEY = "2fafa16ea4c147438f3b0cb031f8dbb7"
 YOUTUBE_API_KEY = "AIzaSyAXedHcSZ4zUaqSaD3MFahLz75IvSmxggM"
-OPENAI_API_KEY = "YOUR_OPENAI_API_KEY"
 
 NUM_TOTAL = 12
 NUM_POPULAR = 2
 RAWG_PAGE_SIZE = 40
 USER_AGENT = "AI-Gaming-Blog-Agent/1.0"
 
+# OpenAI kulcs környezeti változóból
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise ValueError("OpenAI API key missing! Set environment variable OPENAI_API_KEY.")
 openai.api_key = OPENAI_API_KEY
 
+# Kimeneti mappák létrehozása
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
 Path(PICTURE_DIR).mkdir(exist_ok=True)
 
@@ -178,7 +180,7 @@ def generate_more_to_explore(posts, n=3):
     return html
 
 def post_footer_html():
-    footer = """
+    footer = f"""
     <section class="footer">
       <div class="row">
         <div>
@@ -189,9 +191,9 @@ def post_footer_html():
           </p>
         </div>
       </div>
-      <p class="tiny">© {year} AI Gaming Blog</p>
+      <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
     </section>
-    """.format(year=datetime.datetime.now().year)
+    """
     return footer
 
 # =====================
@@ -249,7 +251,6 @@ def generate_post_for_game(game, all_posts):
     h2{{margin-top:18px}}
     p{{color:var(--text);line-height:1.6}}
     .tiny{{color:var(--muted);font-size:13px}}
-    .ad{{background:linear-gradient(180deg,rgba(255,209,102,.06),transparent);padding:12px;border-radius:10px;border:1px dashed #ffd166;color:var(--text)}}
     a{{color:var(--accent)}}
     .more-to-explore{{margin-top:32px}}
     .explore-grid{{display:flex;gap:12px;flex-wrap:wrap}}
@@ -277,7 +278,6 @@ def generate_post_for_game(game, all_posts):
     <h2 class="tiny">AI Rating</h2>
     <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
 
-    <!-- More to Explore -->
     {generate_more_to_explore([p for p in all_posts if p['title'] != name])}
 
     {footer_block}
@@ -344,25 +344,17 @@ def gather_candidates(total_needed, num_popular):
     return random_candidates, popular_candidates
 
 def main():
-    # Betöltjük a már meglévő posztokat az indexből
     all_posts = read_index_posts()
-
-    # Összegyűjtjük a generáláshoz szükséges játékokat
     random_candidates, popular_candidates = gather_candidates(NUM_TOTAL, NUM_POPULAR)
     selected_games = popular_candidates + random_candidates
 
-    # Generáljuk a posztokat minden játékhoz
     for game in selected_games:
         post = generate_post_for_game(game, all_posts)
         if post:
             all_posts.append(post)
 
-    # Rendezés dátum szerint (legújabb előre)
     all_posts.sort(key=lambda x: x.get("date", ""), reverse=True)
-
-    # Frissítjük az index.html fájlt az új posztokkal
     write_index_posts(all_posts)
-
 
 if __name__ == "__main__":
     main()
