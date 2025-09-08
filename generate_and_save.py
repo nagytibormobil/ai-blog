@@ -353,23 +353,43 @@ def gather_candidates(total_needed, num_popular):
 
 def post_footer_html():
     footer = """
-    ...
+    <hr>
+    <section class="ad">
+      <h3>Earn Real Money While You Play 📱</h3>
+      <p>Simple passive income by sharing a bit of your internet. Runs in the background while you game.</p>
+      <p><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank"><strong>Try Honeygain now</strong></a></p>
+      <div class="tiny">Sponsored. Use at your own discretion.</div>
+    </section>
+    <div class="row" style="margin-top:12px">
+      <div class="ad" style="border-style:solid;border-color:#1f2a38">
+        <h3>IC Markets – Trade like a pro 🌍</h3>
+        <p><a href="https://icmarkets.com/?camp=3992" target="_blank">Open an account</a></p>
+      </div>
+      <div class="ad" style="border-style:solid;border-color:#1f2a38">
+        <h3>Dukascopy – Promo code: <code>E12831</code> 🏦</h3>
+        <p><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">Start here</a></p>
+      </div>
+    </div>
     <section class="footer">
       <div class="row">
         <div>
-          <p class="tiny">
-            <a href="../terms.html" target="_blank">
-              You can read all terms and conditions by clicking here.
-            </a>
-          </p>
+          <strong>Comment Policy</strong>
+          <ul class="list tiny">
+            <li>No spam, ads, or offensive content.</li>
+            <li>No adult/drugs/war/terror topics.</li>
+            <li>Max 10 comments/day per person.</li>
+            <li>Be respectful. We moderate strictly.</li>
+          </ul>
+        </div>
+        <div>
+          <strong>Terms</strong>
+          <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
         </div>
       </div>
       <p class="tiny">© {year} AI Gaming Blog</p>
     </section>
     """.format(year=datetime.datetime.now().year)
     return footer
-
-
 
 def main():
     parser = argparse.ArgumentParser()
