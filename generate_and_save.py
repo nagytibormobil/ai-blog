@@ -147,14 +147,14 @@ def build_narrative_review(game):
     paragraphs.append(f"As I wandered through the game, I found myself lost in the **breathtaking environments** and the intricate design of each level. Every sound, every shadow, made me feel like I was truly part of the world. The first combat encounter caught me off guard – I had to quickly learn the mechanics and adapt to survive, which made every victory feel like a personal achievement.")
 
     # Tips and cheats narrative
-    if game.get("official_cheats"):
+    if game.get("official_cheats") and len(game["official_cheats"]) > 0:
         cheat_texts = []
         for cheat in game["official_cheats"]:
             cheat_texts.append(f"{cheat['description']} (Source: {cheat.get('source','official')})")
         cheat_paragraph = " ".join(cheat_texts)
-        paragraphs.append(f"During my playthrough, I discovered official tips and cheats, such as: {cheat_paragraph}. Using them strategically enriched the experience without breaking immersion.")
+        paragraphs.append(f"During my playthrough, I discovered **official tips and cheats**, such as: {cheat_paragraph}. Using them strategically enriched the experience without breaking immersion.")
     else:
-        paragraphs.append("I couldn't find any official cheats or tips online, so all experiences come purely from personal gameplay.")
+        paragraphs.append("I searched online but could not find any official cheats or tips for this game. All experiences come purely from personal gameplay.")
 
     # Exploration and multiplayer
     paragraphs.append(f"Exploring the game further, hidden secrets and side quests kept me entertained for hours. Multiplayer or cooperative modes added extra **thrills**, requiring teamwork and strategy. Every match felt fresh and exciting, keeping me coming back.")
@@ -244,7 +244,7 @@ def generate_post_for_game(game, all_posts):
   <meta name="description" content="Narrative review and immersive gameplay experience of {name}."/>
   <style>
     :root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
-    html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}}
+    html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;font-size:18px}}
     .wrap{{max-width:900px;margin:24px auto;padding:18px;background:var(--panel);border-radius:12px;border:1px solid var(--border)}}
     img.cover{{width:100%;height:auto;border-radius:8px;display:block}}
     h1{{margin:10px 0 6px;font-size:28px}}
