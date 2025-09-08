@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # generate_and_save.py
-# Automatic post generation: RAWG -> image download, YouTube embed, narrative review, index update.
-# Requirements: requests, bs4 installed (pip install requests beautifulsoup4)
+# Automatic narrative post generation: RAWG -> image download, YouTube embed, immersive review, index update.
+# Requirements: requests, bs4 (pip install requests beautifulsoup4)
 
 import os
 import random
@@ -10,7 +10,6 @@ import json
 import re
 from pathlib import Path
 import requests
-from bs4 import BeautifulSoup
 
 # ==============
 # SETTINGS
@@ -66,7 +65,7 @@ def download_image(url, dest_path):
                 f.write(chunk)
         return True
     except Exception as e:
-        print(f"⚠️ Image download failed: {e}")
+        print(f"⚠️  Image download failed: {e}")
         return False
 
 def get_youtube_embed(game_name):
@@ -130,51 +129,43 @@ def write_index_posts(all_posts):
     print("✅ index.html POSTS updated.")
 
 # ==============
-# CONTENT HELPERS
+# NARRATIVE CONTENT GENERATOR
 # ==============
 def build_narrative_review(game):
     name = game.get("name") or "Unknown Game"
-    year = game.get("released") or "N/A"
-    publisher = game.get("publisher") or (game.get("developers",[{}])[0].get("name","Unknown") if isinstance(game.get("developers"), list) else "Unknown")
-    wiki_url = game.get("wiki_url", "#")
-    steam_url = game.get("steam_url", "#")
-    metacritic_url = game.get("metacritic_url", "#")
+    release = game.get("released") or "Unknown"
+    developer = game.get("developers", [{}])[0].get("name", "Unknown Studio") if isinstance(game.get("developers"), list) else "Unknown Studio"
+    wiki_url = game.get("wiki_url") or f"https://en.wikipedia.org/wiki/{name.replace(' ','_')}"
+    steam_url = game.get("steam_url") or "#"
+    metacritic_url = game.get("metacritic_url") or "#"
 
-    # Random narrative style
-    intros = [
-        f"I just jumped into **{name.upper()}** ({year}), developed by {publisher}. The moment I loaded the game, my eyes widened with excitement.",
-        f"Starting **{name}**, I felt like I was stepping into an entirely new world. Developed by {publisher}, released in {year}, this adventure is unforgettable.",
-        f"Launching **{name}** ({year}) by {publisher} instantly drew me into its universe."
-    ]
-    intro = random.choice(intros)
+    paragraphs = []
 
-    gameplay_paragraphs = [
-        f"The **gameplay** is engaging from the first second. I found myself exploring secret corners, uncovering hidden collectibles, and tackling challenges that felt both fresh and rewarding.",
-        f"Every level of **{name}** brings something new. From tricky puzzles to intense battles, the variety kept me glued to the screen.",
-        f"Playing online with friends adds a layer of excitement and strategy. Each session feels unique, and I loved coordinating with my teammates to overcome obstacles.",
-        f"The controls feel natural, and mastering the character's abilities is a thrill. Timing attacks and using skills strategically makes the battles so satisfying.",
-        f"Visually, the game is stunning. Environments are richly detailed, and I often paused just to admire the scenery."
-    ]
-    random.shuffle(gameplay_paragraphs)
-    gameplay_text = " ".join(gameplay_paragraphs[:3])
+    paragraphs.append(f"I recently dived into **{name.upper()}** (Released: {release}) developed by **{developer}**. From the first moment, I felt immersed in its **AMAZING WORLD**. For details, check [Wikipedia]({wiki_url}), [Steam page]({steam_url}), or [Metacritic]({metacritic_url}).")
 
-    # Cheats & Tips
-    cheats_found = game.get("official_cheats", [])
-    if cheats_found:
-        cheats_text = "During my playthrough, I discovered the following **cheats and tips** that enhanced my experience: "
-        cheats_text += " ".join([f"<span style='color:#FFD700;font-weight:bold'>{c}</span> (Source: {game.get('cheats_source', 'Official')})." for c in cheats_found])
+    paragraphs.append(f"As I explored, the **environments and level design** were breathtaking. Every shadow, every sound made the adventure feel real. The first combat surprised me – learning the mechanics was a thrill, and victories felt personally rewarding.")
+
+    if game.get("official_cheats"):
+        cheat_texts = []
+        for cheat in game["official_cheats"]:
+            cheat_texts.append(f"{cheat['description']} (Source: {cheat.get('source','official')})")
+        cheat_paragraph = " ".join(cheat_texts)
+        paragraphs.append(f"During play, I used official tips/cheats: {cheat_paragraph}. They enhanced the experience without breaking immersion.")
     else:
-        cheats_text = "I searched online but couldn’t find any official cheats or tips for this game."
+        paragraphs.append("I searched online but found **no official cheats or tips**, so all experiences are from personal gameplay.")
 
-    review_html = f"""
-<p>{intro}</p>
-<div style="height:12px"></div>
-<p>{gameplay_text}</p>
-<div style="height:12px"></div>
-<p>{cheats_text}</p>
-<p>For more details, check <a href="{wiki_url}">Wikipedia</a>, <a href="{steam_url}">Steam</a>, or <a href="{metacritic_url}">Metacritic</a>.</p>
-"""
-    return review_html
+    paragraphs.append(f"Hidden secrets and side quests kept me entertained for hours. Multiplayer or co-op added **EXCITEMENT**, requiring strategy and teamwork. Every match felt fresh and engaging.")
+
+    paragraphs.append(f"Mastering abilities and controls was satisfying. Weapon sounds, character animations, vehicle handling – all details made gameplay tangible. Timing and strategy often gave me an edge in challenges.")
+
+    paragraphs.append(f"Patch updates and improvements influenced strategies, keeping tips relevant. Overall, **{name}** provided an unforgettable adventure. Each session felt like a new story to tell friends, full of discoveries and thrills.")
+
+    return "\n\n".join(paragraphs)
+
+def get_age_rating(game):
+    rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
+    name = rating.get("name") if isinstance(rating, dict) else str(rating)
+    return f"{name}*" if name else "Not specified*"
 
 def generate_more_to_explore(posts, n=3):
     selected = random.sample(posts, min(n, len(posts)))
@@ -191,19 +182,22 @@ def generate_more_to_explore(posts, n=3):
     html += '</div>\n</section>\n'
     return html
 
-def download_cover_image(game, slug):
-    img_url = game.get("background_image") or game.get("background_image_additional") or ""
-    img_filename = f"{slug}.jpg"
-    img_path = os.path.join(PICTURE_DIR, img_filename)
-    if not os.path.exists(img_path):
-        if img_url:
-            if not download_image(img_url, img_path):
-                ph_url = f"https://placehold.co/800x450?text={slug.replace('-', '+')}"
-                download_image(ph_url, img_path)
-        else:
-            ph_url = f"https://placehold.co/800x450?text={slug.replace('-', '+')}"
-            download_image(ph_url, img_path)
-    return img_filename
+def post_footer_html():
+    footer = f"""
+    <section class="footer">
+      <div class="row">
+        <div>
+          <p class="tiny">
+            <a href="../terms.html" target="_blank">
+              You can read all terms and conditions by clicking here.
+            </a>
+          </p>
+        </div>
+      </div>
+      <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
+    </section>
+    """
+    return footer
 
 def generate_post_for_game(game, all_posts):
     name = game.get("name") or "Unknown Game"
@@ -212,133 +206,36 @@ def generate_post_for_game(game, all_posts):
     out_path = os.path.join(OUTPUT_DIR, filename)
 
     if os.path.exists(out_path):
-        print(f"⚠️ Post already exists for '{name}' -> {filename} (skipping)")
+        print(f"⚠️  Post already exists for '{name}' -> {filename} (skipping)")
         return None
 
-    img_filename = download_cover_image(game, slug)
+    img_url = game.get("background_image") or ""
+    img_filename = f"{slug}.jpg"
+    img_path = os.path.join(PICTURE_DIR, img_filename)
+    if not os.path.exists(img_path):
+        if img_url:
+            ok = download_image(img_url, img_path)
+            if not ok:
+                ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
+                download_image(ph_url, img_path)
+        else:
+            ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
+            download_image(ph_url, img_path)
+
     youtube_embed = get_youtube_embed(name)
     review_html = build_narrative_review(game)
+    age_rating = get_age_rating(game)
 
     now = datetime.datetime.now()
-    title = f"{name} - Full Review & Gameplay Experience"
+    title = f"{name} Full Narrative Review"
     cover_src = f"../{PICTURE_DIR}/{img_filename}"
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>{title}</title>
-<meta name="description" content="Full narrative review and gameplay experience for {name}."/>
-<style>
-:root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
-html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter','Roboto',sans-serif;font-size:18px}}
-.wrap{{max-width:900px;margin:24px auto;padding:18px;background:var(--panel);border-radius:12px;border:1px solid var(--border)}}
-img.cover{{width:100%;height:auto;border-radius:8px;display:block}}
-h1{{margin:10px 0 6px;font-size:28px}}
-h2{{margin-top:18px}}
-p{{color:var(--text);line-height:1.6}}
-a{{color:var(--accent)}}
-.more-to-explore{{margin-top:32px}}
-.explore-grid{{display:flex;gap:12px;flex-wrap:wrap}}
-.explore-item{{flex:1 1 calc(33.333% - 8px);border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--card)}}
-.explore-item img{{width:100%;display:block}}
-.explore-item-title{{padding:6px;color:var(--text);font-size:14px;text-align:center}}
-</style>
-</head>
-<body>
-<div class="wrap">
-<a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
-<h1>{title}</h1>
-<img class="cover" src="{cover_src}" alt="{name} cover"/>
-<div style="height:12px"></div>
-{review_html}
-<h2>Gameplay Video</h2>
-<iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
-{generate_more_to_explore([p for p in all_posts if p['title'] != name])}
-{post_footer_html()}
-</div>
-</body>
-</html>
-"""
-
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(html)
-
-    post_dict = {
-        "title": name,
-        "url": f"{OUTPUT_DIR}/{filename}",
-        "platform": [p['platform']['name'] for p in game.get('platforms', [])] if game.get('platforms') else [],
-        "date": now.strftime("%Y-%m-%d %H:%M:%S"),
-        "cover": f"{PICTURE_DIR}/{img_filename}",
-        "views": 0,
-        "comments": 0
-    }
-    print(f"✅ Generated post: {out_path}")
-    return post_dict
-
-# ==============
-# FOOTER
-# ==============
-def post_footer_html():
-    return f"""
-<section class="footer">
-<p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
-</section>
-"""
-
-# ==============
-# MAIN FLOW
-# ==============
-def gather_candidates(total_needed, num_popular):
-    random_candidates = []
-    popular_candidates = []
-    attempts = 0
-    page = 1
-    while len(popular_candidates) < num_popular and attempts < 8:
-        try:
-            res = rawg_get_popular(page=page)
-            if not res:
-                break
-            for g in res:
-                if len(popular_candidates) >= num_popular:
-                    break
-                popular_candidates.append(g)
-            page += 1
-        except Exception as e:
-            print("RAWG popular fetch error:", e)
-            break
-        attempts += 1
-
-    collected = []
-    attempts = 0
-    while len(collected) < (total_needed - len(popular_candidates)) and attempts < 12:
-        try:
-            page_rand = random.randint(1, 20)
-            res = rawg_search_random(page=page_rand)
-            if res:
-                collected.extend(res)
-        except Exception as e:
-            print("RAWG fetch error:", e)
-        attempts += 1
-
-    random.shuffle(collected)
-    needed = total_needed - len(popular_candidates)
-    random_candidates = collected[:needed]
-    return random_candidates, popular_candidates
-
-def main():
-    all_posts = read_index_posts()
-    random_candidates, popular_candidates = gather_candidates(NUM_TOTAL, NUM_POPULAR)
-    selected_games = popular_candidates + random_candidates
-
-    for game in selected_games:
-        post = generate_post_for_game(game, all_posts)
-        if post:
-            all_posts.append(post)
-
-    all_posts.sort(key=lambda x: x.get("date", ""), reverse=True)
-    write_index_posts(all_posts)
-
-if __name__ == "__main__":
-    main()
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>{title}</title>
+  <meta name="description" content="Narrative review and immersive gameplay experience of {name}."/>
+  <style>
+   
