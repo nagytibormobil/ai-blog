@@ -1,0 +1,22 @@
+@echo off
+REM ===============================
+REM Weboldal frissítése GitHub Pages-re
+REM ===============================
+
+REM Lépj a projekt könyvtárba
+cd /d C:\ai_blog
+
+REM Ellenőrizd a git státuszt
+git status
+
+REM Ha van változás, add hozzá a commit-hoz
+git add index.html generated_posts/*
+
+REM Commit üzenet (tetszőleges)
+git commit -m "Manual update: frissítés a meglévő posztokkal és index.html"
+
+REM Push a GitHub-ra
+git push origin main
+
+echo Weboldal frissítve a GitHub Pages-en!
+pause

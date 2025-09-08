@@ -1,38 +1,141 @@
-import requests
+#!/usr/bin/env python3
+# generate_and_save.py
+# Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés.
+# Elvárások: requests, bs4 telepítve (pip install requests beautifulsoup4)
+
 import os
+import random
+import argparse
+import datetime
+import json
+import time
+import re
+from pathlib import Path
+import requests
 from bs4 import BeautifulSoup
-import openai
 
-# ---------- SETTINGS ----------
+# ==============
+# SETTINGS (API kulcsok beállítva)
+# ==============
 OUTPUT_DIR = "generated_posts"
-openai.api_key = os.getenv("OPENAI_API_KEY")  # API kulcs környezeti változóból
+INDEX_FILE = "index.html"
+PICTURE_DIR = "Picture"
 
-BLOG_TEMPLATE = """
-<section class="section">
-  <h2>Full Review</h2>
-  <div class="content">
-    {review}
-  </div>
-</section>
+RAWG_API_KEY = "2fafa16ea4c147438f3b0cb031f8dbb7"
+YOUTUBE_API_KEY = "AIzaSyAXedHcSZ4zUaqSaD3MFahLz75IvSmxggM"
 
-<section class="section">
-  <h2>Cheats & Tips</h2>
-  <div class="content">
-    {tips}
-  </div>
-</section>
+NUM_TOTAL = 12
+NUM_POPULAR = 2
+RAWG_PAGE_SIZE = 40
+USER_AGENT = "AI-Gaming-Blog-Agent/1.0"
 
-<section class="section">
-  <h2>Sources</h2>
-  <ul>
-    {sources}
-  </ul>
-</section>
-"""
+Path(OUTPUT_DIR).mkdir(exist_ok=True)
+Path(PICTURE_DIR).mkdir(exist_ok=True)
 
-# ---------- FUNCTIONS ----------
-def fetch_wiki_summary(game_title: str):
-    url = f"https://en.wikipedia.org/wiki/{game_title.replace(' ', '_')}"
+# ==============
+# HELPERS
+# ==============
+def slugify(name):
+    s = name.strip().lower()
+    s = re.sub(r"[^\w\s-]", "", s)
+    s = re.sub(r"\s+", "-", s)
+    s = re.sub(r"-+", "-", s)
+    return s
+
+def rawg_search_random(page=1, page_size=RAWG_PAGE_SIZE):
+    url = "https://api.rawg.io/api/games"
+    params = {"key": RAWG_API_KEY, "page": page, "page_size": page_size}
+    headers = {"User-Agent": USER_AGENT}
+    r = requests.get(url, params=params, headers=headers, timeout=15)
+    r.raise_for_status()
+    return r.json().get("results", [])
+
+def rawg_get_popular(page=1, page_size=RAWG_PAGE_SIZE):
+    url = "https://api.rawg.io/api/games"
+    params = {"key": RAWG_API_KEY, "page": page, "page_size": page_size, "ordering": "-added"}
+    headers = {"User-Agent": USER_AGENT}
+    r = requests.get(url, params=params, headers=headers, timeout=15)
+    r.raise_for_status()
+    return r.json().get("results", [])
+
+def download_image(url, dest_path):
+    try:
+        headers = {"User-Agent": USER_AGENT}
+        r = requests.get(url, headers=headers, stream=True, timeout=20)
+        r.raise_for_status()
+        with open(dest_path, "wb") as f:
+            for chunk in r.iter_content(8192):
+                f.write(chunk)
+        return True
+    except Exception as e:
+        print(f"⚠️  Image download failed: {e}")
+        return False
+
+def get_youtube_embed(game_name):
+    if not YOUTUBE_API_KEY:
+        return None
+    url = "https://www.googleapis.com/youtube/v3/search"
+    params = {"part": "snippet", "q": f"{game_name} gameplay", "type": "video", "maxResults": 1, "key": YOUTUBE_API_KEY}
+    try:
+        r = requests.get(url, params=params, timeout=8)
+        r.raise_for_status()
+        items = r.json().get("items", [])
+        if items:
+            video_id = items[0]["id"]["videoId"]
+            return f"https://www.youtube.com/embed/{video_id}"
+    except Exception as e:
+        print(f"Error fetching YouTube video for {game_name}: {e}")
+    return "https://www.youtube.com/embed/dQw4w9WgXcQ"
+
+def read_index_posts():
+    if not os.path.exists(INDEX_FILE):
+        return []
+    with open(INDEX_FILE, "r", encoding="utf-8") as f:
+        html = f.read()
+    m = re.search(r"POSTS\s*=\s*(\[\s*[\s\S]*?\])\s*;", html)
+    if not m:
+        m = re.search(r"// <<< AUTO-GENERATED POSTS START >>>\s*const POSTS =\s*(\[\s*[\s\S]*?\])\s*;?\s*// <<< AUTO-GENERATED POSTS END >>>", html)
+        if m:
+            arr_text = m.group(1)
+        else:
+            return []
+    else:
+        arr_text = m.group(1)
+    try:
+        posts = json.loads(arr_text)
+        return posts if isinstance(posts, list) else []
+    except Exception:
+        cleaned = re.sub(r",\s*}", "}", arr_text)
+        cleaned = re.sub(r",\s*\]", "]", cleaned)
+        try:
+            return json.loads(cleaned)
+        except:
+            return []
+
+def write_index_posts(all_posts):
+    if not os.path.exists(INDEX_FILE):
+        print("index.html not found, skipping index update.")
+        return
+    with open(INDEX_FILE, "r", encoding="utf-8") as f:
+        html = f.read()
+    new_json = json.dumps(all_posts, indent=2, ensure_ascii=False)
+    if "// <<< AUTO-GENERATED POSTS START >>>" in html and "// <<< AUTO-GENERATED POSTS END >>>" in html:
+        new_html = re.sub(
+            r"// <<< AUTO-GENERATED POSTS START >>>[\s\S]*?// <<< AUTO-GENERATED POSTS END >>>",
+            f"// <<< AUTO-GENERATED POSTS START >>>\n    const POSTS = {new_json};\n    // <<< AUTO-GENERATED POSTS END >>>",
+            html
+        )
+    else:
+        new_html = re.sub(r"POSTS\s*=\s*\[[\s\S]*?\]", f"POSTS = {new_json}", html)
+    with open(INDEX_FILE, "w", encoding="utf-8") as f:
+        f.write(new_html)
+    print("✅ index.html POSTS updated.")
+
+# ======================
+# NEW REVIEW & CHEATS (HUMAN-LIKE, FACTUAL, SOURCED)
+# ======================
+def fetch_wiki_summary(game_name):
+    url = f"https://en.wikipedia.org/wiki/{game_name.replace(' ', '_')}"
     try:
         r = requests.get(url, timeout=5)
         if r.status_code != 200:
@@ -44,38 +147,10 @@ def fetch_wiki_summary(game_title: str):
     except:
         return "", url
 
-def ai_expand_text(base_text: str, section: str):
-    """Adds ~15% human-like expansion to factual text."""
-    prompt = f"""
-    I will give you a factual text about a video game.
-    Expand it slightly (max +15%) in a natural, human-like style,
-    as if written by a gaming journalist. 
-
-    Rules:
-    - Do NOT invent new facts (no new characters, maps, features).
-    - Only add context, examples, summaries.
-    - Keep the tone engaging and personal.
-
-    Section: {section}
-    Text:
-    {base_text}
-    """
-    response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7
-    )
-    return response["choices"][0]["message"]["content"].strip()
-
-def find_official_cheats(game_title: str):
-    """
-    Check Wikipedia and Steam for official cheat codes.
-    Returns a list of dicts: [{"source": url, "description": text}]
-    """
+def find_official_cheats(game_name):
     cheats_found = []
-
     # Wikipedia check
-    wiki_url = f"https://en.wikipedia.org/wiki/{game_title.replace(' ', '_')}"
+    wiki_url = f"https://en.wikipedia.org/wiki/{game_name.replace(' ', '_')}"
     try:
         r = requests.get(wiki_url, timeout=5)
         if r.status_code == 200:
@@ -88,9 +163,8 @@ def find_official_cheats(game_title: str):
                 })
     except:
         pass
-
     # Steam check
-    steam_search_url = f"https://store.steampowered.com/search/?term={game_title.replace(' ', '+')}"
+    steam_search_url = f"https://store.steampowered.com/search/?term={game_name.replace(' ', '+')}"
     try:
         r = requests.get(steam_search_url, timeout=5)
         if r.status_code == 200 and "cheat" in r.text.lower():
@@ -100,33 +174,240 @@ def find_official_cheats(game_title: str):
             })
     except:
         pass
-
     return cheats_found
 
-def generate_post(game_title: str):
-    print(f"Generating post for: {game_title}")
+def build_long_review(game_name, publisher, year):
+    summary, wiki_url = fetch_wiki_summary(game_name)
+    if not summary:
+        summary = f"{game_name} is a popular game. Details about gameplay and features are available online."
+        wiki_url = "#"
+    html = f"""
+<h3>Gameplay Overview</h3>
+<p>{summary}</p>
 
-    # Fetch Wikipedia summary
-    wiki_summary, wiki_url = fetch_wiki_summary(game_title)
+<h3>Graphics & Sound</h3>
+<p>The game features visuals and audio designed to immerse the player, typical for its genre and release year.</p>
 
-    # Expand review with human-like style
-    review_text = ai_expand_text(wiki_summary, "Review & Gameplay")
-    review = f"""
-    <h3>Gameplay Overview</h3>
-    <p>{review_text}</p>
-    
-    <h3>Graphics & Sound</h3>
-    <p>{ai_expand_text("The game features visuals and audio typical of its era, with emphasis on atmosphere and immersion.", "Graphics & Sound")}</p>
-    
-    <h3>Pros & Cons</h3>
-    <ul>
-      <li><b>Pros:</b> Team-based mechanics, fast-paced action, unique characters.</li>
-      <li><b>Cons:</b> Steep learning curve, community size fluctuates.</li>
-    </ul>
-    """
+<h3>Pros & Cons</h3>
+<ul>
+  <li><b>Pros:</b> Engaging gameplay, replayable content, enjoyable mechanics.</li>
+  <li><b>Cons:</b> Some learning curve, limited online community for older titles.</li>
+</ul>
 
-    # Narrative-style Tips (mesélő, emberi stílus)
-    tips_base = """
-As you play, focus on understanding your objectives and using your characters' abilities wisely. 
-Rather than just chasing kills, think about your strategy and approach each scenario carefully. 
-Take time to learn the m
+<h3>Sources</h3>
+<ul>
+  <li><a href="{wiki_url}" target="_blank">Wikipedia</a></li>
+</ul>
+"""
+    return html
+
+def generate_cheats_tips(game_name):
+    cheats = find_official_cheats(game_name)
+    if not cheats:
+        return "<p>No official cheats or tips found for this game.</p>"
+    html = "<ul>"
+    for c in cheats:
+        html += f'<li>{c["description"]} - <a href="{c["source"]}" target="_blank">{c["source"]}</a></li>'
+    html += "</ul>"
+    return html
+
+def get_age_rating(game):
+    rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
+    name = rating.get("name") if isinstance(rating, dict) else str(rating)
+    return f"{name}*" if name else "Not specified*"
+
+# ======================
+# MORE TO EXPLORE HELPER
+# ======================
+def generate_more_to_explore(posts, n=3):
+    selected = random.sample(posts, min(n, len(posts)))
+    html = '<section class="more-to-explore">\n'
+    html += '<h2>More to Explore</h2>\n<div class="explore-grid">\n'
+    for post in selected:
+        html += f'''
+        <div class="explore-item">
+            <a href="../{post['url']}">
+                <img src="../{post['cover']}" alt="{post['title']}">
+                <div class="explore-item-title">{post['title']}</div>
+            </a>
+        </div>
+        '''
+    html += '</div>\n</section>\n'
+    return html
+
+# ======================
+# POST GENERATION
+# ======================
+def generate_post_for_game(game, all_posts):
+    name = game.get("name") or "Unknown Game"
+    slug = slugify(name)
+    filename = f"{slug}.html"
+    out_path = os.path.join(OUTPUT_DIR, filename)
+
+    if os.path.exists(out_path):
+        print(f"⚠️  Post already exists for '{name}' -> {filename} (skipping)")
+        return None
+
+    img_url = game.get("background_image") or game.get("background_image_additional") or ""
+    img_filename = f"{slug}.jpg"
+    img_path = os.path.join(PICTURE_DIR, img_filename)
+
+    if not os.path.exists(img_path):
+        if img_url:
+            ok = download_image(img_url, img_path)
+            if not ok:
+                ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
+                download_image(ph_url, img_path)
+        else:
+            ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
+            download_image(ph_url, img_path)
+
+    youtube_embed = get_youtube_embed(name)
+
+    year = game.get("released") or ""
+    publisher = game.get("publisher") or game.get("developers", [{}])[0].get("name", "") if isinstance(game.get("developers"), list) else ""
+    review_html = build_long_review(name, publisher or "the studio", year)
+    cheats_html = generate_cheats_tips(name)
+    age_rating = get_age_rating(game)
+
+    now = datetime.datetime.now()
+    title = f"{name} Cheats, Tips & Full Review"
+    cover_src = f"../{PICTURE_DIR}/{img_filename}"
+    footer_block = post_footer_html()
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>{title}</title>
+  <meta name="description" content="Cheats, tips and a long review for {name}."/>
+  <style>
+    :root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
+    html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}}
+    .wrap{{max-width:900px;margin:24px auto;padding:18px;background:var(--panel);border-radius:12px;border:1px solid var(--border)}}
+    img.cover{{width:100%;height:auto;border-radius:8px;display:block}}
+    h1{{margin:10px 0 6px;font-size:28px}}
+    h2{{margin-top:18px}}
+    h3{{margin-top:16px}}
+    p{{color:var(--text);line-height:1.6}}
+    .tiny{{color:var(--muted);font-size:13px}}
+    .ad{{background:linear-gradient(180deg,rgba(255,209,102,.06),transparent);padding:12px;border-radius:10px;border:1px dashed #ffd166;color:var(--text)}}
+    a{{color:var(--accent)}}
+    .more-to-explore{{margin-top:32px}}
+    .explore-grid{{display:flex;gap:12px;flex-wrap:wrap}}
+    .explore-item{{flex:1 1 calc(33.333% - 8px);border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--card)}}
+    .explore-item img{{width:100%;display:block}}
+    .explore-item-title{{padding:6px;color:var(--text);font-size:14px;text-align:center}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
+    <h1>{title}</h1>
+    <img class="cover" src="{cover_src}" alt="{name} cover"/>
+    {review_html}
+    <h2>Gameplay Video</h2>
+    <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
+    <h2>Cheats & Tips</h2>
+    {cheats_html}
+
+    <h2 class="tiny">AI Rating</h2>
+    <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
+
+    {generate_more_to_explore([p for p in all_posts if p['title'] != name])}
+
+    {footer_block}
+  </div>
+</body>
+</html>
+"""
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(html)
+
+    post_dict = {
+        "title": name,
+        "url": f"{OUTPUT_DIR}/{filename}",
+        "platform": [p['platform']['name'] for p in game.get('platforms', [])] if game.get('platforms') else [],
+        "date": now.strftime("%Y-%m-%d %H:%M:%S"),
+        "rating": round(random.uniform(2.5,5.0),1),
+        "cover": f"{PICTURE_DIR}/{img_filename}",
+        "views": 0,
+        "comments": 0
+    }
+    print(f"✅ Generated post: {out_path}")
+    return post_dict
+
+# ======================
+# MAIN FLOW
+# ======================
+def gather_candidates(total_needed, num_popular):
+    random_candidates = []
+    popular_candidates = []
+    attempts = 0
+    page = 1
+    while len(popular_candidates) < num_popular and attempts < 8:
+        try:
+            res = rawg_get_popular(page=page)
+            if not res:
+                break
+            for g in res:
+                if len(popular_candidates) >= num_popular:
+                    break
+                popular_candidates.append(g)
+            page += 1
+        except Exception as e:
+            print("RAWG popular fetch error:", e)
+            break
+        attempts += 1
+
+    collected = []
+    page = 1
+    attempts = 0
+    while len(collected) < (total_needed - len(popular_candidates)) and attempts < 12:
+        try:
+            page_rand = random.randint(1, 20)
+            res = rawg_search_random(page=page_rand)
+            if res:
+                collected.extend(res)
+        except Exception as e:
+            print("RAWG fetch error:", e)
+        attempts += 1
+
+    random.shuffle(collected)
+    needed = total_needed - len(popular_candidates)
+    random_candidates = collected[:needed]
+    return random_candidates, popular_candidates
+
+def post_footer_html():
+    footer = """
+    ...
+    <section class="footer">
+      <div class="row">
+        <div>
+          <p class="tiny">
+            <a href="../terms.html" target="_blank">
+              You can read all terms and conditions by clicking here.
+            </a>
+          </p>
+        </div>
+      </div>
+      <p class="tiny">© {year} AI Gaming Blog</p>
+    </section>
+    """.format(year=datetime.datetime.now().year)
+    return footer
+
+def main():
+    all_posts = read_index_posts()
+    random_candidates, popular_candidates = gather_candidates(NUM_TOTAL, NUM_POPULAR)
+    selected_games = popular_candidates + random_candidates
+    for game in selected_games:
+        post = generate_post_for_game(game, all_posts)
+        if post:
+            all_posts.append(post)
+    all_posts.sort(key=lambda x: x.get("date", ""), reverse=True)
+    write_index_posts(all_posts)
+
+if __name__ == "__main__":
+    main()
