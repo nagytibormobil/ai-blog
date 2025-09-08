@@ -140,28 +140,32 @@ def build_narrative_review(game):
     metacritic_url = game.get("metacritic_url") or "#"
 
     paragraphs = []
-    paragraphs.append(f"I recently dived into **{name.upper()}** (Released: {release}) developed by **{developer}**. From the very first moments, I felt completely immersed in its unique world. For more factual details, you can check [Wikipedia]({wiki_url}), the [Steam page]({steam_url}), or [Metacritic reviews]({metacritic_url}).")
-    paragraphs.append("The environments pulled me in immediately, with detailed textures and sound design that made me feel part of the story. Early combat required quick reflexes, and victories felt like real achievements.")
-    paragraphs.append("Hidden areas, side quests, and multiplayer matches added variety and replayability. The weapon handling, sound effects, and smooth mechanics made the gameplay even more engaging.")
-    paragraphs.append(f"Overall, **{name}** gave me hours of unforgettable fun, blending story, action, and discovery into one immersive package.")
 
-    return "\n\n".join(f"<p>{p}</p>" for p in paragraphs)
+    paragraphs.append(f"I recently dived into **{name.upper()}** (Released: {release}) developed by **{developer}**. From the very first moments, I felt completely immersed in its unique world, where every corner tells a story. For more factual details, you can check [Wikipedia]({wiki_url}), the [Steam page]({steam_url}), or [Metacritic reviews]({metacritic_url}).")
 
-def build_cheats_section(game):
-    if game.get("official_cheats"):
-        tips = []
+    # Narrative gameplay
+    paragraphs.append(f"As I wandered through the game, I found myself lost in the **breathtaking environments** and the intricate design of each level. Every sound, every shadow, made me feel like I was truly part of the world. The first combat encounter caught me off guard – I had to quickly learn the mechanics and adapt to survive, which made every victory feel like a personal achievement.")
+
+    # Tips and cheats narrative
+    if game.get("official_cheats") and len(game["official_cheats"]) > 0:
+        cheat_texts = []
         for cheat in game["official_cheats"]:
-            desc = cheat.get("description", "")
-            source = cheat.get("source", "official")
-            tips.append(f"<p>{desc} <br><em>(Source: {source})</em></p>")
-        return "\n".join(tips)
+            cheat_texts.append(f"{cheat['description']} (Source: {cheat.get('source','official')})")
+        cheat_paragraph = " ".join(cheat_texts)
+        paragraphs.append(f"During my playthrough, I discovered **official tips and cheats**, such as: {cheat_paragraph}. Using them strategically enriched the experience without breaking immersion.")
     else:
-        no_cheat_msgs = [
-            "I searched online but could not find any official cheats or tips for this game.",
-            "No official cheats or practical tips seem to exist for this title in reliable sources.",
-            "After checking trusted communities and guides, I couldn’t find any cheats or confirmed tips for this game."
-        ]
-        return f"<p>{random.choice(no_cheat_msgs)}</p>"
+        paragraphs.append("I searched online but could not find any official cheats or tips for this game. All experiences come purely from personal gameplay.")
+
+    # Exploration and multiplayer
+    paragraphs.append(f"Exploring the game further, hidden secrets and side quests kept me entertained for hours. Multiplayer or cooperative modes added extra **thrills**, requiring teamwork and strategy. Every match felt fresh and exciting, keeping me coming back.")
+
+    # More gameplay depth
+    paragraphs.append(f"Learning the abilities and mastering the controls was satisfying. Subtle details like weapon sounds, character animations, or vehicle handling made the experience tangible. I particularly enjoyed moments where timing and strategic thinking gave me an edge in challenging situations.")
+
+    # Concluding immersive paragraph
+    paragraphs.append(f"Overall, **{name}** provided an unforgettable adventure. The combination of story, gameplay, and atmosphere created a rich experience that I would love to revisit. Every session felt like a new story to be told and shared with friends.")
+
+    return "\n\n".join(paragraphs)
 
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
@@ -225,7 +229,6 @@ def generate_post_for_game(game, all_posts):
 
     youtube_embed = get_youtube_embed(name)
     review_html = build_narrative_review(game)
-    cheats_html = build_cheats_section(game)
     age_rating = get_age_rating(game)
 
     now = datetime.datetime.now()
@@ -262,8 +265,6 @@ def generate_post_for_game(game, all_posts):
     <h1>{title}</h1>
     <img class="cover" src="{cover_src}" alt="{name} cover"/>
     {review_html}
-    <h2>Cheats & Tips</h2>
-    {cheats_html}
     <h2>Gameplay Video</h2>
     <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
     <!-- More to Explore -->
