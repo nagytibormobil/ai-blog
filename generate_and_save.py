@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # generate_and_save.py
-# Teljesen új verzió: narratív élménybeszámoló minden játékhoz, hosszú, egyedi posztokkal.
-# Cheats & Tips élményszerűen, forrásokkal. Valós adatok: Wikipedia, Steam, Metacritic, hivatalos oldalak.
-# Stabil működés, képek letöltése, YouTube embed, index frissítés.
+# Automatic narrative post generation: RAWG -> image download, YouTube embed, immersive review, index update.
+# Requirements: requests, bs4 (pip install requests beautifulsoup4)
 
 import os
 import random
@@ -12,9 +11,9 @@ import re
 from pathlib import Path
 import requests
 
-# ========================
+# ==============
 # SETTINGS
-# ========================
+# ==============
 OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
 PICTURE_DIR = "Picture"
@@ -30,9 +29,9 @@ USER_AGENT = "AI-Gaming-Blog-Agent/1.0"
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
 Path(PICTURE_DIR).mkdir(exist_ok=True)
 
-# ========================
+# ==============
 # HELPERS
-# ========================
+# ==============
 def slugify(name):
     s = name.strip().lower()
     s = re.sub(r"[^\w\s-]", "", s)
@@ -129,70 +128,44 @@ def write_index_posts(all_posts):
         f.write(new_html)
     print("✅ index.html POSTS updated.")
 
-# ========================
-# NARRATÍV TARTALOM GENERÁLÁS
-# ========================
-def build_long_narrative_review(game):
-    """
-    Teljesen narratív, 15–25 soros poszt.
-    Mintha egy gyerek mesélné az élményt, konkrét tippekkel, cheat-ekkel forrásokkal.
-    """
+# ==============
+# NARRATIVE CONTENT GENERATOR
+# ==============
+def build_narrative_review(game):
     name = game.get("name") or "Unknown Game"
-    year = game.get("released") or "N/A"
-    publisher = game.get("publisher") or (game.get("developers", [{}])[0].get("name", "") if isinstance(game.get("developers"), list) else "Unknown Studio")
-    
-    wiki_url = game.get("wiki_url") or "#"
+    release = game.get("released") or "Unknown"
+    developer = game.get("developers", [{}])[0].get("name", "Unknown Studio") if isinstance(game.get("developers"), list) else "Unknown Studio"
+    wiki_url = game.get("wiki_url") or f"https://en.wikipedia.org/wiki/{name.replace(' ','_')}"
     steam_url = game.get("steam_url") or "#"
-    meta_url = game.get("metacritic_url") or "#"
+    metacritic_url = game.get("metacritic_url") or "#"
 
-    # Narratív szöveg készítése – 15–25 sor
-    paragraphs = [
-        f"Nemrég kezdtem el játszani a {name} ({year}), amit a {publisher} fejlesztett. Már az első percekben elragadott a hangulat, ahogy beléptem a játék világába. A grafikája lenyűgöző, a fények és árnyékok olyanok, mintha tényleg ott lennék. További információk a [Wikipédián]({wiki_url}), a [Steam oldalon]({steam_url}) vagy a [Metacritic vélemények]({meta_url}) között találhatóak.",
-        f"A kezdeti küldetések során azonnal éreztem, mennyire gondosan lett kidolgozva a játékmenet. A karakterek reakciói, a párbeszédek, minden apró részlet életszerű és szórakoztató. Ahogy haladtam előre, felfedeztem titkos szobákat, mellékküldetéseket, és néhány igazán jól elrejtett lootot, ami izgalmas felfedezést jelentett.",
-        f"Az online mód új dimenziókat nyitott. Barátokkal együtt játszva minden egyes küldetés más élmény, a csapatmunka és stratégiai döntések folyamatosan izgalomban tartanak. Egy-egy pillanatban majdnem kifutottunk az időből, de a gyors reakcióinkkal sikerült teljesíteni a küldetést.",
-        f"A fegyverek és képességek használata során rájöttem, hogy az apró trükkök jelentős előnyt jelentenek. Például a {name}-ban a fénykardot ügyesen használva egy pillanat alatt megfordítható egy harc. A [Steam közösség]({steam_url}) szerint ezek a taktikák hatékonyak a fő küldetések során.",
-        f"A harc során a hanghatások lenyűgözőek. A lövések és robbanások pontosan úgy szólnak, ahogy a valóságban hallanám, és ez fokozza a játékélményt. A különböző pályák, legyen szó városi utcákról vagy sivatagi terepről, mind más-más kihívást adnak.",
-        f"Ha a hivatalos cheat-ekről van szó: {generate_narrative_cheats(game)}",
-        f"A tippekkel kapcsolatban: {generate_narrative_tips(game)}",
-        f"Összességében a játék lenyűgöző: a felfedezés, a stratégia és a történet találkozik, minden részletre odafigyeltek. A patch-ek és frissítések folyamatosan javítják a játékot, így mindig van új kihívás és új élmény.",
-        f"A barátokkal együtt töltött idő, az online kooperáció, a különleges küldetések és a rejtett titkok mind hozzájárulnak a teljes játékélményhez. Minden egyes alkalommal valami új történik, mintha a játék mindig velem együtt fejlődne.",
-        f"Ahogy játszottam, észrevettem, hogy az apró részletek, például a karakterek mozgása, a fények változása és a hangok, mind élményszerűvé teszik az egészet. Mintha egy élő világban lennék, ami folyamatosan változik és reagál a tetteimre.",
-    ]
-    
-    return "\n".join(paragraphs)
+    paragraphs = []
 
-def generate_narrative_cheats(game):
-    """
-    Narratív formában, forrásokkal.
-    Ha nincs hivatalos cheat, egyértelműen jelzi.
-    """
-    cheats = game.get("cheats")  # list of dicts: name, description, source
-    if not cheats:
-        return "Nem találtam hivatalos cheat-eket a játékhoz a neten."
-    
-    lines = []
-    for c in cheats:
-        name = c.get("name", "Ismeretlen cheat")
-        desc = c.get("description", "")
-        source = c.get("source", "#")
-        lines.append(f"Az egyik cheat, a {name}, lehetővé teszi, hogy {desc} ([forrás]({source})). Érdemes kipróbálni, ha új módon szeretnéd felfedezni a játékot.")
-    return " ".join(lines)
+    paragraphs.append(f"I recently dived into **{name.upper()}** (Released: {release}) developed by **{developer}**. From the very first moments, I felt completely immersed in its unique world, where every corner tells a story. For more factual details, you can check [Wikipedia]({wiki_url}), the [Steam page]({steam_url}), or [Metacritic reviews]({metacritic_url}).")
 
-def generate_narrative_tips(game):
-    """
-    Narratív formában, forrásokkal.
-    Ha nincs hivatalos tipp, egyértelműen jelzi.
-    """
-    tips = game.get("tips")  # list of dicts: description, source
-    if not tips:
-        return "Nem találtam hivatalos tippeket a játékhoz a neten."
-    
-    lines = []
-    for t in tips:
-        desc = t.get("description", "")
-        source = t.get("source", "#")
-        lines.append(f"Például: {desc} ([forrás]({source})).")
-    return " ".join(lines)
+    # Narrative gameplay
+    paragraphs.append(f"As I wandered through the game, I found myself lost in the **breathtaking environments** and the intricate design of each level. Every sound, every shadow, made me feel like I was truly part of the world. The first combat encounter caught me off guard – I had to quickly learn the mechanics and adapt to survive, which made every victory feel like a personal achievement.")
+
+    # Tips and cheats narrative
+    if game.get("official_cheats"):
+        cheat_texts = []
+        for cheat in game["official_cheats"]:
+            cheat_texts.append(f"{cheat['description']} (Source: {cheat.get('source','official')})")
+        cheat_paragraph = " ".join(cheat_texts)
+        paragraphs.append(f"During my playthrough, I discovered official tips and cheats, such as: {cheat_paragraph}. Using them strategically enriched the experience without breaking immersion.")
+    else:
+        paragraphs.append("I couldn't find any official cheats or tips online, so all experiences come purely from personal gameplay.")
+
+    # Exploration and multiplayer
+    paragraphs.append(f"Exploring the game further, hidden secrets and side quests kept me entertained for hours. Multiplayer or cooperative modes added extra **thrills**, requiring teamwork and strategy. Every match felt fresh and exciting, keeping me coming back.")
+
+    # More gameplay depth
+    paragraphs.append(f"Learning the abilities and mastering the controls was satisfying. Subtle details like weapon sounds, character animations, or vehicle handling made the experience tangible. I particularly enjoyed moments where timing and strategic thinking gave me an edge in challenging situations.")
+
+    # Concluding immersive paragraph
+    paragraphs.append(f"Overall, **{name}** provided an unforgettable adventure. The combination of story, gameplay, and atmosphere created a rich experience that I would love to revisit. Every session felt like a new story to be told and shared with friends.")
+
+    return "\n\n".join(paragraphs)
 
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
@@ -201,8 +174,7 @@ def get_age_rating(game):
 
 def generate_more_to_explore(posts, n=3):
     selected = random.sample(posts, min(n, len(posts)))
-    html = '<section class="more-to-explore">\n'
-    html += '<h2>More to Explore</h2>\n<div class="explore-grid">\n'
+    html = '<section class="more-to-explore">\n<h2>More to Explore</h2>\n<div class="explore-grid">\n'
     for post in selected:
         html += f'''
         <div class="explore-item">
@@ -242,10 +214,9 @@ def generate_post_for_game(game, all_posts):
         print(f"⚠️  Post already exists for '{name}' -> {filename} (skipping)")
         return None
 
-    img_url = game.get("background_image") or game.get("background_image_additional") or ""
+    img_url = game.get("background_image") or ""
     img_filename = f"{slug}.jpg"
     img_path = os.path.join(PICTURE_DIR, img_filename)
-
     if not os.path.exists(img_path):
         if img_url:
             ok = download_image(img_url, img_path)
@@ -257,12 +228,12 @@ def generate_post_for_game(game, all_posts):
             download_image(ph_url, img_path)
 
     youtube_embed = get_youtube_embed(name)
-    review_html = build_long_narrative_review(game)
+    review_html = build_narrative_review(game)
     age_rating = get_age_rating(game)
+
     now = datetime.datetime.now()
-    title = f"{name} Cheats, Tips & Full Review"
+    title = f"{name} Full Narrative Review"
     cover_src = f"../{PICTURE_DIR}/{img_filename}"
-    footer_block = post_footer_html()
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -270,7 +241,7 @@ def generate_post_for_game(game, all_posts):
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>{title}</title>
-  <meta name="description" content="Cheats, tips and a long narrative review for {name}."/>
+  <meta name="description" content="Narrative review and immersive gameplay experience of {name}."/>
   <style>
     :root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
     html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}}
@@ -296,11 +267,9 @@ def generate_post_for_game(game, all_posts):
     {review_html}
     <h2>Gameplay Video</h2>
     <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
-
     <!-- More to Explore -->
     {generate_more_to_explore([p for p in all_posts if p['title'] != name])}
-
-    {footer_block}
+    {post_footer_html()}
   </div>
 </body>
 </html>
@@ -314,7 +283,6 @@ def generate_post_for_game(game, all_posts):
         "url": f"{OUTPUT_DIR}/{filename}",
         "platform": [p['platform']['name'] for p in game.get('platforms', [])] if game.get('platforms') else [],
         "date": now.strftime("%Y-%m-%d %H:%M:%S"),
-        "rating": round(random.uniform(2.5,5.0),1),
         "cover": f"{PICTURE_DIR}/{img_filename}",
         "views": 0,
         "comments": 0
@@ -322,9 +290,9 @@ def generate_post_for_game(game, all_posts):
     print(f"✅ Generated post: {out_path}")
     return post_dict
 
-# ========================
+# ==============
 # MAIN FLOW
-# ========================
+# ==============
 def gather_candidates(total_needed, num_popular):
     random_candidates = []
     popular_candidates = []
@@ -346,7 +314,6 @@ def gather_candidates(total_needed, num_popular):
         attempts += 1
 
     collected = []
-    page = 1
     attempts = 0
     while len(collected) < (total_needed - len(popular_candidates)) and attempts < 12:
         try:
@@ -367,12 +334,10 @@ def main():
     all_posts = read_index_posts()
     random_candidates, popular_candidates = gather_candidates(NUM_TOTAL, NUM_POPULAR)
     selected_games = popular_candidates + random_candidates
-
     for game in selected_games:
         post = generate_post_for_game(game, all_posts)
         if post:
             all_posts.append(post)
-
     all_posts.sort(key=lambda x: x.get("date", ""), reverse=True)
     write_index_posts(all_posts)
 
