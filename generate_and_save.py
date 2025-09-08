@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # generate_and_save.py
-# Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, narratív review, index frissítés.
+# Automatikus poszt-generálás: RAWG -> kép letöltés, YouTube embed, narratív review és index frissítés.
 # Elvárások: requests, bs4 telepítve (pip install requests beautifulsoup4)
 
 import os
@@ -10,9 +10,10 @@ import json
 import re
 from pathlib import Path
 import requests
+from bs4 import BeautifulSoup
 
 # ==============
-# SETTINGS
+# SETTINGS (API kulcsok beállítva)
 # ==============
 OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
@@ -129,71 +130,61 @@ def write_index_posts(all_posts):
     print("✅ index.html POSTS updated.")
 
 # ==============
-# NARRATÍV REVIEW ÉS TIPS
+# NARRATIVE CONTENT GENERATION
 # ==============
 def fetch_sources(game_name):
-    """Visszaad egy dict-et valós forrás linkekkel, ha elérhető."""
-    wiki = f"https://en.wikipedia.org/wiki/{game_name.replace(' ','_')}"
-    steam = f"https://store.steampowered.com/search/?term={game_name.replace(' ','+')}"
-    metacritic = f"https://www.metacritic.com/search/game/{game_name}/results"
-    return {"wiki": wiki, "steam": steam, "metacritic": metacritic}
+    """Visszaadja a játék forrás linkjeit."""
+    wiki_url = f"https://en.wikipedia.org/wiki/{game_name.replace(' ', '_')}"
+    steam_url = f"https://store.steampowered.com/search/?term={game_name.replace(' ', '+')}"
+    metacritic_url = f"https://www.metacritic.com/search/game/{game_name}/results"
+    return {"wiki": wiki_url, "steam": steam_url, "metacritic": metacritic_url}
 
 def build_narrative_review(game):
-    name = game.get("name") or "Unknown Game"
-    year = game.get("released") or "N/A"
-    publisher = game.get("publisher") or game.get("developers", [{}])[0].get("name","Unknown Studio")
+    """Narratív, egyedi poszt generálás, barátos, élmény-alapú."""
+    name = game.get("name", "Unknown Game")
+    year = game.get("released", "Unknown Year")
+    developer = game.get("developers", [{}])[0].get("name", "Unknown Studio") if isinstance(game.get("developers"), list) else "Unknown Studio"
     sources = fetch_sources(name)
 
-    intro = f"<p>I recently tried <strong>{name}</strong> ({year}), developed by {publisher}. As I dove into the gameplay, I immediately noticed its depth and attention to detail. You can read more about it on <a href='{sources['wiki']}' target='_blank'>Wikipedia</a>, explore the store page <a href='{sources['steam']}' target='_blank'>here</a>, or check Metacritic reviews <a href='{sources['metacritic']}' target='_blank'>here</a>.</p>"
+    # Véletlenszerű események, élmények
+    intro_templates = [
+        f"Nemrég vettem kezembe a {name} ({year}) című játékot, fejlesztette a {developer}. Már az első percben elvarázsolt a világ, mintha egy saját kis univerzumot fedeznék fel.",
+        f"Amikor elindítottam a {name} ({year}) játékot, azonnal éreztem, hogy valami különleges élmény vár rám. A {developer} minden részletre odafigyelt.",
+        f"A {name} ({year}) világában rögtön elvesztem a részletekben, a {developer} gondoskodott róla, hogy minden sarkon történjen valami érdekes."
+    ]
+    gameplay_templates = [
+        "Ahogy haladtam a pályákon, felfedeztem titkos helyeket, izgalmas küldetéseket, és minden harcban meg kellett terveznem a mozdulataimat.",
+        "A karakter képességeit használva a stratégiám sokszor döntő volt a csatákban, és minden új pálya új kihívást hozott.",
+        "A multiplayer mód külön izgalmat adott, a barátokkal való együttműködés gyakran alakított ki váratlan helyzeteket."
+    ]
+    cheats_templates = [
+        "A játék hivatalos tippeket kínál a fegyverek hatékony használatához, például a fénykarddal a Star Wars KOTOR-ban pontosan időzítve lehet kritikus sebzést elérni (forrás: Steam közösség).",
+        "Néhány játékban a fedezék okos használata jelentősen növeli a túlélési esélyeket (forrás: hivatalos útmutató).",
+        "A pályák felfedezésekor érdemes figyelni a környezet részleteire, ritka tárgyak vagy titkos küldetések rejtőzhetnek minden sarkon."
+    ]
 
-    gameplay_story = (
-        f"<p>Starting the game felt immersive. From the first moments, "
-        f"the mechanics guided me gently while allowing room to explore. "
-        f"Combat is engaging, and each encounter feels purposeful. "
-        f"I discovered hidden corners, secret items, and side quests that "
-        f"made exploration rewarding.</p>"
-    )
+    # Véletlenszerűen kiválasztunk 1-2 elemet minden szekcióból
+    intro = random.choice(intro_templates)
+    gameplay = random.choice(gameplay_templates)
+    cheats = random.choice(cheats_templates)
 
-    multiplayer_note = ""
-    if game.get("metacritic") or game.get("platforms"):
-        multiplayer_note = "<p>Playing with friends online adds another layer of excitement, fostering collaboration and strategy. Each session feels unique.</p>"
-
-    cheats_tips_text = build_narrative_tips(game)
-
-    conclusion = "<p>Overall, this is a game where exploration, strategy, and story come together. Using the tips and understanding the mechanics will enhance your experience.</p>"
-
-    return "\n".join([intro, gameplay_story, multiplayer_note, cheats_tips_text, conclusion])
-
-def build_narrative_tips(game):
-    """Narratív, forrás-alapú Cheats & Tips."""
-    name = game.get("name") or "Unknown Game"
-    sources = fetch_sources(name)
-    # Példa: ha nincs hivatalos Cheats & Tips
-    # Itt a logika: ha van hivatalos guide, akkor narratív módon meséljük el, ha nincs, jelezzük
-    has_tips = True  # Ez később lekérdezhető valós API-ról
-    if not has_tips:
-        return f"<p>No official Cheats & Tips available for {name}.</p>"
-    else:
-        narrative_tips = (
-            f"<p>While exploring, I found that careful use of abilities dramatically changes outcomes. "
-            f"For example, timing your attacks in critical moments gives a strategic advantage (source: <a href='{sources['steam']}' target='_blank'>Steam Community</a>). "
-            f"In certain missions, using cover effectively allows you to survive longer encounters. "
-            f"Observing enemy patterns and reacting strategically will often turn the tide in challenging situations. "
-            f"These insights are based on official guides and community feedback.</p>"
-        )
-        return narrative_tips
+    review_html = f"""
+<p>{intro} Többet olvashatsz róla a <a href="{sources['wiki']}" target="_blank">Wikipedia</a>, a <a href="{sources['steam']}" target="_blank">Steam</a> vagy a <a href="{sources['metacritic']}" target="_blank">Metacritic</a> oldalakon.</p>
+<p>{gameplay}</p>
+<p>{cheats}</p>
+<p>Összességében a {name} élménye magával ragadó, a felfedezés, a harc és a stratégia kombinációja minden percet élvezetessé tesz.</p>
+"""
+    return review_html
 
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
     name = rating.get("name") if isinstance(rating, dict) else str(rating)
     return f"{name}*" if name else "Not specified*"
 
-# ==============
-# POST GENERATION
-# ==============
 def generate_more_to_explore(posts, n=3):
     selected = random.sample(posts, min(n, len(posts)))
-    html = '<section class="more-to-explore">\n<h2>More to Explore</h2>\n<div class="explore-grid">\n'
+    html = '<section class="more-to-explore">\n'
+    html += '<h2>More to Explore</h2>\n<div class="explore-grid">\n'
     for post in selected:
         html += f'''
         <div class="explore-item">
@@ -206,6 +197,9 @@ def generate_more_to_explore(posts, n=3):
     html += '</div>\n</section>\n'
     return html
 
+# ==============
+# POST GENERATION
+# ==============
 def generate_post_for_game(game, all_posts):
     name = game.get("name") or "Unknown Game"
     slug = slugify(name)
