@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
 # generate_and_save.py
-# Automatikus post-generálás: RAWG -> kép letöltés, YouTube embed, hosszú review, index frissítés.
-# Elvárások: requests, bs4 telepítve (pip install requests beautifulsoup4)
+# Automatic narrative post generation: RAWG -> image download, YouTube embed, immersive review, index update.
+# Requirements: requests, bs4 (pip install requests beautifulsoup4)
 
 import os
 import random
-import argparse
 import datetime
 import json
-import time
 import re
 from pathlib import Path
 import requests
-from bs4 import BeautifulSoup
 
 # ==============
-# SETTINGS (API kulcsok beállítva)
+# SETTINGS
 # ==============
 OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
@@ -132,83 +129,82 @@ def write_index_posts(all_posts):
     print("✅ index.html POSTS updated.")
 
 # ==============
-# NEW HELPERS FOR CONTENT
+# NARRATIVE CONTENT GENERATOR
 # ==============
-def build_long_review(game_name, publisher, year):
-    parts = []
-    intro = f"<p><strong>{game_name}</strong> ({year}), developed by {publisher}, is explored in depth below. This review covers gameplay walkthroughs and cheat codes.</p>"
-    parts.append(intro)
-    walkthrough_sentences = [
-        "The game starts with a tutorial guiding new players through the core mechanics.",
-        "Early levels introduce basic enemies and gradually increase the difficulty.",
-        "Players will encounter several side quests that enrich the main storyline.",
-        "Inventory management and crafting play a key role in progression.",
-        "Boss fights require strategic use of character skills and abilities.",
-        "Certain areas hide collectibles and secrets that reward exploration.",
-        "Multiplayer or co-op challenges provide additional replay value.",
-        "Advanced techniques and combos can be learned for mastery.",
-        "Leveling up characters unlocks new abilities and perks.",
-        "Some puzzles require logical thinking and observation skills.",
-        "Story-driven choices can affect game outcomes and endings.",
-        "Timed challenges test player reflexes and decision-making.",
-        "Exploration of optional zones gives bonus items and experience.",
-        "Achievements can be unlocked by completing specific objectives.",
-        "Replay modes allow experimentation with different strategies.",
-    ]
-    cheat_sentences = [
-        "Using the console command `godmode` enables invincibility.",
-        "Entering `unlock_all_weapons` grants access to all weapons instantly.",
-        "The `add_gold 1000` cheat adds gold to your inventory.",
-        "Using `noclip` allows walking through walls.",
-        "Cheat codes may vary between platform versions.",
-        "Some cheats are hidden and discovered through exploration.",
-        "Always save progress before using cheats to avoid issues.",
-        "Certain cheats affect achievements and may disable them.",
-        "Debug mode can be activated for testing new features.",
-        "Combining specific cheats can produce unexpected effects.",
-    ]
-    for i in range(15):
-        if i % 2 == 0 and i//2 < len(walkthrough_sentences):
-            parts.append(f"<p>{walkthrough_sentences[i//2]}</p>")
-        elif i//2 < len(cheat_sentences):
-            parts.append(f"<p>{cheat_sentences[i//2]}</p>")
-    conclusion = "<p>Overall, this game provides a mix of exploration, strategy, and fun. Use the tips and cheats wisely to enhance your gameplay.</p>"
-    parts.append(conclusion)
-    return "\n".join(parts)
+def build_narrative_review(game):
+    name = game.get("name") or "Unknown Game"
+    release = game.get("released") or "Unknown"
+    developer = game.get("developers", [{}])[0].get("name", "Unknown Studio") if isinstance(game.get("developers"), list) else "Unknown Studio"
+    wiki_url = game.get("wiki_url") or f"https://en.wikipedia.org/wiki/{name.replace(' ','_')}"
+    steam_url = game.get("steam_url") or "#"
+    metacritic_url = game.get("metacritic_url") or "#"
 
-def generate_cheats_tips(game_name):
-    tips = [
-        "Use special abilities strategically to overcome tough enemies.",
-        "Collect resources early to prepare for late-game challenges.",
-        "Explore hidden areas to find rare items.",
-        "Experiment with different weapons and skills combinations.",
-        "Save frequently to avoid losing progress.",
-        "Learn enemy patterns to improve combat efficiency.",
-        "Complete side quests for bonus rewards.",
-        "Use fast travel to save time between zones.",
-        "Upgrade equipment as soon as possible for better performance.",
-        "Watch for environmental clues to solve puzzles.",
-        "Use stealth when facing stronger foes.",
-        "Combine items for special effects.",
-        "Take advantage of in-game tutorials for mastery.",
-        "Interact with NPCs to unlock hidden missions.",
-        "Prioritize main objectives to progress efficiently."
-    ]
-    if not tips:
-        return "<p>No cheats or tips found for this game.</p>"
+    paragraphs = []
+
+    paragraphs.append(f"I recently dived into **{name.upper()}** (Released: {release}) developed by **{developer}**. From the very first moments, I felt completely immersed in its unique world, where every corner tells a story. For more factual details, you can check [Wikipedia]({wiki_url}), the [Steam page]({steam_url}), or [Metacritic reviews]({metacritic_url}).")
+
+    # Narrative gameplay
+    paragraphs.append(f"As I wandered through the game, I found myself lost in the **breathtaking environments** and the intricate design of each level. Every sound, every shadow, made me feel like I was truly part of the world. The first combat encounter caught me off guard – I had to quickly learn the mechanics and adapt to survive, which made every victory feel like a personal achievement.")
+
+    # Tips and cheats narrative
+    if game.get("official_cheats") and len(game["official_cheats"]) > 0:
+        cheat_texts = []
+        for cheat in game["official_cheats"]:
+            cheat_texts.append(f"{cheat['description']} (Source: {cheat.get('source','official')})")
+        cheat_paragraph = " ".join(cheat_texts)
+        paragraphs.append(f"During my playthrough, I discovered **official tips and cheats**, such as: {cheat_paragraph}. Using them strategically enriched the experience without breaking immersion.")
     else:
-        items = "".join(f"<li>{tip}</li>" for tip in tips[:15])
-        return f"<ul>{items}</ul>"
+        paragraphs.append("I searched online but could not find any official cheats or tips for this game. All experiences come purely from personal gameplay.")
+
+    # Exploration and multiplayer
+    paragraphs.append(f"Exploring the game further, hidden secrets and side quests kept me entertained for hours. Multiplayer or cooperative modes added extra **thrills**, requiring teamwork and strategy. Every match felt fresh and exciting, keeping me coming back.")
+
+    # More gameplay depth
+    paragraphs.append(f"Learning the abilities and mastering the controls was satisfying. Subtle details like weapon sounds, character animations, or vehicle handling made the experience tangible. I particularly enjoyed moments where timing and strategic thinking gave me an edge in challenging situations.")
+
+    # Concluding immersive paragraph
+    paragraphs.append(f"Overall, **{name}** provided an unforgettable adventure. The combination of story, gameplay, and atmosphere created a rich experience that I would love to revisit. Every session felt like a new story to be told and shared with friends.")
+
+    return "\n\n".join(paragraphs)
 
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
     name = rating.get("name") if isinstance(rating, dict) else str(rating)
     return f"{name}*" if name else "Not specified*"
 
-# ==============
-# POST GENERATION
-# ==============
-def generate_post_for_game(game):
+def generate_more_to_explore(posts, n=3):
+    selected = random.sample(posts, min(n, len(posts)))
+    html = '<section class="more-to-explore">\n<h2>More to Explore</h2>\n<div class="explore-grid">\n'
+    for post in selected:
+        html += f'''
+        <div class="explore-item">
+            <a href="../{post['url']}">
+                <img src="../{post['cover']}" alt="{post['title']}">
+                <div class="explore-item-title">{post['title']}</div>
+            </a>
+        </div>
+        '''
+    html += '</div>\n</section>\n'
+    return html
+
+def post_footer_html():
+    footer = f"""
+    <section class="footer">
+      <div class="row">
+        <div>
+          <p class="tiny">
+            <a href="../terms.html" target="_blank">
+              You can read all terms and conditions by clicking here.
+            </a>
+          </p>
+        </div>
+      </div>
+      <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
+    </section>
+    """
+    return footer
+
+def generate_post_for_game(game, all_posts):
     name = game.get("name") or "Unknown Game"
     slug = slugify(name)
     filename = f"{slug}.html"
@@ -218,35 +214,26 @@ def generate_post_for_game(game):
         print(f"⚠️  Post already exists for '{name}' -> {filename} (skipping)")
         return None
 
-    img_url = game.get("background_image") or game.get("background_image_additional") or ""
+    img_url = game.get("background_image") or ""
     img_filename = f"{slug}.jpg"
     img_path = os.path.join(PICTURE_DIR, img_filename)
-
-    if os.path.exists(img_path):
-        print(f"⚠️  Image already exists for '{name}' -> {img_filename} (skipping)")
-        return None
-
-    if img_url:
-        ok = download_image(img_url, img_path)
-        if not ok:
+    if not os.path.exists(img_path):
+        if img_url:
+            ok = download_image(img_url, img_path)
+            if not ok:
+                ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
+                download_image(ph_url, img_path)
+        else:
             ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
             download_image(ph_url, img_path)
-    else:
-        ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
-        download_image(ph_url, img_path)
 
     youtube_embed = get_youtube_embed(name)
-
-    year = game.get("released") or ""
-    publisher = game.get("publisher") or game.get("developers", [{}])[0].get("name", "") if isinstance(game.get("developers"), list) else ""
-    review_html = build_long_review(name, publisher or "the studio", year)
-    cheats_html = generate_cheats_tips(name)
+    review_html = build_narrative_review(game)
     age_rating = get_age_rating(game)
 
     now = datetime.datetime.now()
-    title = f"{name} Cheats, Tips & Full Review"
+    title = f"{name} Full Narrative Review"
     cover_src = f"../{PICTURE_DIR}/{img_filename}"
-    footer_block = post_footer_html()
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -254,18 +241,22 @@ def generate_post_for_game(game):
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>{title}</title>
-  <meta name="description" content="Cheats, tips and a long review for {name}."/>
+  <meta name="description" content="Narrative review and immersive gameplay experience of {name}."/>
   <style>
     :root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
-    html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}}
+    html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;font-size:18px}}
     .wrap{{max-width:900px;margin:24px auto;padding:18px;background:var(--panel);border-radius:12px;border:1px solid var(--border)}}
     img.cover{{width:100%;height:auto;border-radius:8px;display:block}}
     h1{{margin:10px 0 6px;font-size:28px}}
     h2{{margin-top:18px}}
     p{{color:var(--text);line-height:1.6}}
     .tiny{{color:var(--muted);font-size:13px}}
-    .ad{{background:linear-gradient(180deg,rgba(255,209,102,.06),transparent);padding:12px;border-radius:10px;border:1px dashed #ffd166;color:var(--text)}}
     a{{color:var(--accent)}}
+    .more-to-explore{{margin-top:32px}}
+    .explore-grid{{display:flex;gap:12px;flex-wrap:wrap}}
+    .explore-item{{flex:1 1 calc(33.333% - 8px);border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--card)}}
+    .explore-item img{{width:100%;display:block}}
+    .explore-item-title{{padding:6px;color:var(--text);font-size:14px;text-align:center}}
   </style>
 </head>
 <body>
@@ -273,27 +264,17 @@ def generate_post_for_game(game):
     <a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
     <h1>{title}</h1>
     <img class="cover" src="{cover_src}" alt="{name} cover"/>
-    <h2>About the Game</h2>
-    <ul>
-      <li><strong>Release:</strong> {year}</li>
-      <li><strong>Recommended Age:</strong> {age_rating}</li>
-      <li><strong>Platforms:</strong> {', '.join([p['platform']['name'] for p in game.get('platforms', [])]) if game.get('platforms') else '—'}</li>
-    </ul>
-    <h2>Full Review</h2>
     {review_html}
     <h2>Gameplay Video</h2>
     <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
-    <h2>Cheats & Tips</h2>
-    {cheats_html}
-
-    <h2 class="tiny">AI Rating</h2>
-    <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
-
-    {footer_block}
+    <!-- More to Explore -->
+    {generate_more_to_explore([p for p in all_posts if p['title'] != name])}
+    {post_footer_html()}
   </div>
 </body>
 </html>
 """
+
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
 
@@ -301,8 +282,7 @@ def generate_post_for_game(game):
         "title": name,
         "url": f"{OUTPUT_DIR}/{filename}",
         "platform": [p['platform']['name'] for p in game.get('platforms', [])] if game.get('platforms') else [],
-        "date": now.strftime("%Y-%m-%d"),
-        "rating": round(random.uniform(2.5,5.0),1),
+        "date": now.strftime("%Y-%m-%d %H:%M:%S"),
         "cover": f"{PICTURE_DIR}/{img_filename}",
         "views": 0,
         "comments": 0
@@ -334,7 +314,6 @@ def gather_candidates(total_needed, num_popular):
         attempts += 1
 
     collected = []
-    page = 1
     attempts = 0
     while len(collected) < (total_needed - len(popular_candidates)) and attempts < 12:
         try:
@@ -351,95 +330,16 @@ def gather_candidates(total_needed, num_popular):
     random_candidates = collected[:needed]
     return random_candidates, popular_candidates
 
-def post_footer_html():
-    footer = """
-    <hr>
-    <section class="ad">
-      <h3>Earn Real Money While You Play 📱</h3>
-      <p>Simple passive income by sharing a bit of your internet. Runs in the background while you game.</p>
-      <p><a href="https://r.honeygain.me/NAGYT86DD6" target="_blank"><strong>Try Honeygain now</strong></a></p>
-      <div class="tiny">Sponsored. Use at your own discretion.</div>
-    </section>
-    <div class="row" style="margin-top:12px">
-      <div class="ad" style="border-style:solid;border-color:#1f2a38">
-        <h3>IC Markets – Trade like a pro 🌍</h3>
-        <p><a href="https://icmarkets.com/?camp=3992" target="_blank">Open an account</a></p>
-      </div>
-      <div class="ad" style="border-style:solid;border-color:#1f2a38">
-        <h3>Dukascopy – Promo code: <code>E12831</code> 🏦</h3>
-        <p><a href="https://www.dukascopy.com/api/es/12831/type-S/target-id-149" target="_blank">Start here</a></p>
-      </div>
-    </div>
-    <section class="footer">
-      <div class="row">
-        <div>
-          <strong>Comment Policy</strong>
-          <ul class="list tiny">
-            <li>No spam, ads, or offensive content.</li>
-            <li>No adult/drugs/war/terror topics.</li>
-            <li>Max 10 comments/day per person.</li>
-            <li>Be respectful. We moderate strictly.</li>
-          </ul>
-        </div>
-        <div>
-          <strong>Terms</strong>
-          <p class="tiny">All content is for informational/entertainment purposes only. Trademarks belong to their respective owners. Affiliate links may generate commissions.</p>
-        </div>
-      </div>
-      <p class="tiny">© {year} AI Gaming Blog</p>
-    </section>
-    """.format(year=datetime.datetime.now().year)
-    return footer
-
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--num_posts", type=int, default=NUM_TOTAL)
-    args = parser.parse_args()
-    total = args.num_posts
-
-    existing_posts = read_index_posts()
-    existing_titles = set(p.get("title","").lower() for p in existing_posts)
-    existing_filenames = set(os.path.basename(p.get("url","")) for p in existing_posts if p.get("url"))
-
-    random_candidates, popular_candidates = gather_candidates(total, NUM_POPULAR)
-    candidates = []
-    candidates.extend(popular_candidates)
-    candidates.extend(random_candidates)
-
-    posts_added = []
-    for cand in candidates:
-        name = cand.get("name","").strip()
-        if not name:
-            continue
-        slug = slugify(name)
-        filename = f"{slug}.html"
-        if name.lower() in existing_titles or filename in existing_filenames or os.path.exists(os.path.join(PICTURE_DIR, f"{slug}.jpg")):
-            print(f"Skipping '{name}' (already exists).")
-            continue
-        post = generate_post_for_game(cand)
+    all_posts = read_index_posts()
+    random_candidates, popular_candidates = gather_candidates(NUM_TOTAL, NUM_POPULAR)
+    selected_games = popular_candidates + random_candidates
+    for game in selected_games:
+        post = generate_post_for_game(game, all_posts)
         if post:
-            posts_added.append(post)
-            existing_titles.add(post["title"].lower())
-            existing_filenames.add(os.path.basename(post["url"]))
-        time.sleep(0.7)
-
-    combined = posts_added + existing_posts
-    seen = set()
-    unique_posts = []
-    for p in combined:
-        t = p.get("title","").lower()
-        if t in seen:
-            continue
-        seen.add(t)
-        unique_posts.append(p)
-
-    unique_posts.sort(key=lambda x: x.get("date",""), reverse=True)
-    write_index_posts(unique_posts)
-
-    print(f"Done. New posts added: {len(posts_added)}")
-    if posts_added:
-        for p in posts_added:
-            print(" -", p["title"], "->", p["url"])
+            all_posts.append(post)
+    all_posts.sort(key=lambda x: x.get("date", ""), reverse=True)
+    write_index_posts(all_posts)
 
 if __name__ == "__main__":
     main()
