@@ -141,24 +141,29 @@ def build_narrative_review(game):
 
     paragraphs = []
 
-    paragraphs.append(f"I recently dived into **{name.upper()}** (Released: {release}) developed by **{developer}**. From the first moment, I felt immersed in its **AMAZING WORLD**. For details, check [Wikipedia]({wiki_url}), [Steam page]({steam_url}), or [Metacritic]({metacritic_url}).")
+    paragraphs.append(f"I recently dived into **{name.upper()}** (Released: {release}) developed by **{developer}**. From the very first moments, I felt completely immersed in its unique world, where every corner tells a story. For more factual details, you can check [Wikipedia]({wiki_url}), the [Steam page]({steam_url}), or [Metacritic reviews]({metacritic_url}).")
 
-    paragraphs.append(f"As I explored, the **environments and level design** were breathtaking. Every shadow, every sound made the adventure feel real. The first combat surprised me – learning the mechanics was a thrill, and victories felt personally rewarding.")
+    # Narrative gameplay
+    paragraphs.append(f"As I wandered through the game, I found myself lost in the **breathtaking environments** and the intricate design of each level. Every sound, every shadow, made me feel like I was truly part of the world. The first combat encounter caught me off guard – I had to quickly learn the mechanics and adapt to survive, which made every victory feel like a personal achievement.")
 
+    # Tips and cheats narrative
     if game.get("official_cheats"):
         cheat_texts = []
         for cheat in game["official_cheats"]:
             cheat_texts.append(f"{cheat['description']} (Source: {cheat.get('source','official')})")
         cheat_paragraph = " ".join(cheat_texts)
-        paragraphs.append(f"During play, I used official tips/cheats: {cheat_paragraph}. They enhanced the experience without breaking immersion.")
+        paragraphs.append(f"During my playthrough, I discovered official tips and cheats, such as: {cheat_paragraph}. Using them strategically enriched the experience without breaking immersion.")
     else:
-        paragraphs.append("I searched online but found **no official cheats or tips**, so all experiences are from personal gameplay.")
+        paragraphs.append("I couldn't find any official cheats or tips online, so all experiences come purely from personal gameplay.")
 
-    paragraphs.append(f"Hidden secrets and side quests kept me entertained for hours. Multiplayer or co-op added **EXCITEMENT**, requiring strategy and teamwork. Every match felt fresh and engaging.")
+    # Exploration and multiplayer
+    paragraphs.append(f"Exploring the game further, hidden secrets and side quests kept me entertained for hours. Multiplayer or cooperative modes added extra **thrills**, requiring teamwork and strategy. Every match felt fresh and exciting, keeping me coming back.")
 
-    paragraphs.append(f"Mastering abilities and controls was satisfying. Weapon sounds, character animations, vehicle handling – all details made gameplay tangible. Timing and strategy often gave me an edge in challenges.")
+    # More gameplay depth
+    paragraphs.append(f"Learning the abilities and mastering the controls was satisfying. Subtle details like weapon sounds, character animations, or vehicle handling made the experience tangible. I particularly enjoyed moments where timing and strategic thinking gave me an edge in challenging situations.")
 
-    paragraphs.append(f"Patch updates and improvements influenced strategies, keeping tips relevant. Overall, **{name}** provided an unforgettable adventure. Each session felt like a new story to tell friends, full of discoveries and thrills.")
+    # Concluding immersive paragraph
+    paragraphs.append(f"Overall, **{name}** provided an unforgettable adventure. The combination of story, gameplay, and atmosphere created a rich experience that I would love to revisit. Every session felt like a new story to be told and shared with friends.")
 
     return "\n\n".join(paragraphs)
 
@@ -238,4 +243,103 @@ def generate_post_for_game(game, all_posts):
   <title>{title}</title>
   <meta name="description" content="Narrative review and immersive gameplay experience of {name}."/>
   <style>
-   
+    :root{{--bg:#0b0f14;--panel:#121821;--muted:#9fb0c3;--text:#eaf1f8;--accent:#5cc8ff;--card:#0f141c;--border:#1f2a38}}
+    html,body{{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}}
+    .wrap{{max-width:900px;margin:24px auto;padding:18px;background:var(--panel);border-radius:12px;border:1px solid var(--border)}}
+    img.cover{{width:100%;height:auto;border-radius:8px;display:block}}
+    h1{{margin:10px 0 6px;font-size:28px}}
+    h2{{margin-top:18px}}
+    p{{color:var(--text);line-height:1.6}}
+    .tiny{{color:var(--muted);font-size:13px}}
+    a{{color:var(--accent)}}
+    .more-to-explore{{margin-top:32px}}
+    .explore-grid{{display:flex;gap:12px;flex-wrap:wrap}}
+    .explore-item{{flex:1 1 calc(33.333% - 8px);border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--card)}}
+    .explore-item img{{width:100%;display:block}}
+    .explore-item-title{{padding:6px;color:var(--text);font-size:14px;text-align:center}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" style="color:var(--accent)">⬅ Back to Home</a>
+    <h1>{title}</h1>
+    <img class="cover" src="{cover_src}" alt="{name} cover"/>
+    {review_html}
+    <h2>Gameplay Video</h2>
+    <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
+    <!-- More to Explore -->
+    {generate_more_to_explore([p for p in all_posts if p['title'] != name])}
+    {post_footer_html()}
+  </div>
+</body>
+</html>
+"""
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(html)
+
+    post_dict = {
+        "title": name,
+        "url": f"{OUTPUT_DIR}/{filename}",
+        "platform": [p['platform']['name'] for p in game.get('platforms', [])] if game.get('platforms') else [],
+        "date": now.strftime("%Y-%m-%d %H:%M:%S"),
+        "cover": f"{PICTURE_DIR}/{img_filename}",
+        "views": 0,
+        "comments": 0
+    }
+    print(f"✅ Generated post: {out_path}")
+    return post_dict
+
+# ==============
+# MAIN FLOW
+# ==============
+def gather_candidates(total_needed, num_popular):
+    random_candidates = []
+    popular_candidates = []
+    attempts = 0
+    page = 1
+    while len(popular_candidates) < num_popular and attempts < 8:
+        try:
+            res = rawg_get_popular(page=page)
+            if not res:
+                break
+            for g in res:
+                if len(popular_candidates) >= num_popular:
+                    break
+                popular_candidates.append(g)
+            page += 1
+        except Exception as e:
+            print("RAWG popular fetch error:", e)
+            break
+        attempts += 1
+
+    collected = []
+    attempts = 0
+    while len(collected) < (total_needed - len(popular_candidates)) and attempts < 12:
+        try:
+            page_rand = random.randint(1, 20)
+            res = rawg_search_random(page=page_rand)
+            if res:
+                collected.extend(res)
+        except Exception as e:
+            print("RAWG fetch error:", e)
+        attempts += 1
+
+    random.shuffle(collected)
+    needed = total_needed - len(popular_candidates)
+    random_candidates = collected[:needed]
+    return random_candidates, popular_candidates
+
+def main():
+    all_posts = read_index_posts()
+    random_candidates, popular_candidates = gather_candidates(NUM_TOTAL, NUM_POPULAR)
+    selected_games = popular_candidates + random_candidates
+    for game in selected_games:
+        post = generate_post_for_game(game, all_posts)
+        if post:
+            all_posts.append(post)
+    all_posts.sort(key=lambda x: x.get("date", ""), reverse=True)
+    write_index_posts(all_posts)
+
+if __name__ == "__main__":
+    main()
