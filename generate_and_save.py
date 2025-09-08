@@ -5,18 +5,16 @@
 
 import os
 import random
-import argparse
 import datetime
 import json
-import time
 import re
 from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 
-# ==============
-# SETTINGS (API kulcsok beállítva)
-# ==============
+# ======================
+# SETTINGS
+# ======================
 OUTPUT_DIR = "generated_posts"
 INDEX_FILE = "index.html"
 PICTURE_DIR = "Picture"
@@ -32,9 +30,9 @@ USER_AGENT = "AI-Gaming-Blog-Agent/1.0"
 Path(OUTPUT_DIR).mkdir(exist_ok=True)
 Path(PICTURE_DIR).mkdir(exist_ok=True)
 
-# ==============
+# ======================
 # HELPERS
-# ==============
+# ======================
 def slugify(name):
     s = name.strip().lower()
     s = re.sub(r"[^\w\s-]", "", s)
@@ -131,83 +129,52 @@ def write_index_posts(all_posts):
         f.write(new_html)
     print("✅ index.html POSTS updated.")
 
-# ==============
-# NEW HELPERS FOR CONTENT
-# ==============
-def build_long_review(game_name, publisher, year):
-    parts = []
-    intro = f"<p><strong>{game_name}</strong> ({year}), developed by {publisher}, is explored in depth below. This review covers gameplay walkthroughs and cheat codes.</p>"
-    parts.append(intro)
-    walkthrough_sentences = [
-        "The game starts with a tutorial guiding new players through the core mechanics.",
-        "Early levels introduce basic enemies and gradually increase the difficulty.",
-        "Players will encounter several side quests that enrich the main storyline.",
-        "Inventory management and crafting play a key role in progression.",
-        "Boss fights require strategic use of character skills and abilities.",
-        "Certain areas hide collectibles and secrets that reward exploration.",
-        "Multiplayer or co-op challenges provide additional replay value.",
-        "Advanced techniques and combos can be learned for mastery.",
-        "Leveling up characters unlocks new abilities and perks.",
-        "Some puzzles require logical thinking and observation skills.",
-        "Story-driven choices can affect game outcomes and endings.",
-        "Timed challenges test player reflexes and decision-making.",
-        "Exploration of optional zones gives bonus items and experience.",
-        "Achievements can be unlocked by completing specific objectives.",
-        "Replay modes allow experimentation with different strategies.",
+# ======================
+# NEW REVIEW & CHEATS (RAWG BASED, NARRATIVE)
+# ======================
+def build_long_review(game):
+    """Generál egy emberi stílusú, narratív review-t a RAWG description_raw alapján."""
+    description = game.get("description_raw") or ""
+    if not description:
+        description = f"{game.get('name', 'This game')} is an engaging title with exciting gameplay mechanics."
+    publisher = game.get("publisher") or (game.get("developers", [{}])[0].get("name", "Unknown Studio") if isinstance(game.get("developers"), list) else "Unknown Studio")
+    year = game.get("released") or "Unknown Year"
+    
+    paragraphs = [
+        f"<p><strong>{game.get('name')}</strong> ({year}), developed by {publisher}, offers the following experience:</p>",
+        f"<p>{description}</p>",
+        "<p>Players will enjoy a mix of strategy, action, and exploration, with mechanics that reward skill and creativity.</p>",
+        "<p>Challenge yourself with the game’s levels, side missions, and unlockables to maximize replay value.</p>",
+        "<p>The game’s graphics and audio create an immersive atmosphere appropriate for its genre.</p>"
     ]
-    cheat_sentences = [
-        "Using the console command `godmode` enables invincibility.",
-        "Entering `unlock_all_weapons` grants access to all weapons instantly.",
-        "The `add_gold 1000` cheat adds gold to your inventory.",
-        "Using `noclip` allows walking through walls.",
-        "Cheat codes may vary between platform versions.",
-        "Some cheats are hidden and discovered through exploration.",
-        "Always save progress before using cheats to avoid issues.",
-        "Certain cheats affect achievements and may disable them.",
-        "Debug mode can be activated for testing new features.",
-        "Combining specific cheats can produce unexpected effects.",
-    ]
-    for i in range(15):
-        if i % 2 == 0 and i//2 < len(walkthrough_sentences):
-            parts.append(f"<p>{walkthrough_sentences[i//2]}</p>")
-        elif i//2 < len(cheat_sentences):
-            parts.append(f"<p>{cheat_sentences[i//2]}</p>")
-    conclusion = "<p>Overall, this game provides a mix of exploration, strategy, and fun. Use the tips and cheats wisely to enhance your gameplay.</p>"
-    parts.append(conclusion)
-    return "\n".join(parts)
+    return "\n".join(paragraphs)
 
-def generate_cheats_tips(game_name):
-    tips = [
-        "Use special abilities strategically to overcome tough enemies.",
-        "Collect resources early to prepare for late-game challenges.",
-        "Explore hidden areas to find rare items.",
-        "Experiment with different weapons and skills combinations.",
-        "Save frequently to avoid losing progress.",
-        "Learn enemy patterns to improve combat efficiency.",
-        "Complete side quests for bonus rewards.",
-        "Use fast travel to save time between zones.",
-        "Upgrade equipment as soon as possible for better performance.",
-        "Watch for environmental clues to solve puzzles.",
-        "Use stealth when facing stronger foes.",
-        "Combine items for special effects.",
-        "Take advantage of in-game tutorials for mastery.",
-        "Interact with NPCs to unlock hidden missions.",
-        "Prioritize main objectives to progress efficiently."
-    ]
-    if not tips:
-        return "<p>No cheats or tips found for this game.</p>"
-    else:
-        items = "".join(f"<li>{tip}</li>" for tip in tips[:15])
-        return f"<ul>{items}</ul>"
+def generate_cheats_tips(game):
+    """Narrative style cheats & tips using RAWG tags and basic gameplay features."""
+    tips = []
+    # RAWG tags
+    if "tags" in game and game["tags"]:
+        tags = [t["name"] for t in game["tags"][:10]]
+        tips.append(f"Focus on key aspects of the game: {', '.join(tags)}.")
+    
+    tips.append("Explore hidden areas to discover special items or rewards.")
+    tips.append("Experiment with different weapons, tools, and strategies for optimal results.")
+    tips.append("Take advantage of tutorial sections and hints provided in the game.")
+    
+    html = "<ul>"
+    for tip in tips:
+        html += f"<li>{tip}</li>"
+    html += "</ul>"
+    return html
 
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
     name = rating.get("name") if isinstance(rating, dict) else str(rating)
     return f"{name}*" if name else "Not specified*"
 
-# ==============
-# MORE TO EXPLORE HELPER
-# ==============
+# ======================
+# MORE TO EXPLORE
+# ======================
 def generate_more_to_explore(posts, n=3):
     selected = random.sample(posts, min(n, len(posts)))
     html = '<section class="more-to-explore">\n'
@@ -224,9 +191,9 @@ def generate_more_to_explore(posts, n=3):
     html += '</div>\n</section>\n'
     return html
 
-# ==============
+# ======================
 # POST GENERATION
-# ==============
+# ======================
 def generate_post_for_game(game, all_posts):
     name = game.get("name") or "Unknown Game"
     slug = slugify(name)
@@ -253,10 +220,8 @@ def generate_post_for_game(game, all_posts):
 
     youtube_embed = get_youtube_embed(name)
 
-    year = game.get("released") or ""
-    publisher = game.get("publisher") or game.get("developers", [{}])[0].get("name", "") if isinstance(game.get("developers"), list) else ""
-    review_html = build_long_review(name, publisher or "the studio", year)
-    cheats_html = generate_cheats_tips(name)
+    review_html = build_long_review(game)
+    cheats_html = generate_cheats_tips(game)
     age_rating = get_age_rating(game)
 
     now = datetime.datetime.now()
@@ -296,7 +261,7 @@ def generate_post_for_game(game, all_posts):
     <img class="cover" src="{cover_src}" alt="{name} cover"/>
     <h2>About the Game</h2>
     <ul>
-      <li><strong>Release:</strong> {year}</li>
+      <li><strong>Release:</strong> {game.get('released') or 'Unknown'}</li>
       <li><strong>Recommended Age:</strong> {age_rating}</li>
       <li><strong>Platforms:</strong> {', '.join([p['platform']['name'] for p in game.get('platforms', [])]) if game.get('platforms') else '—'}</li>
     </ul>
@@ -306,13 +271,10 @@ def generate_post_for_game(game, all_posts):
     <iframe width="100%" height="400" src="{youtube_embed}" frameborder="0" allowfullscreen></iframe>
     <h2>Cheats & Tips</h2>
     {cheats_html}
-
     <h2 class="tiny">AI Rating</h2>
     <p class="tiny">⭐ {round(random.uniform(2.5,5.0),1)}/5</p>
 
-    <!-- More to Explore -->
     {generate_more_to_explore([p for p in all_posts if p['title'] != name])}
-
     {footer_block}
   </div>
 </body>
@@ -335,9 +297,9 @@ def generate_post_for_game(game, all_posts):
     print(f"✅ Generated post: {out_path}")
     return post_dict
 
-# ==============
+# ======================
 # MAIN FLOW
-# ==============
+# ======================
 def gather_candidates(total_needed, num_popular):
     random_candidates = []
     popular_candidates = []
@@ -377,8 +339,7 @@ def gather_candidates(total_needed, num_popular):
     return random_candidates, popular_candidates
 
 def post_footer_html():
-    footer = """
-    ...
+    footer = f"""
     <section class="footer">
       <div class="row">
         <div>
@@ -389,33 +350,21 @@ def post_footer_html():
           </p>
         </div>
       </div>
-      <p class="tiny">© {year} AI Gaming Blog</p>
+      <p class="tiny">© {datetime.datetime.now().year} AI Gaming Blog</p>
     </section>
-    """.format(year=datetime.datetime.now().year)
+    """
     return footer
 
 def main():
-    # Betöltjük a már meglévő posztokat az indexből
     all_posts = read_index_posts()
-
-    # Összegyűjtjük a generáláshoz szükséges játékokat
     random_candidates, popular_candidates = gather_candidates(NUM_TOTAL, NUM_POPULAR)
     selected_games = popular_candidates + random_candidates
-
-    # Generáljuk a posztokat minden játékhoz
     for game in selected_games:
         post = generate_post_for_game(game, all_posts)
         if post:
             all_posts.append(post)
-
-    # Rendezés dátum szerint (legújabb előre)
     all_posts.sort(key=lambda x: x.get("date", ""), reverse=True)
-
-    # Frissítjük az index.html fájlt az új posztokkal
     write_index_posts(all_posts)
-
 
 if __name__ == "__main__":
     main()
-
-
