@@ -26,3 +26,5 @@ git push origin main
 echo.
 echo ✅ Weboldal frissítve a GitHub Pages-en!
 echo 🔁 Ne felejtsd: frissítsd a böngészőt CTRL+F5-tel.
+
+pause
