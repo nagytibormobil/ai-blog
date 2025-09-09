@@ -1,1 +1,0 @@
-python generate_and_save.py --num_posts 5 --prompt_file prompts.txt
