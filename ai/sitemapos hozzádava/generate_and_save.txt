@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+# generate_and_save.py
+import os
+import argparse
+from datetime import datetime
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+
+OUTDIR_DEFAULT = "generated_posts"
+
+def ensure_dir(path):
+    os.makedirs(path, exist_ok=True)
+
+def load_model(model_name="gpt2"):
+    print("Modell és tokenizer betöltése:", model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    # ha nincs pad token, használjuk az eos-t
+    if tokenizer.pad_token is None:
+        tokenizer.add_special_tokens({'pad_token': tokenizer.eos_token})
+    model = AutoModelForCausalLM.from_pretrained(model_name)
+    # ha hozzáadtunk token-t, méreteket frissítjük
+    model.resize_token_embeddings(len(tokenizer))
+    device = torch.device("cpu")
+    model.to(device)
+    model.eval()
+    return tokenizer, model, device
+
+def generate_text(tokenizer, model, device, prompt, max_new_tokens=150, temperature=0.8, top_p=0.92):
+    inputs = tokenizer(prompt, return_tensors="pt")
+    inputs = {k: v.to(device) for k, v in inputs.items()}
+    try:
+        with torch.no_grad():
+            out = model.generate(
+                **inputs,
+                do_sample=True,
+                max_new_tokens=max_new_tokens,
+                temperature=temperature,
+                top_p=top_p,
+                pad_token_id=tokenizer.pad_token_id,
+                eos_token_id=tokenizer.eos_token_id,
+                repetition_penalty=1.1,
+                num_return_sequences=1
+            )
+    except TypeError:
+        # régebbi transformers esetén fallback max_length-re
+        max_length = inputs["input_ids"].shape[1] + max_new_tokens
+        with torch.no_grad():
+            out = model.generate(
