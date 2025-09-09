@@ -3,20 +3,19 @@ REM ===============================
 REM Weboldal frissítése GitHub Pages-re (index, postok, képek)
 REM ===============================
 
-REM Lépj a projekt könyvtárba
 cd /d C:\ai_blog
 
-REM Ellenőrizd a git státuszt
+REM Git státusz kiíratása
 git status
 
-REM Add hozzá az index.html-t, a postokat és a képeket
-git add index.html generated_posts/* Picture/*
+REM Add hozzá MINDEN fájlt (nem csak a három mappát)
+git add -A
 
-REM Commit üzenet (tetszőleges)
-git commit -m "Manual update: frissítés meglévő postokkal és képekkel"
+REM Commit üzenet dátummal
+git commit -m "Auto update: %date% %time%"
 
-REM Push a GitHub-ra
+REM Push a megfelelő branchre (ellenőrizd: main vagy gh-pages?)
 git push origin main
 
-echo Weboldal frissítve a GitHub Pages-en!
-pause
+echo.
+echo ✅ Weboldal frissítve a GitHub Pages-en!
