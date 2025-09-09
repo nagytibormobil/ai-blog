@@ -1,20 +1,14 @@
 @echo off
 REM ===============================
-REM Weboldal frissítése GitHub Pages-re (index, postok, képek)
+REM Weboldal frissítése GitHub Pages-re
 REM ===============================
 
 cd /d C:\ai_blog
 
-REM Másold át a friss tartalmakat a gyökérbe
-echo 🔄 Friss fájlok másolása a repo gyökerébe...
-xcopy /E /Y /I generated_posts generated_posts
-xcopy /E /Y /I Picture Picture
-copy /Y index.html index.html
-
-REM Git státusz kiíratása
+echo 🔄 Git státusz ellenőrzése...
 git status
 
-REM Add hozzá az összes változást
+REM Add hozzá az összes változást (index.html, generated_posts, Picture stb.)
 git add -A
 
 REM Commit üzenet dátummal és idővel
