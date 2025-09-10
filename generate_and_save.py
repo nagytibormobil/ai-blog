@@ -82,7 +82,7 @@ def get_youtube_embed(game_name):
             return f"https://www.youtube.com/embed/{video_id}"
     except Exception as e:
         print(f"Error fetching YouTube video for {game_name}: {e}")
-    return "https://www.youtube.com/embed/dQw4w9WgXcQ"
+    return "https://www.youtube.com/watch?v=p4GFQRyZpgg"
 
 def read_index_posts():
     if not os.path.exists(INDEX_FILE):
