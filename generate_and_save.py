@@ -127,60 +127,60 @@ def write_index_posts(all_posts):
     with open(INDEX_FILE, "w", encoding="utf-8") as f:
         f.write(new_html)
     print("✅ index.html POSTS updated.")
+
 # ==============
-# NARRATIVE CONTENT GENERATOR (ÚJ STÍLUS)
-# ==============
-# ==============
-# NARRATIVE CONTENT GENERATOR (Playful, kid-style storytelling, dynamic version)
+# NARRATIVE CONTENT GENERATOR (Playful, kid-style storytelling, detailed "Kreátor" style)
 # ==============
 def build_narrative_review(game):
     name = game.get("name") or "Ismeretlen Játék"
     release = game.get("released") or "Ismeretlen"
-    developer = (
-        game.get("developers", [{}])[0].get("name", "Ismeretlen Stúdió")
-        if isinstance(game.get("developers"), list)
-        else "Ismeretlen Stúdió"
-    )
-
-    marker = "<!--STYLE:CREATOR-->\n\n"
+    developer = game.get("developers", [{}])[0].get("name", "Ismeretlen Stúdió") if isinstance(game.get("developers"), list) else "Ismeretlen Stúdió"
 
     paragraphs = []
+
+    # MARKER - hogy a HTML-ben tudjuk, ez a "Kreátor" stílus
+    marker = "<!--STYLE:CREATOR-->\n\n"
 
     # Bevezetés
     paragraphs.append(
         f"Amikor először beléptem a **{name}** világába, teljesen ledöbbentem, mennyi mindent lehet csinálni. "
-        "Olyan volt, mintha kaptam volna egy hatalmas játszóteret, ahol minden pillanatban új kaland várt rám."
+        "Olyan volt, mintha kaptam volna egy hatalmas játszóteret, ahol autózhatok, repülhetek, vagy akár csak bolyonghatok a városban."
     )
 
     # Első élmény
     paragraphs.append(
-        "Az első dolog, amit kipróbáltam, rögtön hatalmas izgalmat hozott. "
-        "Ahogy elindultam, szinte éreztem, ahogy zakatol a szívem, és kíváncsi voltam, milyen őrült dolgok történnek majd."
+        "Az első dolog, amit kipróbáltam, persze az autólopás volt. "
+        "Beugrottam egy sportkocsiba, padlóig nyomtam a gázt, és a motor hangjától kirázott a hideg. "
+        "A város utcáin száguldani olyan volt, mintha egy versenyjátékban lennék, csak itt közben rendőrök üldöztek! "
+        "Amikor bekapcsolták a szirénát, zakatolni kezdett a szívem, és próbáltam sikátorokkal, hirtelen kanyarokkal vagy hegyi utakra meneküléssel lerázni őket."
     )
 
     # Vicces bakik
     paragraphs.append(
-        "A legviccesebb pillanatok mindig akkor jöttek, amikor teljesen máshogy alakult minden, mint terveztem. "
-        "Néha hatalmasat estem, néha teljesen félrement a tervem – de pont ettől lett az egész még szórakoztatóbb."
+        "A legviccesebb az volt, amikor először repülőt szereztem. Fogalmam sem volt, hogyan kell vezetni, "
+        "úgyhogy egyenesen az óceánba csapódtam vele! Persze nevettem rajta, és rögtön újra próbálkoztam. "
+        "Ugyanez történt a helikopterrel is – ügyetlen voltam, de közben teljesen szabadnak éreztem magam."
     )
 
-    # Karakterek / hangulat
+    # Karakterek
     paragraphs.append(
-        "A történetben megismert karakterek mind más miatt lettek különlegesek. "
-        "Egyesek viccesek, mások izgalmasak voltak, és néha úgy éreztem, mintha több külön játék keveredne egyetlen világban."
+        "A három főszereplő – Michael, Franklin és Trevor – mind teljesen más karakterek. "
+        "Trevor őrültségein sokszor csak röhögni tudtam, Franklin autós üldözései izgalmasak voltak, "
+        "Michael pedig igazi profi volt a rablásoknál. Olyan érzés volt, mintha három külön játékot kaptam volna egyben."
     )
 
-    # Multiplayer vagy társas élmény
+    # Multiplayer
     paragraphs.append(
-        "És persze ott volt az élmény, amikor nem egyedül játszottam. "
-        "Barátokkal együtt minden sokkal bolondosabb lett: nevettünk, trükköztünk, és mindig akadt valami váratlan fordulat."
+        "És persze ott volt a multiplayer is! A barátaimmal órákig tudtunk hülyéskedni: "
+        "versenyeztünk, bankot raboltunk, vagy repülőkkel próbáltunk trükközni. "
+        "Sokszor teljesen elrontottunk mindent, és végül csak nevetve menekültünk a rendőrök elől."
     )
 
     # Kitalált cheat-ek
     paragraphs.append(
-        "Néha elképzeltem, milyen lenne, ha lennének titkos cheat-ek. "
-        "Mondjuk egy gombnyomásra megkaphatnám a legmenőbb felszerelést, vagy örökké tartana a szupererőm. "
-        "Sajnos ezek csak a fejemben léteztek, de így még viccesebbé vált a játék."
+        "Néha azon gondolkodtam, milyen cheat-ek lennének még menőbbek. "
+        "Például, ha egy gombnyomással előhívhatnám a leggyorsabb autót, vagy ha örökké tarthatna a repülés. "
+        "Kár, hogy ezek csak a fejemben léteztek, de ettől lett még viccesebb az egész."
     )
 
     # Zárás
@@ -190,7 +190,8 @@ def build_narrative_review(game):
         "És a legjobb, hogy mindig történik valami őrültség, ami miatt újra és újra vissza akarok térni."
     )
 
-    return marker + "\n\n".join(paragraphs)
+    # Szépen tagolt HTML visszaadása
+    return marker + "\n\n".join(f"<p>{p}</p>" for p in paragraphs)
 
 
 
