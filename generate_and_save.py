@@ -135,37 +135,65 @@ def build_narrative_review(game):
     name = game.get("name") or "Unknown Game"
     release = game.get("released") or "Unknown"
     developer = game.get("developers", [{}])[0].get("name", "Unknown Studio") if isinstance(game.get("developers"), list) else "Unknown Studio"
-    wiki_url = game.get("wiki_url") or f"https://en.wikipedia.org/wiki/{name.replace(' ','_')}"
-    steam_url = game.get("steam_url") or "#"
-    metacritic_url = game.get("metacritic_url") or "#"
 
     paragraphs = []
 
-    paragraphs.append(f"I recently dived into **{name.upper()}** (Released: {release}) developed by **{developer}**. From the very first moments, I felt completely immersed in its unique world, where every corner tells a story. For more factual details, you can check [Wikipedia]({wiki_url}), the [Steam page]({steam_url}), or [Metacritic reviews]({metacritic_url}).")
+    # Intro - first impressions
+    paragraphs.append(
+        f"When I first started playing **{name}** (Release date: {release}, developer: {developer}), "
+        "it felt like I suddenly jumped into a whole new world. Right from the start it was super exciting, "
+        "and I couldn’t wait to see what the game had in store for me."
+    )
 
-    # Narrative gameplay
-    paragraphs.append(f"As I wandered through the game, I found myself lost in the **breathtaking environments** and the intricate design of each level. Every sound, every shadow, made me feel like I was truly part of the world. The first combat encounter caught me off guard – I had to quickly learn the mechanics and adapt to survive, which made every victory feel like a personal achievement.")
+    # Gameplay and experiences
+    paragraphs.append(
+        "The gameplay kept surprising me. Sometimes everything went smoothly, but other times it was so hard "
+        "that I almost wanted to rage quit. But that’s what made it fun: when I finally got through a tough part, "
+        "I felt so proud of myself, like I was a real hero. "
+        "The sounds, graphics, and controls were often really cool, but sometimes a bit weird too."
+    )
 
-    # Tips and cheats narrative
+    # Cheats / tips
     if game.get("official_cheats") and len(game["official_cheats"]) > 0:
-        cheat_texts = []
+        cheat_list = []
         for cheat in game["official_cheats"]:
-            cheat_texts.append(f"{cheat['description']} (Source: {cheat.get('source','official')})")
-        cheat_paragraph = " ".join(cheat_texts)
-        paragraphs.append(f"During my playthrough, I discovered **official tips and cheats**, such as: {cheat_paragraph}. Using them strategically enriched the experience without breaking immersion.")
+            src = cheat.get('source', 'internet')
+            cheat_list.append(f"- {cheat['description']} (Source: {src})")
+        cheat_text = "\n".join(cheat_list)
+        paragraphs.append(
+            "Guess what, I even found some cheat codes online! Trying them out was hilarious:\n"
+            f"{cheat_text}\n"
+            "It honestly felt like I had superpowers inside the game."
+        )
     else:
-        paragraphs.append("I searched online but could not find any official cheats or tips for this game. All experiences come purely from personal gameplay.")
+        paragraphs.append(
+            "I tried looking for cheat codes, but sadly I couldn’t find any. "
+            "It would be awesome to have one that makes me invincible, or helps me escape from enemies more easily! :)"
+        )
 
     # Exploration and multiplayer
-    paragraphs.append(f"Exploring the game further, hidden secrets and side quests kept me entertained for hours. Multiplayer or cooperative modes added extra **thrills**, requiring teamwork and strategy. Every match felt fresh and exciting, keeping me coming back.")
+    paragraphs.append(
+        "Exploring the maps was always fun: hidden spots, surprises, and lots of funny moments. "
+        "But the best part was when I played multiplayer with my friends. Sometimes we messed up and laughed like crazy, "
+        "other times we played like a real team, and in those moments I honestly felt like we were the best players in the world!"
+    )
 
-    # More gameplay depth
-    paragraphs.append(f"Learning the abilities and mastering the controls was satisfying. Subtle details like weapon sounds, character animations, or vehicle handling made the experience tangible. I particularly enjoyed moments where timing and strategic thinking gave me an edge in challenging situations.")
+    # Negatives (kid-style honesty)
+    paragraphs.append(
+        "Of course, not everything was perfect. Sometimes the graphics looked a little blurry, or the maps felt repetitive and boring. "
+        "Other times the sound effects didn’t feel real, more like plastic. These things bugged me a bit, "
+        "but they never stopped me from playing, because I was always excited to see what would happen next."
+    )
 
-    # Concluding immersive paragraph
-    paragraphs.append(f"Overall, **{name}** provided an unforgettable adventure. The combination of story, gameplay, and atmosphere created a rich experience that I would love to revisit. Every session felt like a new story to be told and shared with friends.")
+    # Closing
+    paragraphs.append(
+        f"Overall, I think **{name}** is a super cool game! "
+        "Whether I played alone or with friends, it always stayed exciting. "
+        "I’m definitely going to play it again, because it just gave me too many awesome memories."
+    )
 
     return "\n\n".join(paragraphs)
+
 
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
