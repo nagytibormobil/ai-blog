@@ -130,51 +130,67 @@ def write_index_posts(all_posts):
 # ==============
 # NARRATIVE CONTENT GENERATOR (ÚJ STÍLUS)
 # ==============
+
+# ==============
+# NARRATIVE CONTENT GENERATOR (Playful, kid-style storytelling)
+# ==============
 def build_narrative_review(game):
     name = game.get("name") or "Unknown Game"
     release = game.get("released") or "Unknown"
-    developer = game.get("developers", [{}])[0].get("name", "Unknown Studio") if isinstance(game.get("developers"), list) else "Unknown Studio"
+    developer = (
+        game.get("developers", [{}])[0].get("name", "Unknown Studio")
+        if isinstance(game.get("developers"), list)
+        else "Unknown Studio"
+    )
 
     paragraphs = []
 
-    # Új stílusú bevezetés
+    # Intro – playful and personal
     paragraphs.append(
-        f"**{name}** (Released: {release}, by {developer}) is an amazing adventure that pulled me in right away. "
-        "From the first moment, I was immersed in a vibrant world full of challenges and surprises."
+        f"When I first launched **{name}** (Released: {release}, by {developer}), "
+        "I felt like I jumped right into a brand-new adventure. The world looked huge, "
+        "bright, and full of surprises, and I just wanted to explore everything at once!"
     )
 
-    # Gameplay és élmények
+    # Exciting personal experience
     paragraphs.append(
-        "Every gameplay session brought something new: thrilling moments, funny mishaps, "
-        "and times that tested my skills. Overcoming difficult sections felt incredibly rewarding, "
-        "and the visuals and sounds made it all the more memorable."
+        "The very first thing I did was something silly: I grabbed a random vehicle "
+        "and just raced down the streets as fast as I could. The engine roared, lights "
+        "flashed around me, and I was laughing because it felt like I was inside a movie!"
     )
 
-    # Tippek, cheat-ek
+    # Favorite part with action
     paragraphs.append(
-        "I explored tricks and tips online—some were hilarious, some surprisingly useful! "
-        "It felt like discovering hidden superpowers inside the game."
+        "My favorite moments were when the police started chasing me. Sirens blaring, "
+        "red and blue lights everywhere, and I tried to escape any way I could. "
+        "Sometimes I jumped over ramps, sometimes I hid in alleys, and whenever I got away, "
+        "I felt like the smartest player in the world!"
     )
 
-    # Felfedezés, multiplayer
+    # Multiplayer / exploration fun
     paragraphs.append(
-        "Exploring every corner of the maps was exciting, and playing multiplayer with friends added a whole new layer of fun. "
-        "We laughed, strategized, and celebrated victories together, making the experience unforgettable."
+        "But it wasn’t only about racing or running. I explored every corner: climbing mountains, "
+        "flying planes, or just walking around and listening to the funny things people said. "
+        "And when I played multiplayer with friends, oh boy—we laughed so much! Someone always came up "
+        "with a crazy idea, like riding bicycles on the highway, and of course it ended in total chaos."
     )
 
-    # Negatívumok, őszinte vélemény
+    # Imaginary cheats / playful imagination
     paragraphs.append(
-        "Of course, not everything was perfect. Occasionally the graphics felt off, or some maps were repetitive. "
-        "Still, these minor flaws never stopped me from enjoying the game to its fullest."
+        "I even made up my own cheats in my head! Like, if I pressed some secret combo, "
+        "my car would suddenly become twice as fast. It wasn’t real, of course, "
+        "but pretending made the game even more fun."
     )
 
-    # Zárás
+    # Closing summary
     paragraphs.append(
-        f"In summary, **{name}** is a must-play! Whether solo or with friends, "
-        "it offers memorable experiences that I can't wait to revisit."
+        f"In the end, **{name}** wasn’t just a game for me, it was a giant playground full of laughter, "
+        "crazy ideas, and unforgettable adventures. Every time I think back, I remember that freedom "
+        "to do anything and the excitement of discovering new surprises."
     )
 
     return "\n\n".join(paragraphs)
+
 
 
 
