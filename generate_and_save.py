@@ -128,88 +128,45 @@ def write_index_posts(all_posts):
         f.write(new_html)
     print("✅ index.html POSTS updated.")
 
-# ==============================
-# Updated generate_dynamic_review (English, playful, kid-style)
-# ==============================
-def generate_dynamic_review(game):
+# ==============
+# NARRATIVE CONTENT GENERATOR
+# ==============
+def build_narrative_review(game):
+    name = game.get("name") or "Unknown Game"
+    release = game.get("released") or "Unknown"
+    developer = game.get("developers", [{}])[0].get("name", "Unknown Studio") if isinstance(game.get("developers"), list) else "Unknown Studio"
+    wiki_url = game.get("wiki_url") or f"https://en.wikipedia.org/wiki/{name.replace(' ','_')}"
+    steam_url = game.get("steam_url") or "#"
+    metacritic_url = game.get("metacritic_url") or "#"
+
     paragraphs = []
 
-    # 1. First impression
-    paragraphs.append(
-        f"When I first stepped into the world of {game['name']}, I was blown away by how much there was to do! "
-        "It felt like a giant playground full of surprises and adventures!"
-    )
+    paragraphs.append(f"I recently dived into **{name.upper()}** (Released: {release}) developed by **{developer}**. From the very first moments, I felt completely immersed in its unique world, where every corner tells a story. For more factual details, you can check [Wikipedia]({wiki_url}), the [Steam page]({steam_url}), or [Metacritic reviews]({metacritic_url}).")
 
-    # 2. First big adventure
-    genre = game.get('genre', '').lower()
-    if 'racing' in genre:
-        paragraphs.append(
-            "The first thing I tried was driving – oh, the thrill of pressing the gas pedal and hearing the engine roar! 🚗💨"
-        )
-    elif 'rpg' in genre:
-        paragraphs.append(
-            "The first quest I tackled was so exciting that I immediately got lost in the story! 🗡️✨"
-        )
-    elif 'strategy' in genre:
-        paragraphs.append(
-            "Planning my first moves and building my base was so much fun, I couldn’t stop! 🏰⚔️"
-        )
+    # Narrative gameplay
+    paragraphs.append(f"As I wandered through the game, I found myself lost in the **breathtaking environments** and the intricate design of each level. Every sound, every shadow, made me feel like I was truly part of the world. The first combat encounter caught me off guard – I had to quickly learn the mechanics and adapt to survive, which made every victory feel like a personal achievement.")
+
+    # Tips and cheats narrative
+    if game.get("official_cheats") and len(game["official_cheats"]) > 0:
+        cheat_texts = []
+        for cheat in game["official_cheats"]:
+            cheat_texts.append(f"{cheat['description']} (Source: {cheat.get('source','official')})")
+        cheat_paragraph = " ".join(cheat_texts)
+        paragraphs.append(f"During my playthrough, I discovered **official tips and cheats**, such as: {cheat_paragraph}. Using them strategically enriched the experience without breaking immersion.")
     else:
-        paragraphs.append(
-            "The first experiences were completely new and full of surprises!"
-        )
+        paragraphs.append("I searched online but could not find any official cheats or tips for this game. All experiences come purely from personal gameplay.")
 
-    # 3. Funny mishaps / challenges
-    paragraphs.append(
-        "There were plenty of funny and unexpected moments that made the game even more enjoyable! 😆🎮"
-    )
+    # Exploration and multiplayer
+    paragraphs.append(f"Exploring the game further, hidden secrets and side quests kept me entertained for hours. Multiplayer or cooperative modes added extra **thrills**, requiring teamwork and strategy. Every match felt fresh and exciting, keeping me coming back.")
 
-    # 4. Characters
-    characters = game.get('characters', [])
-    if characters:
-        char_list = ', '.join(characters)
-        paragraphs.append(
-            f"The characters – {char_list} – were all unique and added so much personality to the game."
-        )
+    # More gameplay depth
+    paragraphs.append(f"Learning the abilities and mastering the controls was satisfying. Subtle details like weapon sounds, character animations, or vehicle handling made the experience tangible. I particularly enjoyed moments where timing and strategic thinking gave me an edge in challenging situations.")
 
-    # 5. Multiplayer
-    if game.get('multiplayer'):
-        paragraphs.append(
-            "Playing with friends made everything even wackier: we laughed, tried crazy stunts, "
-            "and sometimes totally messed things up, but loved every moment! 🤪"
-        )
-
-    # 6. Special features
-    features = game.get('special_features', [])
-    if features:
-        features_list = ', '.join(features)
-        paragraphs.append(
-            f"The game also included special features like {features_list}, which made exploring even more fun!"
-        )
-
-    # 7. Official cheats / playful kid-style
-    cheats = game.get('cheats', [])
-    if cheats:
-        cheats_list = "\n- ".join(cheats)
-        paragraphs.append(
-            f"Yay! There are official cheats for the game! 🎉 Here’s what I found:\n- {cheats_list}"
-        )
-    else:
-        paragraphs.append(
-            "I really looked for cheats, but couldn’t find any 😢. Every fun moment was purely from my own skills!"
-        )
-
-    # 8. Summary
-    paragraphs.append(
-        f"Overall, {game['name']} was an amazing adventure full of surprises, laughter, and memorable moments. "
-        "I can't wait to jump back in and see what crazy things happen next! 🌟"
-    )
+    # Concluding immersive paragraph
+    paragraphs.append(f"Overall, **{name}** provided an unforgettable adventure. The combination of story, gameplay, and atmosphere created a rich experience that I would love to revisit. Every session felt like a new story to be told and shared with friends.")
 
     return "\n\n".join(paragraphs)
 
-# ==================
-# Other helpers
-# ==================
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
     name = rating.get("name") if isinstance(rating, dict) else str(rating)
@@ -247,9 +204,6 @@ def post_footer_html():
     """
     return footer
 
-# ==================
-# Updated generate_post_for_game
-# ==================
 def generate_post_for_game(game, all_posts):
     name = game.get("name") or "Unknown Game"
     slug = slugify(name)
@@ -260,8 +214,7 @@ def generate_post_for_game(game, all_posts):
         print(f"⚠️  Post already exists for '{name}' -> {filename} (skipping)")
         return None
 
-    # Image handling
-    img_url = game.get('background_image') or ""
+    img_url = game.get("background_image") or ""
     img_filename = f"{slug}.jpg"
     img_path = os.path.join(PICTURE_DIR, img_filename)
     if not os.path.exists(img_path):
@@ -274,12 +227,8 @@ def generate_post_for_game(game, all_posts):
             ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
             download_image(ph_url, img_path)
 
-    # YouTube embed
     youtube_embed = get_youtube_embed(name)
-
-    # USE dynamic review
-    review_html = generate_dynamic_review(game)
-
+    review_html = build_narrative_review(game)
     age_rating = get_age_rating(game)
 
     now = datetime.datetime.now()
@@ -341,9 +290,9 @@ def generate_post_for_game(game, all_posts):
     print(f"✅ Generated post: {out_path}")
     return post_dict
 
-# ==================
+# ==============
 # MAIN FLOW
-# ==================
+# ==============
 def gather_candidates(total_needed, num_popular):
     random_candidates = []
     popular_candidates = []
