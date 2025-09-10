@@ -127,9 +127,8 @@ def write_index_posts(all_posts):
     with open(INDEX_FILE, "w", encoding="utf-8") as f:
         f.write(new_html)
     print("✅ index.html POSTS updated.")
-
 # ==============
-# NARRATIVE CONTENT GENERATOR
+# NARRATIVE CONTENT GENERATOR (ÚJ STÍLUS)
 # ==============
 def build_narrative_review(game):
     name = game.get("name") or "Unknown Game"
@@ -138,61 +137,45 @@ def build_narrative_review(game):
 
     paragraphs = []
 
-    # Intro - first impressions
+    # Új stílusú bevezetés
     paragraphs.append(
-        f"When I first started playing **{name}** (Release date: {release}, developer: {developer}), "
-        "it felt like I suddenly jumped into a whole new world. Right from the start it was super exciting, "
-        "and I couldn’t wait to see what the game had in store for me."
+        f"**{name}** (Released: {release}, by {developer}) is an amazing adventure that pulled me in right away. "
+        "From the first moment, I was immersed in a vibrant world full of challenges and surprises."
     )
 
-    # Gameplay and experiences
+    # Gameplay és élmények
     paragraphs.append(
-        "The gameplay kept surprising me. Sometimes everything went smoothly, but other times it was so hard "
-        "that I almost wanted to rage quit. But that’s what made it fun: when I finally got through a tough part, "
-        "I felt so proud of myself, like I was a real hero. "
-        "The sounds, graphics, and controls were often really cool, but sometimes a bit weird too."
+        "Every gameplay session brought something new: thrilling moments, funny mishaps, "
+        "and times that tested my skills. Overcoming difficult sections felt incredibly rewarding, "
+        "and the visuals and sounds made it all the more memorable."
     )
 
-    # Cheats / tips
-    if game.get("official_cheats") and len(game["official_cheats"]) > 0:
-        cheat_list = []
-        for cheat in game["official_cheats"]:
-            src = cheat.get('source', 'internet')
-            cheat_list.append(f"- {cheat['description']} (Source: {src})")
-        cheat_text = "\n".join(cheat_list)
-        paragraphs.append(
-            "Guess what, I even found some cheat codes online! Trying them out was hilarious:\n"
-            f"{cheat_text}\n"
-            "It honestly felt like I had superpowers inside the game."
-        )
-    else:
-        paragraphs.append(
-            "I tried looking for cheat codes, but sadly I couldn’t find any. "
-            "It would be awesome to have one that makes me invincible, or helps me escape from enemies more easily! :)"
-        )
-
-    # Exploration and multiplayer
+    # Tippek, cheat-ek
     paragraphs.append(
-        "Exploring the maps was always fun: hidden spots, surprises, and lots of funny moments. "
-        "But the best part was when I played multiplayer with my friends. Sometimes we messed up and laughed like crazy, "
-        "other times we played like a real team, and in those moments I honestly felt like we were the best players in the world!"
+        "I explored tricks and tips online—some were hilarious, some surprisingly useful! "
+        "It felt like discovering hidden superpowers inside the game."
     )
 
-    # Negatives (kid-style honesty)
+    # Felfedezés, multiplayer
     paragraphs.append(
-        "Of course, not everything was perfect. Sometimes the graphics looked a little blurry, or the maps felt repetitive and boring. "
-        "Other times the sound effects didn’t feel real, more like plastic. These things bugged me a bit, "
-        "but they never stopped me from playing, because I was always excited to see what would happen next."
+        "Exploring every corner of the maps was exciting, and playing multiplayer with friends added a whole new layer of fun. "
+        "We laughed, strategized, and celebrated victories together, making the experience unforgettable."
     )
 
-    # Closing
+    # Negatívumok, őszinte vélemény
     paragraphs.append(
-        f"Overall, I think **{name}** is a super cool game! "
-        "Whether I played alone or with friends, it always stayed exciting. "
-        "I’m definitely going to play it again, because it just gave me too many awesome memories."
+        "Of course, not everything was perfect. Occasionally the graphics felt off, or some maps were repetitive. "
+        "Still, these minor flaws never stopped me from enjoying the game to its fullest."
+    )
+
+    # Zárás
+    paragraphs.append(
+        f"In summary, **{name}** is a must-play! Whether solo or with friends, "
+        "it offers memorable experiences that I can't wait to revisit."
     )
 
     return "\n\n".join(paragraphs)
+
 
 
 def get_age_rating(game):
