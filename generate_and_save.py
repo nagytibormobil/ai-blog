@@ -130,40 +130,40 @@ def write_index_posts(all_posts):
 
 # ==============
 
-# ==============================
-# Updated generate_dynamic_review (English, playful, kid-style)
-# ==============================
+# ==============
+# NARRATIVE CONTENT GENERATOR (Playful, kid-style storytelling) - English
+# ==============
 def generate_dynamic_review(game):
     paragraphs = []
 
     # 1. First impression
     paragraphs.append(
-        f"When I first stepped into the world of {game['name']}, I was blown away by how much there was to do! "
-        "It felt like a giant playground full of surprises and adventures!"
+        f"When I first stepped into the world of {game['name']}, I was blown away by how much there was to do. "
+        "It felt like being handed a giant playground full of surprises and adventures!"
     )
 
     # 2. First big adventure
     genre = game.get('genre', '').lower()
     if 'racing' in genre:
         paragraphs.append(
-            "The first thing I tried was driving – oh, the thrill of pressing the gas pedal and hearing the engine roar! 🚗💨"
+            "The first thing I tried was driving – oh, the thrill of pressing the gas pedal and feeling the engine roar!"
         )
     elif 'rpg' in genre:
         paragraphs.append(
-            "The first quest I tackled was so exciting that I immediately got lost in the story! 🗡️✨"
+            "The first quest I tackled was so exciting that I immediately got lost in the story."
         )
     elif 'strategy' in genre:
         paragraphs.append(
-            "Planning my first moves and building my base was so much fun, I couldn’t stop! 🏰⚔️"
+            "Planning my first moves and building my base was so much fun, I couldn’t stop!"
         )
     else:
         paragraphs.append(
-            "The first experiences were completely new and full of surprises!"
+            "The first experiences were completely new and full of surprises."
         )
 
     # 3. Funny mishaps / challenges
     paragraphs.append(
-        "There were plenty of funny and unexpected moments that made the game even more enjoyable! 😆🎮"
+        "There were plenty of funny and unexpected moments that made the whole experience even more enjoyable."
     )
 
     # 4. Characters
@@ -178,7 +178,7 @@ def generate_dynamic_review(game):
     if game.get('multiplayer'):
         paragraphs.append(
             "Playing with friends made everything even wackier: we laughed, tried crazy stunts, "
-            "and sometimes totally messed things up, but loved every moment! 🤪"
+            "and sometimes totally messed things up while having the best time ever."
         )
 
     # 6. Special features
@@ -186,29 +186,25 @@ def generate_dynamic_review(game):
     if features:
         features_list = ', '.join(features)
         paragraphs.append(
-            f"The game also included special features like {features_list}, which made exploring even more fun!"
+            f"The game also included special features like {features_list}, which made exploring even more fun."
         )
 
-    # 7. Official cheats / playful kid-style
+    # 7. Official cheats
     cheats = game.get('cheats', [])
     if cheats:
-        cheats_list = "\n- ".join(cheats)
+        cheats_list = ', '.join(cheats)
         paragraphs.append(
-            f"Yay! There are official cheats for the game! 🎉 Here’s what I found:\n- {cheats_list}"
-        )
-    else:
-        paragraphs.append(
-            "I really looked for cheats, but couldn’t find any 😢. Every fun moment was purely from my own skills!"
+            f"And if you like using cheats, the official ones include: {cheats_list}!"
         )
 
     # 8. Summary
     paragraphs.append(
         f"Overall, {game['name']} was an amazing adventure full of surprises, laughter, and memorable moments. "
-        "I can't wait to jump back in and see what crazy things happen next! 🌟"
+        "I can’t wait to jump back in and see what crazy things happen next!"
     )
 
+    # Join with double newlines for spacing (like paragraphs in HTML)
     return "\n\n".join(paragraphs)
-
 
 
 # ==================
