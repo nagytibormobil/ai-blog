@@ -130,61 +130,67 @@ def write_index_posts(all_posts):
 # ==============
 # NARRATIVE CONTENT GENERATOR (ÚJ STÍLUS)
 # ==============
-
 # ==============
-# NARRATIVE CONTENT GENERATOR (Playful, kid-style storytelling)
+# NARRATIVE CONTENT GENERATOR (Playful, kid-style storytelling, dynamic version)
 # ==============
 def build_narrative_review(game):
     name = game.get("name") or "Ismeretlen Játék"
     release = game.get("released") or "Ismeretlen"
-    developer = game.get("developers", [{}])[0].get("name", "Ismeretlen Stúdió") if isinstance(game.get("developers"), list) else "Ismeretlen Stúdió"
+    developer = (
+        game.get("developers", [{}])[0].get("name", "Ismeretlen Stúdió")
+        if isinstance(game.get("developers"), list)
+        else "Ismeretlen Stúdió"
+    )
+
+    marker = "<!--STYLE:CREATOR-->\n\n"
 
     paragraphs = []
 
-    # Bevezetés - első élmény
+    # Bevezetés
     paragraphs.append(
-        f"Amikor először elindítottam a **{name}** játékot (megjelenés: {release}, fejlesztő: {developer}), "
-        "olyan érzés volt, mintha hirtelen egy teljesen új világba csöppentem volna. "
-        "Azonnal elkapott az izgalom, és kíváncsi voltam, milyen kalandok várnak rám."
+        f"Amikor először beléptem a **{name}** világába, teljesen ledöbbentem, mennyi mindent lehet csinálni. "
+        "Olyan volt, mintha kaptam volna egy hatalmas játszóteret, ahol minden pillanatban új kaland várt rám."
     )
 
-    # Játékélmény - vicces és izgalmas helyzetek
+    # Első élmény
     paragraphs.append(
-        "Minden egyes játékmenet tartogatott valami újat: őrült pillanatokat, vicces bakikat, "
-        "és olyan kihívásokat, amik próbára tették az ügyességemet. "
-        "Amikor valamit sikerült megoldanom vagy teljesítenem, hatalmas büszkeséget éreztem."
+        "Az első dolog, amit kipróbáltam, rögtön hatalmas izgalmat hozott. "
+        "Ahogy elindultam, szinte éreztem, ahogy zakatol a szívem, és kíváncsi voltam, milyen őrült dolgok történnek majd."
     )
 
-    # Trükkök, kitalált cheat-ek
+    # Vicces bakik
     paragraphs.append(
-        "Néha azon gondolkodtam, milyen lenne, ha lennének titkos cheat-kódok! "
-        "Képzeltem, hogy egy gombnyomással szupererőt kapok, vagy kétszer olyan gyors lehetek. "
-        "Ezek persze csak a fejemben léteztek, de még viccesebbé tették a játékot."
+        "A legviccesebb pillanatok mindig akkor jöttek, amikor teljesen máshogy alakult minden, mint terveztem. "
+        "Néha hatalmasat estem, néha teljesen félrement a tervem – de pont ettől lett az egész még szórakoztatóbb."
     )
 
-    # Felfedezés, barátokkal játszás
+    # Karakterek / hangulat
     paragraphs.append(
-        "A világ felfedezése rengeteg élményt adott, és amikor barátokkal játszottam, "
-        "még szórakoztatóbb lett az egész. Együtt nevettünk, trükköztünk, "
-        "és közösen próbáltuk megoldani a nehéz helyzeteket."
+        "A történetben megismert karakterek mind más miatt lettek különlegesek. "
+        "Egyesek viccesek, mások izgalmasak voltak, és néha úgy éreztem, mintha több külön játék keveredne egyetlen világban."
     )
 
-    # Negatívumok – de könnyed hangon
+    # Multiplayer vagy társas élmény
     paragraphs.append(
-        "Persze nem volt mindig minden tökéletes. Néha a pályák ismétlődőnek tűntek, "
-        "vagy akadt egy-két bosszantó rész. De ezek egyáltalán nem vették el a kedvem, "
-        "sőt, inkább csak még nagyobb kihívásnak éreztem őket."
+        "És persze ott volt az élmény, amikor nem egyedül játszottam. "
+        "Barátokkal együtt minden sokkal bolondosabb lett: nevettünk, trükköztünk, és mindig akadt valami váratlan fordulat."
     )
 
-    # Zárás – összegzés
+    # Kitalált cheat-ek
     paragraphs.append(
-        f"Összességében a **{name}** számomra egy hatalmas élmény volt. "
-        "Tele van izgalmakkal, meglepetésekkel és rengeteg nevetéssel. "
-        "Ez az a játék, amihez mindig szívesen visszatérek, mert tudom, hogy újra átélhetem ezeket a kalandokat."
+        "Néha elképzeltem, milyen lenne, ha lennének titkos cheat-ek. "
+        "Mondjuk egy gombnyomásra megkaphatnám a legmenőbb felszerelést, vagy örökké tartana a szupererőm. "
+        "Sajnos ezek csak a fejemben léteztek, de így még viccesebbé vált a játék."
     )
 
-    return "\n\n".join(paragraphs)
+    # Zárás
+    paragraphs.append(
+        f"Összességében a **{name}** számomra nemcsak egy játék, hanem egy hatalmas játszótér, "
+        "ahol bármit kipróbálhatok, amit csak el tudok képzelni. "
+        "És a legjobb, hogy mindig történik valami őrültség, ami miatt újra és újra vissza akarok térni."
+    )
 
+    return marker + "\n\n".join(paragraphs)
 
 
 
