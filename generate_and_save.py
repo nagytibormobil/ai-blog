@@ -82,7 +82,7 @@ def get_youtube_embed(game_name):
             return f"https://www.youtube.com/embed/{video_id}"
     except Exception as e:
         print(f"Error fetching YouTube video for {game_name}: {e}")
-    return "https://www.youtube.com/watch?v=p4GFQRyZpgg"
+    return "https://www.youtube.com/embed/dQw4w9WgXcQ"
 
 def read_index_posts():
     if not os.path.exists(INDEX_FILE):
@@ -129,72 +129,43 @@ def write_index_posts(all_posts):
     print("✅ index.html POSTS updated.")
 
 # ==============
-# NARRATIVE CONTENT GENERATOR (Playful, kid-style storytelling, detailed "Kreátor" style)
+# NARRATIVE CONTENT GENERATOR
 # ==============
 def build_narrative_review(game):
-    name = game.get("name") or "Ismeretlen Játék"
-    release = game.get("released") or "Ismeretlen"
-    developer = game.get("developers", [{}])[0].get("name", "Ismeretlen Stúdió") if isinstance(game.get("developers"), list) else "Ismeretlen Stúdió"
+    name = game.get("name") or "Unknown Game"
+    release = game.get("released") or "Unknown"
+    developer = game.get("developers", [{}])[0].get("name", "Unknown Studio") if isinstance(game.get("developers"), list) else "Unknown Studio"
+    wiki_url = game.get("wiki_url") or f"https://en.wikipedia.org/wiki/{name.replace(' ','_')}"
+    steam_url = game.get("steam_url") or "#"
+    metacritic_url = game.get("metacritic_url") or "#"
 
     paragraphs = []
 
-    # MARKER - hogy a HTML-ben tudjuk, ez a "Kreátor" stílus
-    marker = "<!--STYLE:CREATOR-->\n\n"
+    paragraphs.append(f"I recently dived into **{name.upper()}** (Released: {release}) developed by **{developer}**. From the very first moments, I felt completely immersed in its unique world, where every corner tells a story. For more factual details, you can check [Wikipedia]({wiki_url}), the [Steam page]({steam_url}), or [Metacritic reviews]({metacritic_url}).")
 
-    # Bevezetés
-    paragraphs.append(
-        f"Amikor először beléptem a **{name}** világába, teljesen ledöbbentem, mennyi mindent lehet csinálni. "
-        "Olyan volt, mintha kaptam volna egy hatalmas játszóteret, ahol autózhatok, repülhetek, vagy akár csak bolyonghatok a városban."
-    )
+    # Narrative gameplay
+    paragraphs.append(f"As I wandered through the game, I found myself lost in the **breathtaking environments** and the intricate design of each level. Every sound, every shadow, made me feel like I was truly part of the world. The first combat encounter caught me off guard – I had to quickly learn the mechanics and adapt to survive, which made every victory feel like a personal achievement.")
 
-    # Első élmény
-    paragraphs.append(
-        "Az első dolog, amit kipróbáltam, persze az autólopás volt. "
-        "Beugrottam egy sportkocsiba, padlóig nyomtam a gázt, és a motor hangjától kirázott a hideg. "
-        "A város utcáin száguldani olyan volt, mintha egy versenyjátékban lennék, csak itt közben rendőrök üldöztek! "
-        "Amikor bekapcsolták a szirénát, zakatolni kezdett a szívem, és próbáltam sikátorokkal, hirtelen kanyarokkal vagy hegyi utakra meneküléssel lerázni őket."
-    )
+    # Tips and cheats narrative
+    if game.get("official_cheats") and len(game["official_cheats"]) > 0:
+        cheat_texts = []
+        for cheat in game["official_cheats"]:
+            cheat_texts.append(f"{cheat['description']} (Source: {cheat.get('source','official')})")
+        cheat_paragraph = " ".join(cheat_texts)
+        paragraphs.append(f"During my playthrough, I discovered **official tips and cheats**, such as: {cheat_paragraph}. Using them strategically enriched the experience without breaking immersion.")
+    else:
+        paragraphs.append("I searched online but could not find any official cheats or tips for this game. All experiences come purely from personal gameplay.")
 
-    # Vicces bakik
-    paragraphs.append(
-        "A legviccesebb az volt, amikor először repülőt szereztem. Fogalmam sem volt, hogyan kell vezetni, "
-        "úgyhogy egyenesen az óceánba csapódtam vele! Persze nevettem rajta, és rögtön újra próbálkoztam. "
-        "Ugyanez történt a helikopterrel is – ügyetlen voltam, de közben teljesen szabadnak éreztem magam."
-    )
+    # Exploration and multiplayer
+    paragraphs.append(f"Exploring the game further, hidden secrets and side quests kept me entertained for hours. Multiplayer or cooperative modes added extra **thrills**, requiring teamwork and strategy. Every match felt fresh and exciting, keeping me coming back.")
 
-    # Karakterek
-    paragraphs.append(
-        "A három főszereplő – Michael, Franklin és Trevor – mind teljesen más karakterek. "
-        "Trevor őrültségein sokszor csak röhögni tudtam, Franklin autós üldözései izgalmasak voltak, "
-        "Michael pedig igazi profi volt a rablásoknál. Olyan érzés volt, mintha három külön játékot kaptam volna egyben."
-    )
+    # More gameplay depth
+    paragraphs.append(f"Learning the abilities and mastering the controls was satisfying. Subtle details like weapon sounds, character animations, or vehicle handling made the experience tangible. I particularly enjoyed moments where timing and strategic thinking gave me an edge in challenging situations.")
 
-    # Multiplayer
-    paragraphs.append(
-        "És persze ott volt a multiplayer is! A barátaimmal órákig tudtunk hülyéskedni: "
-        "versenyeztünk, bankot raboltunk, vagy repülőkkel próbáltunk trükközni. "
-        "Sokszor teljesen elrontottunk mindent, és végül csak nevetve menekültünk a rendőrök elől."
-    )
+    # Concluding immersive paragraph
+    paragraphs.append(f"Overall, **{name}** provided an unforgettable adventure. The combination of story, gameplay, and atmosphere created a rich experience that I would love to revisit. Every session felt like a new story to be told and shared with friends.")
 
-    # Kitalált cheat-ek
-    paragraphs.append(
-        "Néha azon gondolkodtam, milyen cheat-ek lennének még menőbbek. "
-        "Például, ha egy gombnyomással előhívhatnám a leggyorsabb autót, vagy ha örökké tarthatna a repülés. "
-        "Kár, hogy ezek csak a fejemben léteztek, de ettől lett még viccesebb az egész."
-    )
-
-    # Zárás
-    paragraphs.append(
-        f"Összességében a **{name}** számomra nemcsak egy játék, hanem egy hatalmas játszótér, "
-        "ahol bármit kipróbálhatok, amit csak el tudok képzelni. "
-        "És a legjobb, hogy mindig történik valami őrültség, ami miatt újra és újra vissza akarok térni."
-    )
-
-    # Szépen tagolt HTML visszaadása
-    return marker + "\n\n".join(f"<p>{p}</p>" for p in paragraphs)
-
-
-
+    return "\n\n".join(paragraphs)
 
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
