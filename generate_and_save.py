@@ -128,42 +128,40 @@ def write_index_posts(all_posts):
         f.write(new_html)
     print("✅ index.html POSTS updated.")
 
-# ==============
-
-# ==============
-# NARRATIVE CONTENT GENERATOR (Playful, kid-style storytelling) - English
-# ==============
+# ==============================
+# Updated generate_dynamic_review (English, playful, kid-style)
+# ==============================
 def generate_dynamic_review(game):
     paragraphs = []
 
     # 1. First impression
     paragraphs.append(
-        f"When I first stepped into the world of {game['name']}, I was blown away by how much there was to do. "
-        "It felt like being handed a giant playground full of surprises and adventures!"
+        f"When I first stepped into the world of {game['name']}, I was blown away by how much there was to do! "
+        "It felt like a giant playground full of surprises and adventures!"
     )
 
     # 2. First big adventure
     genre = game.get('genre', '').lower()
     if 'racing' in genre:
         paragraphs.append(
-            "The first thing I tried was driving – oh, the thrill of pressing the gas pedal and feeling the engine roar!"
+            "The first thing I tried was driving – oh, the thrill of pressing the gas pedal and hearing the engine roar! 🚗💨"
         )
     elif 'rpg' in genre:
         paragraphs.append(
-            "The first quest I tackled was so exciting that I immediately got lost in the story."
+            "The first quest I tackled was so exciting that I immediately got lost in the story! 🗡️✨"
         )
     elif 'strategy' in genre:
         paragraphs.append(
-            "Planning my first moves and building my base was so much fun, I couldn’t stop!"
+            "Planning my first moves and building my base was so much fun, I couldn’t stop! 🏰⚔️"
         )
     else:
         paragraphs.append(
-            "The first experiences were completely new and full of surprises."
+            "The first experiences were completely new and full of surprises!"
         )
 
     # 3. Funny mishaps / challenges
     paragraphs.append(
-        "There were plenty of funny and unexpected moments that made the whole experience even more enjoyable."
+        "There were plenty of funny and unexpected moments that made the game even more enjoyable! 😆🎮"
     )
 
     # 4. Characters
@@ -178,7 +176,7 @@ def generate_dynamic_review(game):
     if game.get('multiplayer'):
         paragraphs.append(
             "Playing with friends made everything even wackier: we laughed, tried crazy stunts, "
-            "and sometimes totally messed things up while having the best time ever."
+            "and sometimes totally messed things up, but loved every moment! 🤪"
         )
 
     # 6. Special features
@@ -186,46 +184,32 @@ def generate_dynamic_review(game):
     if features:
         features_list = ', '.join(features)
         paragraphs.append(
-            f"The game also included special features like {features_list}, which made exploring even more fun."
+            f"The game also included special features like {features_list}, which made exploring even more fun!"
         )
 
-    # 7. Official cheats
+    # 7. Official cheats / playful kid-style
     cheats = game.get('cheats', [])
     if cheats:
-        cheats_list = ', '.join(cheats)
+        cheats_list = "\n- ".join(cheats)
         paragraphs.append(
-            f"And if you like using cheats, the official ones include: {cheats_list}!"
+            f"Yay! There are official cheats for the game! 🎉 Here’s what I found:\n- {cheats_list}"
+        )
+    else:
+        paragraphs.append(
+            "I really looked for cheats, but couldn’t find any 😢. Every fun moment was purely from my own skills!"
         )
 
     # 8. Summary
     paragraphs.append(
         f"Overall, {game['name']} was an amazing adventure full of surprises, laughter, and memorable moments. "
-        "I can’t wait to jump back in and see what crazy things happen next!"
+        "I can't wait to jump back in and see what crazy things happen next! 🌟"
     )
 
-    # Join with double newlines for spacing (like paragraphs in HTML)
     return "\n\n".join(paragraphs)
 
-
 # ==================
-# Example usage
+# Other helpers
 # ==================
-game_data = {
-    "name": "Grand Theft Auto V",
-    "genre": "Racing/Action",
-    "characters": ["Michael", "Franklin", "Trevor"],
-    "multiplayer": True,
-    "special_features": ["heists", "flight", "vehicle variety"],
-    "cheats": ["spawn car", "invincibility", "lower wanted level"]
-}
-
-print(generate_dynamic_review(game_data))
-
-
-
-
-
-
 def get_age_rating(game):
     rating = game.get("esrb_rating") or game.get("age_rating") or {"name":"Not specified"}
     name = rating.get("name") if isinstance(rating, dict) else str(rating)
@@ -263,6 +247,9 @@ def post_footer_html():
     """
     return footer
 
+# ==================
+# Updated generate_post_for_game
+# ==================
 def generate_post_for_game(game, all_posts):
     name = game.get("name") or "Unknown Game"
     slug = slugify(name)
@@ -273,7 +260,8 @@ def generate_post_for_game(game, all_posts):
         print(f"⚠️  Post already exists for '{name}' -> {filename} (skipping)")
         return None
 
-    img_url = game.get("background_image") or ""
+    # Image handling
+    img_url = game.get('background_image') or ""
     img_filename = f"{slug}.jpg"
     img_path = os.path.join(PICTURE_DIR, img_filename)
     if not os.path.exists(img_path):
@@ -286,8 +274,12 @@ def generate_post_for_game(game, all_posts):
             ph_url = f"https://placehold.co/800x450?text={name.replace(' ', '+')}"
             download_image(ph_url, img_path)
 
+    # YouTube embed
     youtube_embed = get_youtube_embed(name)
-    review_html = build_narrative_review(game)
+
+    # USE dynamic review
+    review_html = generate_dynamic_review(game)
+
     age_rating = get_age_rating(game)
 
     now = datetime.datetime.now()
@@ -349,9 +341,9 @@ def generate_post_for_game(game, all_posts):
     print(f"✅ Generated post: {out_path}")
     return post_dict
 
-# ==============
+# ==================
 # MAIN FLOW
-# ==============
+# ==================
 def gather_candidates(total_needed, num_popular):
     random_candidates = []
     popular_candidates = []
