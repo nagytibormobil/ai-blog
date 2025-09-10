@@ -135,61 +135,56 @@ def write_index_posts(all_posts):
 # NARRATIVE CONTENT GENERATOR (Playful, kid-style storytelling)
 # ==============
 def build_narrative_review(game):
-    name = game.get("name") or "Unknown Game"
-    release = game.get("released") or "Unknown"
-    developer = (
-        game.get("developers", [{}])[0].get("name", "Unknown Studio")
-        if isinstance(game.get("developers"), list)
-        else "Unknown Studio"
-    )
+    name = game.get("name") or "Ismeretlen Játék"
+    release = game.get("released") or "Ismeretlen"
+    developer = game.get("developers", [{}])[0].get("name", "Ismeretlen Stúdió") if isinstance(game.get("developers"), list) else "Ismeretlen Stúdió"
 
     paragraphs = []
 
-    # Intro – playful and personal
+    # Bevezetés - első élmény
     paragraphs.append(
-        f"When I first launched **{name}** (Released: {release}, by {developer}), "
-        "I felt like I jumped right into a brand-new adventure. The world looked huge, "
-        "bright, and full of surprises, and I just wanted to explore everything at once!"
+        f"Amikor először elindítottam a **{name}** játékot (megjelenés: {release}, fejlesztő: {developer}), "
+        "olyan érzés volt, mintha hirtelen egy teljesen új világba csöppentem volna. "
+        "Azonnal elkapott az izgalom, és kíváncsi voltam, milyen kalandok várnak rám."
     )
 
-    # Exciting personal experience
+    # Játékélmény - vicces és izgalmas helyzetek
     paragraphs.append(
-        "The very first thing I did was something silly: I grabbed a random vehicle "
-        "and just raced down the streets as fast as I could. The engine roared, lights "
-        "flashed around me, and I was laughing because it felt like I was inside a movie!"
+        "Minden egyes játékmenet tartogatott valami újat: őrült pillanatokat, vicces bakikat, "
+        "és olyan kihívásokat, amik próbára tették az ügyességemet. "
+        "Amikor valamit sikerült megoldanom vagy teljesítenem, hatalmas büszkeséget éreztem."
     )
 
-    # Favorite part with action
+    # Trükkök, kitalált cheat-ek
     paragraphs.append(
-        "My favorite moments were when the police started chasing me. Sirens blaring, "
-        "red and blue lights everywhere, and I tried to escape any way I could. "
-        "Sometimes I jumped over ramps, sometimes I hid in alleys, and whenever I got away, "
-        "I felt like the smartest player in the world!"
+        "Néha azon gondolkodtam, milyen lenne, ha lennének titkos cheat-kódok! "
+        "Képzeltem, hogy egy gombnyomással szupererőt kapok, vagy kétszer olyan gyors lehetek. "
+        "Ezek persze csak a fejemben léteztek, de még viccesebbé tették a játékot."
     )
 
-    # Multiplayer / exploration fun
+    # Felfedezés, barátokkal játszás
     paragraphs.append(
-        "But it wasn’t only about racing or running. I explored every corner: climbing mountains, "
-        "flying planes, or just walking around and listening to the funny things people said. "
-        "And when I played multiplayer with friends, oh boy—we laughed so much! Someone always came up "
-        "with a crazy idea, like riding bicycles on the highway, and of course it ended in total chaos."
+        "A világ felfedezése rengeteg élményt adott, és amikor barátokkal játszottam, "
+        "még szórakoztatóbb lett az egész. Együtt nevettünk, trükköztünk, "
+        "és közösen próbáltuk megoldani a nehéz helyzeteket."
     )
 
-    # Imaginary cheats / playful imagination
+    # Negatívumok – de könnyed hangon
     paragraphs.append(
-        "I even made up my own cheats in my head! Like, if I pressed some secret combo, "
-        "my car would suddenly become twice as fast. It wasn’t real, of course, "
-        "but pretending made the game even more fun."
+        "Persze nem volt mindig minden tökéletes. Néha a pályák ismétlődőnek tűntek, "
+        "vagy akadt egy-két bosszantó rész. De ezek egyáltalán nem vették el a kedvem, "
+        "sőt, inkább csak még nagyobb kihívásnak éreztem őket."
     )
 
-    # Closing summary
+    # Zárás – összegzés
     paragraphs.append(
-        f"In the end, **{name}** wasn’t just a game for me, it was a giant playground full of laughter, "
-        "crazy ideas, and unforgettable adventures. Every time I think back, I remember that freedom "
-        "to do anything and the excitement of discovering new surprises."
+        f"Összességében a **{name}** számomra egy hatalmas élmény volt. "
+        "Tele van izgalmakkal, meglepetésekkel és rengeteg nevetéssel. "
+        "Ez az a játék, amihez mindig szívesen visszatérek, mert tudom, hogy újra átélhetem ezeket a kalandokat."
     )
 
     return "\n\n".join(paragraphs)
+
 
 
 
